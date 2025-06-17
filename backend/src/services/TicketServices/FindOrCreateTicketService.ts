@@ -5,6 +5,7 @@ import Ticket from "../../models/Ticket";
 import ShowTicketService from "./ShowTicketService";
 import FindOrCreateATicketTrakingService from "./FindOrCreateATicketTrakingService";
 import Setting from "../../models/Setting";
+import { getIO } from "../../libs/socket"; // import para emissão socket
 
 interface TicketData {
   status?: string;
@@ -30,6 +31,8 @@ const FindOrCreateTicketService = async (
     order: [["id", "DESC"]]
   });
 
+  let created = false;
+
   if (ticket) {
     await ticket.update({ unreadMessages });
   }
@@ -49,17 +52,19 @@ const FindOrCreateTicketService = async (
         unreadMessages,
         companyId
       });
+
       await FindOrCreateATicketTrakingService({
         ticketId: ticket.id,
         companyId,
         whatsappId: ticket.whatsappId,
-        userId: ticket.userId,
+        userId: ticket.userId
       });
     }
+
     const msgIsGroupBlock = await Setting.findOne({
       where: { key: "timeCreateNewTicket" }
     });
-  
+
     const value = msgIsGroupBlock ? parseInt(msgIsGroupBlock.value, 10) : 7200;
   }
 
@@ -81,6 +86,7 @@ const FindOrCreateTicketService = async (
         unreadMessages,
         companyId
       });
+
       await FindOrCreateATicketTrakingService({
         ticketId: ticket.id,
         companyId,
@@ -107,11 +113,19 @@ const FindOrCreateTicketService = async (
       userId: ticket.userId
     });
 
+    created = true;
   } else {
     await ticket.update({ whatsappId });
   }
 
   ticket = await ShowTicketService(ticket.id, companyId);
+
+  // 🔔 Emissão de evento via socket
+  const io = getIO();
+  io.to(`company-${companyId}`).emit(`company-${companyId}-ticket`, {
+    action: created ? "create" : "update",
+    ticket
+  });
 
   return ticket;
 };

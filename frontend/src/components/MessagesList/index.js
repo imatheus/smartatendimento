@@ -368,27 +368,24 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
     };
   }, [pageNumber, ticketId]);
 
-  useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+// frontend/src/components/MessagesList/index.js
+useEffect(() => {
+  const companyId = localStorage.getItem("companyId");
+  const socket = socketConnection({ companyId });
 
-    socket.on("connect", () => socket.emit("joinChatBox", `${ticket.id}`));
+  const messageListener = (data) => {
+    if (data.ticketId === ticketId) {
+      dispatch({ type: "ADD_MESSAGE", payload: data.message });
+    }
+  };
 
-    socket.on(`company-${companyId}-appMessage`, (data) => {
-      if (data.action === "create") {
-        dispatch({ type: "ADD_MESSAGE", payload: data.message });
-        scrollToBottom();
-      }
+  socket.on("appMessage", messageListener);
 
-      if (data.action === "update") {
-        dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
-      }
-    });
+  return () => {
+    socket.off("appMessage", messageListener);
+  };
+}, [ticketId]);
 
-    return () => {
-      socket.disconnect();
-    };
-  }, [ticketId, ticket]);
 
   const loadMore = () => {
     setPageNumber((prevPageNumber) => prevPageNumber + 1);
