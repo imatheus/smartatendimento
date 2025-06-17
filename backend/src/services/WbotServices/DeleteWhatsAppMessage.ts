@@ -1,59 +1,18 @@
-import { proto, WALegacySocket, WASocket } from "@adiwajshing/baileys";
-import AppError from "../../errors/AppError";
-import GetTicketWbot from "../../helpers/GetTicketWbot";
-import GetWbotMessage from "../../helpers/GetWbotMessage";
-import Message from "../../models/Message";
-import Ticket from "../../models/Ticket";
+import { WASocket } from "@adiwajshing/baileys";
+import { getWbot } from "../../libs/wbot";
 
-const DeleteWhatsAppMessage = async (messageId: string): Promise<Message> => {
-  const message = await Message.findByPk(messageId, {
-    include: [
-      {
-        model: Ticket,
-        as: "ticket",
-        include: ["contact"]
-      }
-    ]
-  });
-
-  if (!message) {
-    throw new AppError("No message found with this ID.");
-  }
-
-  const { ticket } = message;
-
-  const messageToDelete = await GetWbotMessage(ticket, messageId);
-
-  try {
-    const wbot = await GetTicketWbot(ticket);
-    const messageDelete = messageToDelete as proto.WebMessageInfo;
-
-    if (wbot.type === "legacy") {
-      const remoteJid = messageDelete.key.remoteJid as string;
-      await (wbot as WALegacySocket).sendMessage(remoteJid, {
-        delete: messageDelete.key
-      });
-    }
-
-    if (wbot.type === "md") {
-      const menssageDelete = messageToDelete as Message;
-
-      await (wbot as WASocket).sendMessage(menssageDelete.remoteJid, {
-        delete: {
-          id: menssageDelete.id,
-          remoteJid: menssageDelete.remoteJid,
-          participant: menssageDelete.participant,
-          fromMe: menssageDelete.fromMe
-        }
-      });
-    }
-  } catch (err) {
-    console.log(err);
-    throw new AppError("ERR_DELETE_WAPP_MSG");
-  }
-  await message.update({ isDeleted: true });
-
-  return message;
+const DeleteWhatsAppMessage = async (
+  messageId: string,
+  whatsappId: number
+): Promise<void> => {
+  const wbot = getWbot(whatsappId);
+  const message = await wbot.loadMessage(messageId);
+  await wbot.chatModify(
+    {
+      clear: { messages: [{ id: message.key.id!, fromMe: true, timestamp: message.messageTimestamp as number }] }
+    },
+    message.key.remoteJid!
+  );
 };
 
 export default DeleteWhatsAppMessage;

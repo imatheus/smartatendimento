@@ -7,32 +7,34 @@ module.exports = {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
-      },
-      whatsappId: {
-        type: DataTypes.INTEGER,
-        primaryKey: true
+        allowNull: false,
       },
       contacts: {
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
       },
       chats: {
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
+      },
+      whatsappId: {
+        type: DataTypes.INTEGER,
+        references: { model: "Whatsapps", key: "id" },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
       createdAt: {
         type: DataTypes.DATE,
-        allowNull: false
+        allowNull: false,
       },
       updatedAt: {
         type: DataTypes.DATE,
-        allowNull: false
-      }
+        allowNull: false,
+      },
     });
   },
 
   down: (queryInterface: QueryInterface) => {
     return queryInterface.dropTable("Baileys");
-  }
+  },
 };

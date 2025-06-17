@@ -1,13 +1,12 @@
 import {
   Table,
   Column,
-  CreatedAt,
-  UpdatedAt,
   Model,
+  DataType,
   PrimaryKey,
   AutoIncrement,
-  Default,
-  ForeignKey
+  ForeignKey,
+  BelongsTo,
 } from "sequelize-typescript";
 import Whatsapp from "./Whatsapp";
 
@@ -18,23 +17,18 @@ class Baileys extends Model<Baileys> {
   @Column
   id: number;
 
-  @Default(null)
-  @Column
+  @Column(DataType.TEXT)
   contacts: string;
 
-  @Default(null)
-  @Column
+  @Column(DataType.TEXT)
   chats: string;
-
-  @CreatedAt
-  createdAt: Date;
-
-  @UpdatedAt
-  updatedAt: Date;
 
   @ForeignKey(() => Whatsapp)
   @Column
   whatsappId: number;
+
+  @BelongsTo(() => Whatsapp)
+  whatsapp: Whatsapp;
 }
 
 export default Baileys;

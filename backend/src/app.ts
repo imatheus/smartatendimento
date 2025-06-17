@@ -1,26 +1,19 @@
-import "./bootstrap";
 import "reflect-metadata";
-import "express-async-errors";
+import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
+import "express-async-errors";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import * as Sentry from "@sentry/node";
+import { join } from "path";
 
 import "./database";
-import uploadConfig from "./config/upload";
-import AppError from "./errors/AppError";
+import "./queues";
 import routes from "./routes";
+import AppError from "./errors/AppError";
+import uploadConfig from "./config/upload";
 import { logger } from "./utils/logger";
-import { messageQueue, sendScheduledMessages } from "./queues";
-
-Sentry.init({ dsn: process.env.SENTRY_DSN });
 
 const app = express();
-
-app.set("queues", {
-  messageQueue,
-  sendScheduledMessages
-});
 
 app.use(
   cors({
@@ -30,11 +23,10 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
-app.use(Sentry.Handlers.requestHandler());
-app.use("/public", express.static(uploadConfig.directory));
-app.use(routes);
+app.use(express.urlencoded({ extended: true }));
+app.use("/public", express.static(join(__dirname, "..", "public")));
 
-app.use(Sentry.Handlers.errorHandler());
+app.use(routes);
 
 app.use(async (err: Error, req: Request, res: Response, _: NextFunction) => {
   if (err instanceof AppError) {

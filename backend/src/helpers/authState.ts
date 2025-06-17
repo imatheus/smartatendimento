@@ -1,77 +1,93 @@
-import type {
-  AuthenticationCreds,
+import {
   AuthenticationState,
+  BufferJSON,
+  initAuthCreds,
+  proto,
   SignalDataTypeMap
-} from "@adiwajshing/baileys";
-import { BufferJSON, initAuthCreds, proto } from "@adiwajshing/baileys";
-import Whatsapp from "../models/Whatsapp";
+} from "@whiskeysockets/baileys";
+import Baileys from "../models/Baileys";
 
-const KEY_MAP: { [T in keyof SignalDataTypeMap]: string } = {
-  "pre-key": "preKeys",
-  session: "sessions",
-  "sender-key": "senderKeys",
-  "app-state-sync-key": "appStateSyncKeys",
-  "app-state-sync-version": "appStateVersions",
-  "sender-key-memory": "senderKeyMemory"
+// Função para remover a sessão do banco de dados
+export const removeBaileysState = async (sessionId: number): Promise<void> => {
+  try {
+    const record = await Baileys.findOne({ where: { whatsappId: sessionId } });
+    if (record) {
+      await record.destroy();
+    }
+  } catch (err) {
+    console.log("Erro ao remover estado do Baileys:", err);
+  }
 };
 
-const authState = async (
-  whatsapp: Whatsapp
-): Promise<{ state: AuthenticationState; saveState: () => void }> => {
-  let creds: AuthenticationCreds;
+// Função principal para gerenciar o estado de autenticação
+export const useStore = async (
+  sessionId: number
+): Promise<{ state: AuthenticationState; saveCreds: () => Promise<void> }> => {
+  // Inicializa credenciais e chaves em memória
+  let creds = initAuthCreds();
   let keys: any = {};
 
+  // Busca o registro da sessão no banco de dados
+  const record = await Baileys.findOne({ where: { whatsappId: sessionId } });
+
+  // Se houver um registro, desserializa os dados corretamente
+  if (record && record.contacts) {
+    const parsed = JSON.parse(record.contacts, BufferJSON.reviver);
+    creds = parsed.creds;
+    keys = parsed.keys;
+  }
+
+  // Função para salvar o estado no banco de dados
   const saveState = async () => {
     try {
-      await whatsapp.update({
-        session: JSON.stringify({ creds, keys }, BufferJSON.replacer, 0)
+      const state = { creds, keys };
+      // Serializa o estado para JSON, tratando os Buffers corretamente
+      const strState = JSON.stringify(state, BufferJSON.replacer, 2);
+
+      const existingRecord = await Baileys.findOne({
+        where: { whatsappId: sessionId }
       });
-    } catch (error) {
-      console.log(error);
+
+      if (existingRecord) {
+        await existingRecord.update({ contacts: strState });
+      } else {
+        await Baileys.create({ contacts: strState, whatsappId: sessionId });
+      }
+    } catch (e) {
+      console.error("Falha ao salvar o estado de autenticação:", e);
     }
   };
 
-  // const getSessionDatabase = await whatsappById(whatsapp.id);
-
-  if (whatsapp.session && whatsapp.session !== null) {
-    const result = JSON.parse(whatsapp.session, BufferJSON.reviver);
-    creds = result.creds;
-    keys = result.keys;
-  } else {
-    creds = initAuthCreds();
-    keys = {};
-  }
-
   return {
+    // O estado que será usado pelo Baileys
     state: {
       creds,
+      // Funções para obter e definir as chaves de sinalização
       keys: {
         get: (type, ids) => {
-          const key = KEY_MAP[type];
-          return ids.reduce((dict: any, id) => {
-            let value = keys[key]?.[id];
+          const key = type as keyof typeof keys;
+          return ids.reduce((dict: any, id: string) => {
+            const value = keys[key]?.[id];
             if (value) {
-              if (type === "app-state-sync-key") {
-                value = proto.Message.AppStateSyncKeyData.fromObject(value);
-              }
               dict[id] = value;
             }
             return dict;
           }, {});
         },
         set: (data: any) => {
-          // eslint-disable-next-line no-restricted-syntax, guard-for-in
-          for (const i in data) {
-            const key = KEY_MAP[i as keyof SignalDataTypeMap];
-            keys[key] = keys[key] || {};
-            Object.assign(keys[key], data[i]);
+          for (const key in data) {
+            const type = key as keyof typeof keys;
+            if (!keys[type]) {
+              keys[type] = {};
+            }
+            Object.assign(keys[type], data[key]);
           }
+          // Salva o estado sempre que as chaves forem atualizadas
           saveState();
         }
       }
     },
-    saveState
+    // Função para ser chamada quando as credenciais são atualizadas
+    saveCreds: saveState
   };
 };
-
-export default authState;
