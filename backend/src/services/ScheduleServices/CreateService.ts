@@ -1,7 +1,10 @@
 import * as Yup from "yup";
+import moment from "moment";
 
 import AppError from "../../errors/AppError";
 import Schedule from "../../models/Schedule";
+import ScheduleJobService from "./ScheduleJobService";
+import { logger } from "../../utils/logger";
 
 interface Request {
   body: string;
@@ -29,6 +32,14 @@ const CreateService = async ({
     throw new AppError(err.message);
   }
 
+  // Validar se a data de envio não é no passado
+  const sendAtMoment = moment(sendAt);
+  const now = moment();
+  
+  if (sendAtMoment.isBefore(now.subtract(1, 'minute'))) {
+    throw new AppError("A data de envio não pode ser no passado");
+  }
+
   const schedule = await Schedule.create(
     {
       body,
@@ -41,6 +52,17 @@ const CreateService = async ({
   );
 
   await schedule.reload();
+
+  // Agendar o job para processamento
+  try {
+    await ScheduleJobService(schedule);
+    logger.info(`Schedule ${schedule.id} created and job scheduled successfully`);
+  } catch (error) {
+    logger.error(`Error scheduling job for schedule ${schedule.id}:`, error);
+    // Atualizar status para erro se não conseguir agendar
+    await schedule.update({ status: 'ERRO' });
+    throw new AppError("Erro ao agendar mensagem. Tente novamente.");
+  }
 
   return schedule;
 };

@@ -83,6 +83,7 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 	const [schedule, setSchedule] = useState(initialState);
 	const [currentContact, setCurrentContact] = useState(initialContact);
 	const [contacts, setContacts] = useState([initialContact]);
+	const [saving, setSaving] = useState(false);
 
 	useEffect(() => {
 		if (contactId && contacts.length) {
@@ -130,28 +131,57 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 
 	const handleSaveSchedule = async values => {
 		const scheduleData = { ...values, userId: user.id };
+		
+		setSaving(true);
+		
 		try {
+			// Validar se a data não é no passado
+			const sendAtMoment = moment(values.sendAt);
+			const now = moment();
+			
+			if (sendAtMoment.isBefore(now.subtract(1, 'minute'))) {
+				toast.error("❌ A data de agendamento não pode ser no passado!");
+				setSaving(false);
+				return;
+			}
+			
+			// Mostrar data formatada na mensagem
+			const formattedDate = sendAtMoment.format('DD/MM/YYYY [às] HH:mm');
+			
 			if (scheduleId) {
 				await api.put(`/schedules/${scheduleId}`, scheduleData);
+				toast.success(`✅ Agendamento atualizado com sucesso! Nova data: ${formattedDate}`);
 			} else {
 				await api.post("/schedules", scheduleData);
+				toast.success(`✅ Agendamento criado com sucesso! A mensagem será enviada automaticamente em ${formattedDate}.`);
 			}
-			toast.success(i18n.t("scheduleModal.success"));
+			
+			// Recarregar lista se função fornecida
 			if (typeof reload == 'function') {
 				reload();
 			}
+			
+			// Limpar contato e redirecionar se necessário
 			if (contactId) {
 				if (typeof cleanContact === 'function') {
 					cleanContact();
 					history.push('/schedules');
 				}
 			}
+			
+			// Aguardar um pouco para o usuário ver a mensagem de sucesso, depois fechar modal
+			setTimeout(() => {
+				setCurrentContact(initialContact);
+				setSchedule(initialState);
+				setSaving(false);
+				handleClose();
+			}, 1500); // 1.5 segundos para ler a mensagem
+			
 		} catch (err) {
 			toastError(err);
+			setSaving(false);
+			// Não fechar o modal em caso de erro para o usuário poder tentar novamente
 		}
-		setCurrentContact(initialContact);
-		setSchedule(initialState);
-		handleClose();
 	};
 
 	return (

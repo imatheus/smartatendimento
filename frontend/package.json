@@ -25,8 +25,7 @@
     "markdown-to-jsx": "^7.1.0",
     "material-ui-color": "^1.2.0",
     "material-ui-popup-state": "^1.7.0",
-    "mic-recorder-to-mp3": "^2.2.2",
-    "moment": "^2.29.1",
+        "moment": "^2.29.1",
     "process": "^0.11.10",
     "qrcode.react": "^1.0.0",
     "query-string": "^7.0.0",
@@ -51,8 +50,7 @@
     "styled-components": "^5.3.5",
     "text-mask-addons": "^3.8.0",
     "use-debounce": "^7.0.0",
-    "use-sound": "^2.0.1",
-    "uuid": "^8.3.2",
+        "uuid": "^8.3.2",
     "yup": "^0.32.8"
   },
   "scripts": {

@@ -292,12 +292,17 @@ const reducer = (state, action) => {
     const messageIndex = state.findIndex((m) => m.id === newMessage.id);
 
     if (messageIndex !== -1) {
+      // Atualizar mensagem existente
       state[messageIndex] = newMessage;
     } else {
+      // Adicionar nova mensagem no final da lista
       state.push(newMessage);
     }
 
-    return [...state];
+    // Ordenar mensagens por data de criação para garantir ordem correta
+    const sortedState = state.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    
+    return [...sortedState];
   }
 
   if (action.type === "UPDATE_MESSAGE") {
@@ -368,21 +373,38 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
     };
   }, [pageNumber, ticketId]);
 
-// frontend/src/components/MessagesList/index.js
 useEffect(() => {
+  if (!ticketId || ticketId === "undefined") {
+    return;
+  }
+  
   const companyId = localStorage.getItem("companyId");
   const socket = socketConnection({ companyId });
 
+  // Conectar ao room específico do ticket
+  socket.on("connect", () => {
+    socket.emit("joinChatBox", `${ticketId}`);
+  });
+
   const messageListener = (data) => {
-    if (data.ticketId === ticketId) {
+    // Garantir que a comparação funcione com string e number
+    const currentTicketId = parseInt(ticketId);
+    const messageTicketId = parseInt(data.ticket?.id || data.message?.ticketId);
+    
+    if (data.action === "create" && messageTicketId === currentTicketId) {
       dispatch({ type: "ADD_MESSAGE", payload: data.message });
+      setTimeout(() => scrollToBottom(), 100); // Pequeno delay para garantir que a mensagem foi renderizada
+    }
+    if (data.action === "update" && parseInt(data.message?.ticketId) === currentTicketId) {
+      dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
     }
   };
 
-  socket.on("appMessage", messageListener);
+  socket.on(`company-${companyId}-appMessage`, messageListener);
 
   return () => {
-    socket.off("appMessage", messageListener);
+    socket.off(`company-${companyId}-appMessage`, messageListener);
+    socket.disconnect();
   };
 }, [ticketId]);
 
@@ -427,14 +449,7 @@ useEffect(() => {
     if (message.mediaType === "image") {
       return <ModalImageCors imageUrl={message.mediaUrl} />;
     }
-    if (message.mediaType === "audio") {
-      return (
-        <audio controls>
-          <source src={message.mediaUrl} type="audio/ogg"></source>
-        </audio>
-      );
-    }
-
+    
     if (message.mediaType === "video") {
       return (
         <video
@@ -620,10 +635,11 @@ useEffect(() => {
   const messageLocation = (message, createdAt) => {
     return (
       <div className={[classes.textContentItem, { display: 'flex', padding: 5 }]}>
-        <img src={message.split('|')[0]} className={classes.imageLocation} />
+        <img src={message.split('|')[0]} className={classes.imageLocation} alt="Localização" />
         <a
           style={{ fontWeight: '700', color: 'gray' }}
           target="_blank"
+          rel="noopener noreferrer"
           href={message.split('|')[1]}> Clique para ver localização</a>
         <span className={classes.timestamp}>
           {format(parseISO(createdAt), "HH:mm")}

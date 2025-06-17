@@ -19,126 +19,178 @@ export default async function DashboardDataService(
   companyId: string | number,
   params: Params
 ): Promise<DashboardData> {
-  const query = `
-    with
-    traking as (
-      select
-        c.name "companyName",
-        u.name "userName",
-        u.online "userOnline",
-        w.name "whatsappName",
-        ct.name "contactName",
-        ct.number "contactNumber",
-        (tt."finishedAt" is not null) "finished",
-        (tt."userId" is null and tt."finishedAt" is null) "pending",
-        coalesce((
-          (date_part('day', age(coalesce(tt."ratingAt", tt."finishedAt") , tt."startedAt")) * 24 * 60) +
-          (date_part('hour', age(coalesce(tt."ratingAt", tt."finishedAt"), tt."startedAt")) * 60) +
-          (date_part('minutes', age(coalesce(tt."ratingAt", tt."finishedAt"), tt."startedAt")))
-        ), 0) "supportTime",
-        coalesce((
-          (date_part('day', age(tt."startedAt", tt."queuedAt")) * 24 * 60) +
-          (date_part('hour', age(tt."startedAt", tt."queuedAt")) * 60) +
-          (date_part('minutes', age(tt."startedAt", tt."queuedAt")))
-        ), 0) "waitTime",
-        t.status,
-        tt.*,
-        ct."id" "contactId"
-      from "TicketTraking" tt
-      left join "Companies" c on c.id = tt."companyId"
-      left join "Users" u on u.id = tt."userId"
-      left join "Whatsapps" w on w.id = tt."whatsappId"
-      left join "Tickets" t on t.id = tt."ticketId"
-      left join "Contacts" ct on ct.id = t."contactId"
-      -- filterPeriod
-    ),
-    counters as (
-      select
-        (select avg("supportTime") from traking where "supportTime" > 0) "avgSupportTime",
-        (select avg("waitTime") from traking where "waitTime" > 0) "avgWaitTime",
-        (
-          select count(distinct "id")
-          from "Tickets"
-          where status like 'open' and "companyId" = ?
-        ) "supportHappening",
-        (
-          select count(distinct "id")
-          from "Tickets"
-          where status like 'pending' and "companyId" = ?
-        ) "supportPending",
-        (select count(id) from traking where finished) "supportFinished",
-        (
-          select count(leads.id) from (
-            select
-              ct1.id,
-              count(tt1.id) total
-            from traking tt1
-            left join "Tickets" t1 on t1.id = tt1."ticketId"
-            left join "Contacts" ct1 on ct1.id = t1."contactId"
-            group by 1
-            having count(tt1.id) = 1
-          ) leads
-        ) "leads"
-    ),
-    attedants as (
-      select
+  try {
+    // Build date filter conditions
+    let dateFilter = '';
+    let dateFilterAttendants = '';
+    const replacements: any[] = [];
+    const replacementsAttendants: any[] = [];
+
+    if (_.has(params, "days") && params.days > 0) {
+      dateFilter = ` AND tt."queuedAt" >= (NOW() - INTERVAL '${parseInt(`${params.days}`.replace(/\D/g, ""), 10)} days')`;
+      dateFilterAttendants = ` AND tt."queuedAt" >= (NOW() - INTERVAL '${parseInt(`${params.days}`.replace(/\D/g, ""), 10)} days')`;
+    }
+
+    if (_.has(params, "date_from") && params.date_from) {
+      dateFilter += ` AND tt."queuedAt" >= ?`;
+      dateFilterAttendants += ` AND tt."queuedAt" >= ?`;
+      replacements.push(`${params.date_from} 00:00:00`);
+      replacementsAttendants.push(`${params.date_from} 00:00:00`);
+    }
+
+    if (_.has(params, "date_to") && params.date_to) {
+      dateFilter += ` AND tt."finishedAt" <= ?`;
+      dateFilterAttendants += ` AND tt."finishedAt" <= ?`;
+      replacements.push(`${params.date_to} 23:59:59`);
+      replacementsAttendants.push(`${params.date_to} 23:59:59`);
+    }
+
+    const countersQuery = `
+      WITH tracking_data AS (
+        SELECT 
+          tt.*,
+          CASE 
+            WHEN tt."finishedAt" IS NOT NULL THEN 1 
+            ELSE 0 
+          END as finished,
+          CASE 
+            WHEN tt."userId" IS NULL AND tt."finishedAt" IS NULL THEN 1 
+            ELSE 0 
+          END as pending,
+          COALESCE(
+            EXTRACT(EPOCH FROM (COALESCE(tt."finishedAt", tt."ratingAt") - tt."startedAt")) / 60, 0
+          ) as "supportTime",
+          COALESCE(
+            EXTRACT(EPOCH FROM (tt."startedAt" - tt."queuedAt")) / 60, 0
+          ) as "waitTime"
+        FROM "TicketTraking" tt
+        WHERE tt."companyId" = ?${dateFilter}
+      ),
+      leads_data AS (
+        SELECT 
+          COUNT(DISTINCT ct.id) as leads_count
+        FROM tracking_data tt
+        LEFT JOIN "Tickets" t ON t.id = tt."ticketId"
+        LEFT JOIN "Contacts" ct ON ct.id = t."contactId"
+        GROUP BY ct.id
+        HAVING COUNT(tt.id) = 1
+      )
+      SELECT 
+        COALESCE(
+          (SELECT COUNT(*) FROM "Tickets" WHERE status = 'open' AND "companyId" = ?), 0
+        ) as "supportHappening",
+        COALESCE(
+          (SELECT COUNT(*) FROM "Tickets" WHERE status = 'pending' AND "companyId" = ?), 0
+        ) as "supportPending",
+        COALESCE(
+          (SELECT COUNT(*) FROM tracking_data WHERE finished = 1), 0
+        ) as "supportFinished",
+        COALESCE(
+          (SELECT AVG("supportTime") FROM tracking_data WHERE "supportTime" > 0), 0
+        ) as "avgSupportTime",
+        COALESCE(
+          (SELECT AVG("waitTime") FROM tracking_data WHERE "waitTime" > 0), 0
+        ) as "avgWaitTime",
+        COALESCE(
+          (SELECT COUNT(*) FROM leads_data), 0
+        ) as "leads"
+    `;
+
+    const attendantsQuery = `
+      SELECT 
         u.id,
         u.name,
-        coalesce(att."avgSupportTime", 0) "avgSupportTime",
-        att.tickets,
-        att.rating,
-        att.online
-      from "Users" u
-      left join (
-        select
-          u1.id,
-          u1."name",
-          u1."online",
-          avg(t."supportTime") "avgSupportTime",
-          count(t."id") tickets,
-          coalesce(avg(ur.rate), 0) rating
-        from "Users" u1
-        left join traking t on t."userId" = u1.id
-        left join "UserRatings" ur on ur."userId" = t."userId" and ur."createdAt"::date = t."finishedAt"::date
-        group by 1, 2
-      ) att on att.id = u.id
-      where u."companyId" = ?
-      order by att.name
-    )
-    select
-      (select coalesce(jsonb_build_object('counters', c.*)->>'counters', '{}')::jsonb from counters c) counters,
-      (select coalesce(json_agg(a.*), '[]')::jsonb from attedants a) attendants;
-  `;
+        u.online,
+        COALESCE(stats.tickets, 0) as tickets,
+        COALESCE(stats.rating, 0) as rating,
+        COALESCE(stats."avgSupportTime", 0) as "avgSupportTime"
+      FROM "Users" u
+      LEFT JOIN (
+        SELECT 
+          tt."userId",
+          COUNT(tt.id) as tickets,
+          COALESCE(AVG(ur.rate), 0) as rating,
+          COALESCE(AVG(
+            CASE 
+              WHEN tt."startedAt" IS NOT NULL AND tt."finishedAt" IS NOT NULL
+              THEN EXTRACT(EPOCH FROM (tt."finishedAt" - tt."startedAt")) / 60
+              ELSE 0 
+            END
+          ), 0) as "avgSupportTime"
+        FROM "TicketTraking" tt
+        LEFT JOIN "UserRatings" ur ON ur."userId" = tt."userId" 
+          AND DATE(ur."createdAt") = DATE(tt."finishedAt")
+        WHERE tt."companyId" = ?${dateFilterAttendants}
+        GROUP BY tt."userId"
+      ) stats ON stats."userId" = u.id
+      WHERE u."companyId" = ?
+      ORDER BY u.name
+    `;
 
-  let where = 'where tt."companyId" = ?';
-  const replacements: any[] = [companyId];
+    // Prepare final replacements arrays
+    const finalReplacementsCounters = [companyId, ...replacements, companyId, companyId];
+    const finalReplacementsAttendants = [companyId, ...replacementsAttendants, companyId];
 
-  if (_.has(params, "days")) {
-    where += ` and tt."queuedAt" >= (now() - '? days'::interval)`;
-    replacements.push(parseInt(`${params.days}`.replace(/\D/g, ""), 10));
+    // Execute queries with timeout
+    const [countersResult, attendantsResult] = await Promise.all([
+      sequelize.query(countersQuery, {
+        replacements: finalReplacementsCounters,
+        type: QueryTypes.SELECT,
+        plain: true,
+        timeout: 15000 // 15 seconds timeout
+      }),
+      sequelize.query(attendantsQuery, {
+        replacements: finalReplacementsAttendants,
+        type: QueryTypes.SELECT,
+        timeout: 15000 // 15 seconds timeout
+      })
+    ]);
+
+    // Validate and sanitize counters data
+    const sanitizedCounters = {
+      supportHappening: Number(countersResult?.supportHappening) || 0,
+      supportPending: Number(countersResult?.supportPending) || 0,
+      supportFinished: Number(countersResult?.supportFinished) || 0,
+      avgSupportTime: Number(countersResult?.avgSupportTime) || 0,
+      avgWaitTime: Number(countersResult?.avgWaitTime) || 0,
+      leads: Number(countersResult?.leads) || 0
+    };
+
+    // Validate and sanitize attendants data
+    const sanitizedAttendants = Array.isArray(attendantsResult) 
+      ? attendantsResult.map(attendant => ({
+          id: attendant.id,
+          name: attendant.name || 'Nome não disponível',
+          online: Boolean(attendant.online),
+          tickets: Number(attendant.tickets) || 0,
+          rating: attendant.rating !== null && attendant.rating !== undefined 
+            ? Number(attendant.rating) 
+            : null,
+          avgSupportTime: Number(attendant.avgSupportTime) || 0
+        }))
+      : [];
+
+    const responseData: DashboardData = {
+      counters: sanitizedCounters,
+      attendants: sanitizedAttendants
+    };
+
+    return responseData;
+
+  } catch (error) {
+    console.error('Dashboard query error:', error);
+    
+    // Return default data in case of error
+    return {
+      counters: {
+        supportHappening: 0,
+        supportPending: 0,
+        supportFinished: 0,
+        avgSupportTime: 0,
+        avgWaitTime: 0,
+        leads: 0
+      },
+      attendants: []
+    };
   }
-
-  if (_.has(params, "date_from")) {
-    where += ` and tt."queuedAt" >= ?`;
-    replacements.push(`${params.date_from} 00:00:00`);
-  }
-
-  if (_.has(params, "date_to")) {
-    where += ` and tt."finishedAt" <= ?`;
-    replacements.push(`${params.date_to} 23:59:59`);
-  }
-
-  replacements.push(companyId);
-  replacements.push(companyId);
-  replacements.push(companyId);
-
-  const finalQuery = query.replace("-- filterPeriod", where);
-
-  const responseData: DashboardData = await sequelize.query(finalQuery, {
-    replacements,
-    type: QueryTypes.SELECT,
-    plain: true
-  });
-
-  return responseData;
 }

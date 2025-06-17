@@ -27,6 +27,7 @@ const useStyles = makeStyles(theme => ({
 export default function CardCounter(props) {
     const { icon, title, value, loading } = props
 	const classes = useStyles();
+    
     return ( !loading ? 
         <Card>
             <CardHeader
@@ -42,7 +43,7 @@ export default function CardCounter(props) {
                 }
                 subheader={
                     <Typography variant="subtitle1" component="p" className={classes.cardSubtitle}>
-                        { value }
+                        { value !== undefined && value !== null ? value : '0' }
                     </Typography>
                 }
             />

@@ -106,8 +106,8 @@ const UpdateTicketService = async ({
             ratingAt: moment().toDate()
           });
 
-          io.to("open")
-            .to(ticketId.toString())
+          io.to("status:open")
+            .to(`ticket:${ticketId}`)
             .emit(`company-${ticket.companyId}-ticket`, {
               action: "delete",
               ticketId: ticket.id
@@ -204,27 +204,42 @@ const UpdateTicketService = async ({
 
     await ticketTraking.save();
 
-    if (justClose && status == 'closed') {
-      io.emit(`company-${companyId}-ticket`, {
-        action: "removeFromList",
-        ticketId: ticket?.id
-      });
+    console.log(`🔄 UpdateTicketService: Processing ticket ${ticket.id}`);
+    console.log(`🔄 Status change: ${oldStatus} -> ${ticket.status}`);
+    console.log(`🔄 User change: ${oldUserId} -> ${ticket.user?.id}`);
+    console.log(`🔄 JustClose: ${justClose}`);
 
-    } else
-      if (ticket.status !== oldStatus || ticket.user?.id !== oldUserId) {
-        io.to(oldStatus).emit(`company-${companyId}-ticket`, {
+    // Sempre emitir eventos quando o status ou usuário mudou
+    if (ticket.status !== oldStatus || ticket.user?.id !== oldUserId) {
+      // Remove da lista anterior se o status mudou
+      if (ticket.status !== oldStatus) {
+        console.log(`📤 Emitting DELETE to status:${oldStatus} for ticket ${ticket.id}`);
+        io.to(`status:${oldStatus}`).emit(`company-${companyId}-ticket`, {
           action: "delete",
           ticketId: ticket.id
         });
       }
 
-    io.to(ticket.status)
-      .to("notification")
-      .to(ticketId.toString())
-      .emit(`company-${companyId}-ticket`, {
-        action: "update",
-        ticket
-      });
+      // Adiciona/atualiza na nova lista
+      console.log(`📤 Emitting UPDATE to status:${ticket.status} for ticket ${ticket.id}`);
+      io.to(`status:${ticket.status}`)
+        .to("notification")
+        .to(`ticket:${ticketId}`)
+        .emit(`company-${companyId}-ticket`, {
+          action: "update",
+          ticket
+        });
+    } else {
+      // Se não houve mudança de status/usuário, apenas atualiza
+      console.log(`📤 Emitting UPDATE (no status change) to status:${ticket.status} for ticket ${ticket.id}`);
+      io.to(`status:${ticket.status}`)
+        .to("notification")
+        .to(`ticket:${ticketId}`)
+        .emit(`company-${companyId}-ticket`, {
+          action: "update",
+          ticket
+        });
+    }
 
     return { ticket, oldStatus, oldUserId };
   } catch (err) {

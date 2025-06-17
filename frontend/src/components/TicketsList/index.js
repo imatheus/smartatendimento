@@ -105,7 +105,7 @@ const reducer = (state, action) => {
   if (action.type === "UPDATE_TICKET") {
     const ticket = action.payload;
 
-    const ticketIndex = state.findIndex((t) => t.id === ticket.id);
+    const ticketIndex = state.findIndex((t) => parseInt(t.id) === parseInt(ticket.id));
     if (ticketIndex !== -1) {
       state[ticketIndex] = ticket;
     } else {
@@ -118,7 +118,7 @@ const reducer = (state, action) => {
   if (action.type === "UPDATE_TICKET_UNREAD_MESSAGES") {
     const ticket = action.payload;
 
-    const ticketIndex = state.findIndex((t) => t.id === ticket.id);
+    const ticketIndex = state.findIndex((t) => parseInt(t.id) === parseInt(ticket.id));
     if (ticketIndex !== -1) {
       state[ticketIndex] = ticket;
       state.unshift(state.splice(ticketIndex, 1)[0]);
@@ -140,9 +140,11 @@ const reducer = (state, action) => {
 
   if (action.type === "DELETE_TICKET") {
     const ticketId = action.payload;
-    const ticketIndex = state.findIndex((t) => t.id === ticketId);
+    const ticketIndex = state.findIndex((t) => parseInt(t.id) === parseInt(ticketId));
+    console.log(`DELETE_TICKET: ticketId=${ticketId}, found at index=${ticketIndex}, current state length=${state.length}`);
     if (ticketIndex !== -1) {
       state.splice(ticketIndex, 1);
+      console.log(`DELETE_TICKET: Removed ticket, new state length=${state.length}`);
     }
 
     return [...state];
@@ -207,6 +209,8 @@ const TicketsList = ({
     });
 
     socket.on(`company-${companyId}-ticket`, (data) => {
+      console.log(`TicketsList(${status}): Socket event received:`, data);
+      
       if (data.action === "updateUnread") {
         dispatch({
           type: "RESET_UNREAD",
@@ -214,18 +218,32 @@ const TicketsList = ({
         });
       }
 
-      if (data.action === "update" && shouldUpdateTicket(data.ticket)) {
-        dispatch({
-          type: "UPDATE_TICKET",
-          payload: data.ticket,
-        });
-      }
-
-      if (data.action === "update" && notBelongsToUserQueues(data.ticket)) {
-        dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+      if (data.action === "update") {
+        console.log(`TicketsList(${status}): Update event - ticket status: ${data.ticket.status}, list status: ${status}`);
+        if (shouldUpdateTicket(data.ticket)) {
+          if (data.ticket.status === status) {
+            console.log(`TicketsList(${status}): Updating ticket in list`);
+            dispatch({
+              type: "UPDATE_TICKET",
+              payload: data.ticket,
+            });
+          } else {
+            console.log(`TicketsList(${status}): Deleting ticket (status changed from ${status} to ${data.ticket.status})`);
+            dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+          }
+        } else {
+          console.log(`TicketsList(${status}): Deleting ticket (doesn't belong to user)`);
+          dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+        }
       }
 
       if (data.action === "delete") {
+        console.log(`TicketsList(${status}): Delete event for ticket ${data.ticketId}`);
+        dispatch({ type: "DELETE_TICKET", payload: data.ticketId });
+      }
+
+      if (data.action === "removeFromList") {
+        console.log(`TicketsList(${status}): RemoveFromList event for ticket ${data.ticketId}`);
         dispatch({ type: "DELETE_TICKET", payload: data.ticketId });
       }
     });

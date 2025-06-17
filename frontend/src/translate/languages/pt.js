@@ -320,7 +320,6 @@ const messages = {
           schedules: "Agendamentos",
           campaigns: "Campanhas",
           annoucements: "Informativos",
-          chats: "Chat Interno",
           financeiro: "Financeiro",
         },
         appBar: {

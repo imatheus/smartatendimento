@@ -56,10 +56,17 @@ const TicketActionButtonsCustom = ({ ticket }) => {
 	const handleUpdateTicketStatus = async (e, status, userId) => {
 		setLoading(true);
 		try {
-			await api.put(`/tickets/${ticket.id}`, {
+			const updateData = {
 				status: status,
 				userId: userId || null,
-			});
+			};
+
+			// Quando fechando um ticket, adicionar justClose: true
+			if (status === "closed") {
+				updateData.justClose = true;
+			}
+
+			await api.put(`/tickets/${ticket.id}`, updateData);
 
 			setLoading(false);
 			if (status === "open") {

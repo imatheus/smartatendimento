@@ -16,18 +16,13 @@ import Divider from "@material-ui/core/Divider";
 import Badge from "@material-ui/core/Badge";
 import Box from "@material-ui/core/Box";
 
-import { i18n } from "../../translate/i18n";
-
 import api from "../../services/api";
-import ButtonWithSpinner from "../ButtonWithSpinner";
 import MarkdownWrapper from "../MarkdownWrapper";
 import { Tooltip } from "@material-ui/core";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { TicketsContext } from "../../context/Tickets/TicketsContext";
 import toastError from "../../errors/toastError";
 import { v4 as uuidv4 } from "uuid";
-
-import RoomIcon from '@material-ui/icons/Room';
 import WhatsAppIcon from "@material-ui/icons/WhatsApp";
 import AndroidIcon from "@material-ui/icons/Android";
 import VisibilityIcon from "@material-ui/icons/Visibility";
@@ -153,7 +148,7 @@ const useStyles = makeStyles((theme) => ({
 const TicketListItemCustom = ({ ticket, setUpdate }) => {
   const classes = useStyles();
   const history = useHistory();
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [ticketUser, setTicketUser] = useState(null);
   const [whatsAppName, setWhatsAppName] = useState(null);
 
@@ -191,18 +186,16 @@ const TicketListItemCustom = ({ ticket, setUpdate }) => {
         justClose: true,
         userId: user?.id,
       });
+      
+      // Navegar para a lista de tickets após fechar
+      history.push(`/tickets/`);
     } catch (err) {
-      setLoading(false);
       toastError(err);
+    } finally {
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
-    if (isMounted.current) {
-      setLoading(false);
-    }
-
-    history.push(`/tickets/`);
-    setUpdate(Math.random())
-    
-    setLoading(false);
   };
 
   const handleAcepptTicket = async (id) => {
@@ -212,17 +205,16 @@ const TicketListItemCustom = ({ ticket, setUpdate }) => {
         status: "open",
         userId: user?.id,
       });
+      
+      // Navegar para o ticket após aceitar
+      history.push(`/tickets/${ticket.uuid}`);
     } catch (err) {
-      setLoading(false);
       toastError(err);
+    } finally {
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
-    if (isMounted.current) {
-      setLoading(false);
-    }
-
-    history.push(`/tickets/${ticket.uuid}`);
-    setUpdate(Math.random())
-    setLoading(false);
   };
 
   const handleSelectTicket = (ticket) => {

@@ -2,13 +2,11 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import withWidth, { isWidthUp } from "@material-ui/core/withWidth";
 import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
-import MicRecorder from "mic-recorder-to-mp3";
 import clsx from "clsx";
 
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import InputBase from "@material-ui/core/InputBase";
-import CircularProgress from "@material-ui/core/CircularProgress";
 import { green } from "@material-ui/core/colors";
 import AttachFileIcon from "@material-ui/icons/AttachFile";
 import IconButton from "@material-ui/core/IconButton";
@@ -16,16 +14,12 @@ import MoodIcon from "@material-ui/icons/Mood";
 import SendIcon from "@material-ui/icons/Send";
 import CancelIcon from "@material-ui/icons/Cancel";
 import ClearIcon from "@material-ui/icons/Clear";
-import MicIcon from "@material-ui/icons/Mic";
-import CheckCircleOutlineIcon from "@material-ui/icons/CheckCircleOutline";
-import HighlightOffIcon from "@material-ui/icons/HighlightOff";
 import { FormControlLabel, Switch } from "@material-ui/core";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { isString, isEmpty, isObject, has } from "lodash";
 
 import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
-import RecordingTimer from "./RecordingTimer";
 import { ReplyMessageContext } from "../../context/ReplyingMessage/ReplyingMessageContext";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
@@ -36,7 +30,6 @@ import useQuickMessages from "../../hooks/useQuickMessages";
 import Compressor from 'compressorjs';
 import LinearWithValueLabel from "./ProgressBarCustom";
 
-const Mp3Recorder = new MicRecorder({ bitRate: 128 });
 
 const useStyles = makeStyles((theme) => ({
   mainWrapper: {
@@ -104,25 +97,7 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: -12,
   },
 
-  audioLoading: {
-    color: green[500],
-    opacity: "70%",
-  },
-
-  recorderWrapper: {
-    display: "flex",
-    alignItems: "center",
-    alignContent: "middle",
-  },
-
-  cancelAudioIcon: {
-    color: "red",
-  },
-
-  sendAudioIcon: {
-    color: "green",
-  },
-
+  
   replyginMsgWrapper: {
     display: "flex",
     width: "100%",
@@ -252,12 +227,7 @@ const ActionButtons = (props) => {
   const {
     inputMessage,
     loading,
-    recording,
-    ticketStatus,
     handleSendMessage,
-    handleCancelAudio,
-    handleUploadAudio,
-    handleStartRecording,
   } = props;
   const classes = useStyles();
   if (inputMessage) {
@@ -271,47 +241,8 @@ const ActionButtons = (props) => {
         <SendIcon className={classes.sendMessageIcons} />
       </IconButton>
     );
-  } else if (recording) {
-    return (
-      <div className={classes.recorderWrapper}>
-        <IconButton
-          aria-label="cancelRecording"
-          component="span"
-          fontSize="large"
-          disabled={loading}
-          onClick={handleCancelAudio}
-        >
-          <HighlightOffIcon className={classes.cancelAudioIcon} />
-        </IconButton>
-        {loading ? (
-          <div>
-            <CircularProgress className={classes.audioLoading} />
-          </div>
-        ) : (
-          <RecordingTimer />
-        )}
-
-        <IconButton
-          aria-label="sendRecordedAudio"
-          component="span"
-          onClick={handleUploadAudio}
-          disabled={loading}
-        >
-          <CheckCircleOutlineIcon className={classes.sendAudioIcon} />
-        </IconButton>
-      </div>
-    );
   } else {
-    return (
-      <IconButton
-        aria-label="showRecorder"
-        component="span"
-        disabled={loading || ticketStatus !== "open"}
-        onClick={handleStartRecording}
-      >
-        <MicIcon className={classes.sendMessageIcons} />
-      </IconButton>
-    );
+    return null;
   }
 };
 
@@ -461,8 +392,7 @@ const MessageInputCustom = (props) => {
   const [inputMessage, setInputMessage] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [percentLoading, setPercentLoading] = useState(0);
+    const [percentLoading, setPercentLoading] = useState(0);
 
   const inputRef = useRef();
   const { setReplyingMessage, replyingMessage } =
@@ -526,7 +456,7 @@ const MessageInputCustom = (props) => {
 
       if (!file) { return; }
 
-      if (media?.type.split('/')[0] == 'image') {
+      if (media?.type.split('/')[0] === 'image') {
         new Compressor(file, {
           quality: 0.7,
 
@@ -617,55 +547,9 @@ const MessageInputCustom = (props) => {
     setReplyingMessage(null);
   };
 
-  const handleStartRecording = async () => {
-    setLoading(true);
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      await Mp3Recorder.start();
-      setRecording(true);
-      setLoading(false);
-    } catch (err) {
-      toastError(err);
-      setLoading(false);
-    }
-  };
-
-  const handleUploadAudio = async () => {
-    setLoading(true);
-    try {
-      const [, blob] = await Mp3Recorder.stop().getMp3();
-      if (blob.size < 10000) {
-        setLoading(false);
-        setRecording(false);
-        return;
-      }
-
-      const formData = new FormData();
-      const filename = `audio-record-site-${new Date().getTime()}.mp3`;
-      formData.append("medias", blob, filename);
-      formData.append("body", filename);
-      formData.append("fromMe", true);
-
-      await api.post(`/messages/${ticketId}`, formData);
-    } catch (err) {
-      toastError(err);
-    }
-
-    setRecording(false);
-    setLoading(false);
-  };
-
-  const handleCancelAudio = async () => {
-    try {
-      await Mp3Recorder.stop().getMp3();
-      setRecording(false);
-    } catch (err) {
-      toastError(err);
-    }
-  };
-
+  
   const disableOption = () => {
-    return loading || recording || ticketStatus !== "open";
+    return loading || ticketStatus !== "open";
   };
 
   const renderReplyingMessage = (message) => {
@@ -768,12 +652,7 @@ const MessageInputCustom = (props) => {
           <ActionButtons
             inputMessage={inputMessage}
             loading={loading}
-            recording={recording}
-            ticketStatus={ticketStatus}
             handleSendMessage={handleSendMessage}
-            handleCancelAudio={handleCancelAudio}
-            handleUploadAudio={handleUploadAudio}
-            handleStartRecording={handleStartRecording}
           />
         </div>
       </Paper>

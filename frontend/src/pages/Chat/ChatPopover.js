@@ -2,7 +2,6 @@ import React, {
   useContext,
   useEffect,
   useReducer,
-  useRef,
   useState,
 } from "react";
 import { makeStyles } from "@material-ui/core/styles";
@@ -24,8 +23,6 @@ import { socketConnection } from "../../services/socket";
 import { useDate } from "../../hooks/useDate";
 import { AuthContext } from "../../context/Auth/AuthContext";
 
-import notifySound from "../../assets/chat_notify.mp3";
-import useSound from "use-sound";
 
 const useStyles = makeStyles((theme) => ({
   mainPaper: {
@@ -107,18 +104,13 @@ export default function ChatPopover() {
   const [chats, dispatch] = useReducer(reducer, []);
   const [invisible, setInvisible] = useState(true);
   const { datetimeToClient } = useDate();
-  const [play] = useSound(notifySound);
-  const soundAlertRef = useRef();
-
-  useEffect(() => {
-    soundAlertRef.current = play;
-
+    useEffect(() => {
     if (!("Notification" in window)) {
       console.log("This browser doesn't support notifications");
     } else {
       Notification.requestPermission();
     }
-  }, [play]);
+  }, []);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
@@ -143,7 +135,6 @@ export default function ChatPopover() {
         dispatch({ type: "CHANGE_CHAT", payload: data });
         if (data.newMessage.senderId !== user.id) {
           console.log(data);
-          soundAlertRef.current();
         }
       }
       if (data.action === "update") {

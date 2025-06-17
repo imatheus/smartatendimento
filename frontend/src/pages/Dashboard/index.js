@@ -15,8 +15,6 @@ import GroupIcon from "@material-ui/icons/Group";
 import AssignmentIcon from "@material-ui/icons/Assignment";
 import PersonIcon from "@material-ui/icons/Person";
 import TodayIcon from '@material-ui/icons/Today';
-import BlockIcon from '@material-ui/icons/Block';
-import DoneIcon from '@material-ui/icons/Done';
 
 import { makeStyles } from "@material-ui/core/styles";
 import { grey, blue } from "@material-ui/core/colors";
@@ -77,22 +75,84 @@ const useStyles = makeStyles((theme) => ({
 
 const Dashboard = () => {
   const classes = useStyles();
-  const [counters, setCounters] = useState({});
+  const [counters, setCounters] = useState({
+    supportPending: 0,
+    supportHappening: 0,
+    supportFinished: 0,
+    leads: 0,
+    avgSupportTime: 0,
+    avgWaitTime: 0
+  });
   const [attendants, setAttendants] = useState([]);
   const [filterType, setFilterType] = useState(1);
   const [period, setPeriod] = useState(0);
-  const [companyDueDate, setCompanyDueDate] = useState();
+  const [companyDueDate, setCompanyDueDate] = useState(null);
   const [dateFrom, setDateFrom] = useState(
     moment("1", "D").format("YYYY-MM-DD")
   );
   const [dateTo, setDateTo] = useState(moment().format("YYYY-MM-DD"));
   const [loading, setLoading] = useState(false);
+  const [companiesLoading, setCompaniesLoading] = useState(true);
   const { find } = useDashboard();
   const { finding } = useCompanies();
+
   useEffect(() => {
     async function firstLoad() {
-      await fetchData();
+      try {
+        // Set default parameters for initial load
+        const defaultParams = {
+          days: 7 // Default to last 7 days
+        };
+        
+        setLoading(true);
+        const data = await find(defaultParams);
+        
+        if (data && data.counters) {
+          setCounters(data.counters);
+        } else {
+          setCounters({
+            supportPending: 0,
+            supportHappening: 0,
+            supportFinished: 0,
+            leads: 0,
+            avgSupportTime: 0,
+            avgWaitTime: 0
+          });
+        }
+        
+        if (isArray(data.attendants)) {
+          setAttendants(data.attendants);
+        } else {
+          setAttendants([]);
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        toast.error("Erro ao carregar dashboard");
+        
+        // Set default values in case of error
+        setCounters({
+          supportPending: 0,
+          supportHappening: 0,
+          supportFinished: 0,
+          leads: 0,
+          avgSupportTime: 0,
+          avgWaitTime: 0
+        });
+        setAttendants([]);
+        setLoading(false);
+      }
     }
+    
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
+    
+    // Timeout to allow system to load properly
     setTimeout(() => {
       firstLoad();
     }, 1000);
@@ -144,14 +204,36 @@ const Dashboard = () => {
       return;
     }
 
-    const data = await find(params);
+    try {
+      const data = await find(params);
 
-
-
-    setCounters(data.counters);
-    if (isArray(data.attendants)) {
-      setAttendants(data.attendants);
-    } else {
+      setCounters(data.counters || {
+        supportPending: 0,
+        supportHappening: 0,
+        supportFinished: 0,
+        leads: 0,
+        avgSupportTime: 0,
+        avgWaitTime: 0
+      });
+      
+      if (isArray(data.attendants)) {
+        setAttendants(data.attendants);
+      } else {
+        setAttendants([]);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error("Erro ao carregar dados do dashboard");
+      
+      // Set default values in case of error
+      setCounters({
+        supportPending: 0,
+        supportHappening: 0,
+        supportFinished: 0,
+        leads: 0,
+        avgSupportTime: 0,
+        avgWaitTime: 0
+      });
       setAttendants([]);
     }
 
@@ -159,25 +241,30 @@ const Dashboard = () => {
   }
 
   useEffect(() => {
-    async function fetchData() {
-      await loadCompanies();
+    const companyId = localStorage.getItem("companyId");
+    
+    if (!companyId) {
+      return;
     }
-    fetchData();
-  }, [])
-  //let companyDueDate = localStorage.getItem("companyDueDate");
-  //const companyDueDate = localStorage.getItem("companyDueDate").toString();
-  const companyId = localStorage.getItem("companyId");
-  const loadCompanies = async () => {
-    setLoading(true);
-    try {
-      const companiesList = await finding(companyId);
-      setCompanyDueDate(moment(companiesList.dueDate).format("DD/MM/yyyy"));
-    } catch (e) {
-      console.log("🚀 Console Log : e", e);
-      // toast.error("Não foi possível carregar a lista de registros");
-    }
-    setLoading(false);
-  };
+    
+    const loadCompanies = async () => {
+      try {
+        const companiesList = await finding(companyId);
+        if (companiesList && companiesList.dueDate) {
+          setCompanyDueDate(moment(companiesList.dueDate).format("DD/MM/yyyy"));
+        } else {
+          setCompanyDueDate("N/A");
+        }
+      } catch (e) {
+        console.error("Error loading company data:", e);
+        setCompanyDueDate("Erro");
+      } finally {
+        setCompaniesLoading(false);
+      }
+    };
+
+    loadCompanies();
+  }, []) // Removido 'finding' da dependência para evitar re-execuções
 
   function formatTime(minutes) {
     return moment()
@@ -251,7 +338,7 @@ const Dashboard = () => {
               icon={<TodayIcon fontSize="inherit" />}
               title="Data Vencimento"
               value={companyDueDate}
-              loading={loading}
+              loading={companiesLoading}
             />
           </Grid>
           <Grid item xs={12}>

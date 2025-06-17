@@ -75,20 +75,22 @@ const useStyles = makeStyles((theme) => ({
 const reducer = (state, action) => {
   if (action.type === "LOAD_TICKETS") {
     const newTickets = action.payload;
+    let newState = [...state];
 
     newTickets.forEach((ticket) => {
-      const ticketIndex = state.findIndex((t) => t.id === ticket.id);
+      const ticketIndex = newState.findIndex((t) => t.id === ticket.id);
       if (ticketIndex !== -1) {
-        state[ticketIndex] = ticket;
+        newState[ticketIndex] = ticket;
         if (ticket.unreadMessages > 0) {
-          state.unshift(state.splice(ticketIndex, 1)[0]);
+          const updatedTicket = newState.splice(ticketIndex, 1)[0];
+          newState.unshift(updatedTicket);
         }
       } else {
-        state.push(ticket);
+        newState.push(ticket);
       }
     });
 
-    return [...state];
+    return newState;
   }
 
   if (action.type === "RESET_UNREAD") {
@@ -96,56 +98,68 @@ const reducer = (state, action) => {
 
     const ticketIndex = state.findIndex((t) => t.id === ticketId);
     if (ticketIndex !== -1) {
-      state[ticketIndex].unreadMessages = 0;
+      const newState = [...state];
+      newState[ticketIndex] = { ...newState[ticketIndex], unreadMessages: 0 };
+      return newState;
     }
 
-    return [...state];
+    return state;
   }
 
   if (action.type === "UPDATE_TICKET") {
     const ticket = action.payload;
 
-    const ticketIndex = state.findIndex((t) => t.id === ticket.id);
+    const ticketIndex = state.findIndex((t) => parseInt(t.id) === parseInt(ticket.id));
     if (ticketIndex !== -1) {
-      state[ticketIndex] = ticket;
+      const newState = [...state];
+      newState[ticketIndex] = ticket;
+      return newState;
     } else {
-      state.unshift(ticket);
+      const newState = [ticket, ...state];
+      return newState;
     }
-
-    return [...state];
   }
 
   if (action.type === "UPDATE_TICKET_UNREAD_MESSAGES") {
     const ticket = action.payload;
 
-    const ticketIndex = state.findIndex((t) => t.id === ticket.id);
+    const ticketIndex = state.findIndex((t) => parseInt(t.id) === parseInt(ticket.id));
     if (ticketIndex !== -1) {
-      state[ticketIndex] = ticket;
-      state.unshift(state.splice(ticketIndex, 1)[0]);
+      const newState = [...state];
+      newState[ticketIndex] = ticket;
+      // Move ticket to top if it has unread messages
+      const updatedTicket = newState.splice(ticketIndex, 1)[0];
+      newState.unshift(updatedTicket);
+      return newState;
     } else {
-      state.unshift(ticket);
+      const newState = [ticket, ...state];
+      return newState;
     }
-
-    return [...state];
   }
 
   if (action.type === "UPDATE_TICKET_CONTACT") {
     const contact = action.payload;
     const ticketIndex = state.findIndex((t) => t.contactId === contact.id);
     if (ticketIndex !== -1) {
-      state[ticketIndex].contact = contact;
+      const newState = [...state];
+      newState[ticketIndex] = { ...newState[ticketIndex], contact };
+      return newState;
     }
-    return [...state];
+    return state;
   }
 
   if (action.type === "DELETE_TICKET") {
     const ticketId = action.payload;
-    const ticketIndex = state.findIndex((t) => t.id === ticketId);
+    const ticketIndex = state.findIndex((t) => parseInt(t.id) === parseInt(ticketId));
+    console.log(`TicketsListCustom DELETE_TICKET: ticketId=${ticketId}, found at index=${ticketIndex}, current state length=${state.length}`);
     if (ticketIndex !== -1) {
-      state.splice(ticketIndex, 1);
+      const newState = [...state];
+      newState.splice(ticketIndex, 1);
+      console.log(`TicketsListCustom DELETE_TICKET: Removed ticket, new state length=${newState.length}`);
+      return newState;
     }
 
-    return [...state];
+    return state;
   }
 
   if (action.type === "RESET") {
@@ -166,9 +180,9 @@ const TicketsListCustom = (props) => {
   } = props;
   const classes = useStyles();
   const [pageNumber, setPageNumber] = useState(1);
-  const [update, setUpdate] = useState(0);
+  const [, setUpdate] = useState(0);
   const [ticketsList, dispatch] = useReducer(reducer, []);
-  const [ticketsListUpdated, setTicketsListUpdated] = useState([]);
+  const [,] = useState([]);
   const { user } = useContext(AuthContext);
   const { profile, queues } = user;
 
@@ -212,14 +226,19 @@ const TicketsListCustom = (props) => {
       ticket.queueId && selectedQueueIds.indexOf(ticket.queueId) === -1;
 
     socket.on("connect", () => {
+      console.log(`🔌 TicketsListCustom(${status}): Socket connected`);
       if (status) {
+        console.log(`🔌 TicketsListCustom(${status}): Joining tickets room: ${status}`);
         socket.emit("joinTickets", status);
       } else {
+        console.log(`🔌 TicketsListCustom(${status}): Joining notification room`);
         socket.emit("joinNotification");
       }
     });
 
     socket.on(`company-${companyId}-ticket`, (data) => {
+      console.log(`TicketsListCustom(${status}): Socket event received:`, data);
+      
       if (data.action === "updateUnread") {
         dispatch({
           type: "RESET_UNREAD",
@@ -227,26 +246,39 @@ const TicketsListCustom = (props) => {
         });
       }
 
-      if (data.action === "update" && shouldUpdateTicket(data.ticket)) {
-        dispatch({
-          type: "UPDATE_TICKET",
-          payload: data.ticket,
-        });
-      }
-
-      if (data.action === "update" && notBelongsToUserQueues(data.ticket)) {
-        dispatch({ type: "DELETE_TICKET", payload: data.ticket?.id });
+      if (data.action === "update") {
+        console.log(`🎯 TicketsListCustom(${status}): Update event - ticket status: ${data.ticket.status}, list status: ${status}, ticket ID: ${data.ticket.id}`);
+        
+        // Se o status do ticket não corresponde ao status da lista atual, remove o ticket
+        if (data.ticket.status !== status) {
+          console.log(`❌ TicketsListCustom(${status}): Deleting ticket (status changed from ${status} to ${data.ticket.status})`);
+          dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+          return;
+        }
+        
+        // Se o ticket pertence a esta lista, verifica se deve ser atualizado
+        if (shouldUpdateTicket(data.ticket)) {
+          console.log(`✅ TicketsListCustom(${status}): Updating ticket in list`);
+          dispatch({
+            type: "UPDATE_TICKET",
+            payload: data.ticket,
+          });
+        } else {
+          // Se não pertence mais ao usuário/fila, remove da lista
+          console.log(`❌ TicketsListCustom(${status}): Deleting ticket (doesn't belong to user queues)`);
+          dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+        }
       }
 
       if (data.action === "delete") {
-        dispatch({ type: "DELETE_TICKET", payload: data?.ticketId });
-        
-      }
-
-      if (data.action === "removeFromList") {
+        console.log(`TicketsListCustom(${status}): Delete event for ticket ${data.ticketId}`);
         dispatch({ type: "DELETE_TICKET", payload: data.ticketId });
       }
 
+      if (data.action === "removeFromList") {
+        console.log(`TicketsListCustom(${status}): RemoveFromList event for ticket ${data.ticketId}`);
+        dispatch({ type: "DELETE_TICKET", payload: data.ticketId });
+      }
     });
 
     socket.on(`company-${companyId}-appMessage`, (data) => {

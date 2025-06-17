@@ -154,12 +154,7 @@ const TicketsManagerTabs = () => {
     setTabOpen(newValue);
   };
 
-  const applyPanelStyle = (status) => {
-    if (tabOpen !== status) {
-      return { width: 0, height: 0 };
-    }
-  };
-
+  
   const handleCloseOrOpenTicket = (ticket) => {
     setNewTicketModalOpen(false);
     if (ticket !== undefined && ticket.uuid !== undefined) {
@@ -300,19 +295,21 @@ const TicketsManagerTabs = () => {
           />
         </Tabs>
         <Paper className={classes.ticketsWrapper}>
-          <TicketsList
-            status="open"
-            showAll={showAllTickets}
-            selectedQueueIds={selectedQueueIds}
-            updateCount={(val) => setOpenCount(val)}
-            style={applyPanelStyle("open")}
-          />
-          <TicketsList
-            status="pending"
-            selectedQueueIds={selectedQueueIds}
-            updateCount={(val) => setPendingCount(val)}
-            style={applyPanelStyle("pending")}
-          />
+          {tabOpen === "open" && (
+            <TicketsList
+              status="open"
+              showAll={showAllTickets}
+              selectedQueueIds={selectedQueueIds}
+              updateCount={(val) => setOpenCount(val)}
+            />
+          )}
+          {tabOpen === "pending" && (
+            <TicketsList
+              status="pending"
+              selectedQueueIds={selectedQueueIds}
+              updateCount={(val) => setPendingCount(val)}
+            />
+          )}
         </Paper>
       </TabPanel>
       <TabPanel value={tab} name="closed" className={classes.ticketsWrapper}>

@@ -1,7 +1,10 @@
 import fs from "fs";
 import AppError from "../../errors/AppError";
 import Ticket from "../../models/Ticket";
+import Message from "../../models/Message";
 import { sendAttachmentFromUrl } from "./graphAPI";
+import CreateMessageService from "../MessageServices/CreateMessageService";
+import { v4 as uuidv4 } from "uuid";
 // import { verifyMessage } from "./facebookMessageListener";
 
 interface Request {
@@ -18,10 +21,7 @@ export const typeAttachment = (media: Express.Multer.File) => {
   if (media.mimetype.includes("video")) {
     return "video";
   }
-  if (media.mimetype.includes("audio")) {
-    return "audio";
-  }
-
+  
   return "file";
 };
 
@@ -29,7 +29,7 @@ export const sendFacebookMessageMedia = async ({
   media,
   ticket,
   body
-}: Request): Promise<any> => {
+}: Request): Promise<Message> => {
   try {
     const type = typeAttachment(media);
 
@@ -42,12 +42,34 @@ export const sendFacebookMessageMedia = async ({
       ticket.whatsapp.facebookUserToken
     );
 
+    // Create message record in database
+    const messageData = {
+      id: uuidv4(),
+      ticketId: ticket.id,
+      contactId: undefined, // fromMe messages don't have contactId
+      body: media.originalname || media.filename,
+      fromMe: true,
+      read: true,
+      mediaType: type,
+      mediaUrl: media.filename,
+      ack: 1, // sent
+      dataJson: JSON.stringify(sendMessage)
+    };
+
+    // Update ticket's last message
     await ticket.update({ lastMessage: media.filename });
+
+    // Create message and emit socket event
+    const newMessage = await CreateMessageService({ 
+      messageData, 
+      companyId: ticket.companyId 
+    });
 
     fs.unlinkSync(media.path);
 
-    return sendMessage;
+    return newMessage;
   } catch (err) {
+    console.log("Error sending Facebook media:", err);
     throw new AppError("ERR_SENDING_FACEBOOK_MSG");
   }
 };

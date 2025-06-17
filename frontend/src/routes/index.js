@@ -29,7 +29,6 @@ import Campaigns from "../pages/Campaigns";
 import CampaignsConfig from "../pages/CampaignsConfig";
 import CampaignReport from "../pages/CampaignReport";
 import Annoucements from "../pages/Annoucements";
-import Chat from "../pages/Chat";
 import Subscription from "../pages/Subscription/";
 
 
@@ -113,8 +112,7 @@ const Routes = () => {
                   component={Subscription}
                   isPrivate
                 />
-                <Route exact path="/chats/:id?" component={Chat} isPrivate />
-                {showCampaigns && (
+                                {showCampaigns && (
                   <>
                     <Route
                       exact

@@ -91,9 +91,6 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
 
 
   } else {
-
-
-
     if (["facebook", "instagram"].includes(channel)) {
       console.log(`Checking if ${ticket.contact.number} is a valid ${channel} contact`)
       await sendFaceMessage({ body, ticket, quotedMsg });
@@ -102,7 +99,6 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     if (channel === "whatsapp") {
       await SendWhatsAppMessage({ body, ticket, quotedMsg });
     }
-
   }
 
   return res.send();
@@ -118,7 +114,7 @@ export const remove = async (
   const message = await DeleteWhatsAppMessage(messageId);
 
   const io = getIO();
-  io.to(message.ticketId.toString()).emit(`company-${companyId}-appMessage`, {
+  io.to(`ticket:${message.ticketId}`).emit(`company-${companyId}-appMessage`, {
     action: "update",
     message
   });

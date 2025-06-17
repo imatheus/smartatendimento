@@ -33,11 +33,18 @@ const useStyles = makeStyles(theme => ({
 }));
 
 export function RatingBox ({ rating }) {
-    const ratingTrunc = rating === null ? 0 : Math.trunc(rating);
+    // Handle null, undefined, or invalid rating values
+    let ratingValue = 0;
+    
+    if (rating !== null && rating !== undefined && !isNaN(rating)) {
+        ratingValue = Math.max(0, Math.min(3, Math.trunc(Number(rating))));
+    }
+    
     return <Rating
-        defaultValue={ratingTrunc}
+        value={ratingValue}
         max={3}
         readOnly
+        size="small"
     />
 }
 
@@ -46,13 +53,23 @@ export default function TableAttendantsStatus(props) {
 	const classes = useStyles();
 
     function renderList () {
+        if (!attendants || attendants.length === 0) {
+            return (
+                <TableRow>
+                    <TableCell colSpan={4} align="center" style={{ padding: '20px', color: '#666' }}>
+                        Nenhum atendente encontrado para o período selecionado
+                    </TableCell>
+                </TableRow>
+            );
+        }
+
         return attendants.map((a, k) => (
             <TableRow key={k}>
-                <TableCell>{a.name}</TableCell>
+                <TableCell>{a.name || 'Nome não disponível'}</TableCell>
                 <TableCell align="center" title="1 - Insatisfeito, 2 - Satisfeito, 3 - Muito Satisfeito" className={classes.pointer}>
                     <RatingBox rating={a.rating} />
                 </TableCell>
-                <TableCell align="center">{formatTime(a.avgSupportTime, 2)}</TableCell>
+                <TableCell align="center">{formatTime(a.avgSupportTime || 0)}</TableCell>
                 <TableCell align="center">
                     { a.online ?
                         <CheckCircleIcon className={classes.on} />
