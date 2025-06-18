@@ -425,48 +425,100 @@ const isValidMsg = (msg: proto.IWebMessageInfo): boolean => {
 const verifyQueue = async (wbot: Session, msg: proto.IWebMessageInfo, ticket: Ticket, contact: Contact) => {
   const { queues, greetingMessage } = await ShowWhatsAppService(wbot.id!, ticket.companyId);
 
-  // Debug: Log para verificar quantos setores estão sendo retornados
-  console.log(`[DEBUG] Setores encontrados: ${queues.length}`);
+  console.log(`[DEBUG QUEUE] Setores encontrados: ${queues.length}`);
   queues.forEach((queue, index) => {
-    console.log(`[DEBUG] Setor ${index + 1}: ${queue.name} (ID: ${queue.id})`);
+    console.log(`[DEBUG QUEUE] Setor ${index + 1}: ${queue.name} (ID: ${queue.id})`);
   });
 
   // Se não há setores cadastrados, não faz nada
   if (queues.length === 0) {
-    console.log(`[DEBUG] Nenhum setor encontrado, retornando...`);
+    console.log(`[DEBUG QUEUE] Nenhum setor encontrado, retornando...`);
     return;
   }
 
   const selectedOption = getBodyMessage(msg);
-  console.log(`[DEBUG] Opção selecionada pelo usuário: "${selectedOption}"`);
+  console.log(`[DEBUG QUEUE] Opção selecionada pelo usuário: "${selectedOption}"`);
   
-  const choosenQueue = queues.find((q, i) => i + 1 === +selectedOption);
-  console.log(`[DEBUG] Setor escolhido:`, choosenQueue ? `${choosenQueue.name} (ID: ${choosenQueue.id})` : 'Nenhum');
-
-  if (choosenQueue) {
-    let chatbot = false;
-    if (choosenQueue?.options) {
-      chatbot = choosenQueue?.options?.length > 0;
-    }
-    console.log(`[DEBUG] Atribuindo setor ${choosenQueue.name} ao ticket ${ticket.id}`);
+  // Verificar se o usuário selecionou uma opção válida
+  const optionNumber = parseInt(selectedOption);
+  if (selectedOption && !isNaN(optionNumber) && optionNumber >= 1 && optionNumber <= queues.length) {
+    // Usuário selecionou um setor válido
+    const choosenQueue = queues[optionNumber - 1];
+    console.log(`[DEBUG QUEUE] Setor escolhido: ${choosenQueue.name} (ID: ${choosenQueue.id})`);
+    
+    // Verificar se o setor tem opções de chatbot
+    const queueOptionsCount = await QueueOption.count({
+      where: { queueId: choosenQueue.id, parentId: null }
+    });
+    
+    const chatbot = queueOptionsCount > 0;
+    console.log(`[DEBUG QUEUE] Setor ${choosenQueue.name} tem ${queueOptionsCount} opções, chatbot: ${chatbot}`);
+    
     await UpdateTicketService({ 
       ticketData: { queueId: choosenQueue.id, chatbot }, 
       ticketId: ticket.id, 
       companyId: ticket.companyId 
     });
-  } else {
-    // SEMPRE mostrar as opções de setores para o usuário escolher
-    // Independente da quantidade de setores, o usuário deve selecionar
-    console.log(`[DEBUG] Mostrando opções de setores para o usuário`);
-    let options = "";
-    queues.forEach((queue, index) => {
-      options += `*[ ${index + 1} ]* - ${queue.name}\n`;
-    });
     
-    console.log(`[DEBUG] Mensagem que será enviada:`, `${greetingMessage}\n\n${options}`);
-    const body = formatBody(`\u200e${greetingMessage}\n\n${options}`, contact);
-    await SendWhatsAppMessage({ body, ticket });
+    console.log(`[DEBUG QUEUE] Ticket ${ticket.id} atualizado com setor ${choosenQueue.name} (chatbot: ${chatbot})`);
+    
+    // Se tem chatbot, verificar horário de funcionamento antes de mostrar opções
+    if (chatbot) {
+      const queue = await Queue.findByPk(choosenQueue.id);
+      
+      // Verificar horário de funcionamento ANTES de mostrar as opções
+      const { schedules }: any = queue;
+      const now = moment();
+      const weekday = now.format("dddd").toLowerCase();
+      let schedule;
+
+      if (Array.isArray(schedules) && schedules?.length > 0) {
+        schedule = schedules.find((s) => s.weekdayEn === weekday && s.startTime !== "" && s.startTime !== null && s.endTime !== "" && s.endTime !== null);
+      }
+
+      // Se está fora do horário e tem mensagem configurada
+      if (queue.outOfHoursMessage !== null && queue.outOfHoursMessage !== "" && !isNil(schedule)) {
+        const startTime = moment(schedule.startTime, "HH:mm");
+        const endTime = moment(schedule.endTime, "HH:mm");
+
+        if (now.isBefore(startTime) || now.isAfter(endTime)) {
+          console.log(`[DEBUG QUEUE] Fora do horário de funcionamento - enviando mensagem`);
+          const body = formatBody(`${queue.outOfHoursMessage}\n\n*[ # ]* - Voltar ao Menu Principal`, contact);
+          await SendWhatsAppMessage({ body, ticket });
+          return;
+        }
+      }
+
+      // Se está no horário, mostrar as opções do chatbot
+      const queueOptions = await QueueOption.findAll({
+        where: { queueId: choosenQueue.id, parentId: null },
+        order: [["option", "ASC"], ["createdAt", "ASC"]]
+      });
+      
+      let options = "";
+      queueOptions.forEach((option) => {
+        options += `*[ ${option.option} ]* - ${option.title}\n`;
+      });
+      options += `\n*[ # ]* - Voltar ao Menu Principal`;
+
+      const textMessage = formatBody(`\u200e${queue.greetingMessage}\n\n${options}`, contact);
+      console.log(`[DEBUG QUEUE] Enviando opções do chatbot: ${textMessage}`);
+      await SendWhatsAppMessage({ body: textMessage, ticket });
+    }
+    
+    return;
   }
+  
+  // Se chegou aqui, é primeira mensagem ou opção inválida - mostrar opções de setores
+  console.log(`[DEBUG QUEUE] Primeira mensagem ou opção inválida - mostrando opções de setores`);
+  let options = "";
+  queues.forEach((queue, index) => {
+    options += `*[ ${index + 1} ]* - ${queue.name}\n`;
+  });
+  
+  const body = formatBody(`\u200e${greetingMessage}\n\n${options}`, contact);
+  console.log(`[DEBUG QUEUE] Enviando opções de setores: ${body}`);
+  await SendWhatsAppMessage({ body, ticket });
 };
 
 const handleChatbot = async (
@@ -475,93 +527,42 @@ const handleChatbot = async (
   wbot: Session, 
   dontReadTheFirstQuestion: boolean = false
 ): Promise<void> => {
-  const queue = await Queue.findByPk(ticket.queueId, {
-    include: [
-      {
-        model: QueueOption,
-        as: "options",
-        where: { parentId: null },
-        order: [
-          ["option", "ASC"],
-          ["createdAt", "ASC"],
-        ],
-      },
-    ],
-  });
-
-  if (ticket.queue !== null) {
-    const queue = await Queue.findByPk(ticket.queueId);
-    const { schedules }: any = queue;
-    const now = moment();
-    const weekday = now.format("dddd").toLowerCase();
-    let schedule;
-
-    if (Array.isArray(schedules) && schedules?.length > 0) {
-      schedule = schedules.find((s) => s.weekdayEn === weekday && s.startTime !== "" && s.startTime !== null && s.endTime !== "" && s.endTime !== null);
-    }
-
-    if (ticket.queue.outOfHoursMessage !== null && ticket.queue.outOfHoursMessage !== "" && !isNil(schedule)) {
-      const startTime = moment(schedule.startTime, "HH:mm");
-      const endTime = moment(schedule.endTime, "HH:mm");
-
-      if (now.isBefore(startTime) || now.isAfter(endTime)) {
-        const body = formatBody(`${ticket.queue.outOfHoursMessage}\n\n*[ # ]* - Voltar ao Menu Principal`, ticket.contact);
-        await SendWhatsAppMessage({ body, ticket });
-        return;
-      }
-
-      const body = formatBody(`\u200e${ticket.queue.greetingMessage}`, ticket.contact);
-      await SendWhatsAppMessage({ body, ticket });
-    }
+  console.log(`[DEBUG CHATBOT] Iniciando handleChatbot para ticket ${ticket.id}, queueId: ${ticket.queueId}, queueOptionId: ${ticket.queueOptionId}`);
+  
+  // Buscar a fila sem filtro de parentId para evitar problemas
+  const queue = await Queue.findByPk(ticket.queueId);
+  
+  if (!queue) {
+    console.log(`[DEBUG CHATBOT] Queue não encontrada para ID: ${ticket.queueId}`);
+    return;
   }
 
-  const messageBody = getBodyMessage(msg);
+  console.log(`[DEBUG CHATBOT] Queue encontrada: ${queue.name}, greetingMessage: "${queue.greetingMessage}"`);
 
+  // A verificação de horário de funcionamento foi movida para verifyQueue
+  // para ser executada imediatamente após a seleção do setor
+
+  const messageBody = getBodyMessage(msg);
+  console.log(`[DEBUG CHATBOT] Mensagem do usuário: "${messageBody}"`);
+
+  // Voltar para o menu inicial
   if (messageBody == "#") {
-    // voltar para o menu inicial
+    console.log(`[DEBUG CHATBOT] Usuário escolheu voltar ao menu inicial`);
     await ticket.update({ queueOptionId: null, chatbot: false, queueId: null });
+    
+    // Recarregar o ticket para garantir que as mudanças foram aplicadas
+    await ticket.reload();
+    console.log(`[DEBUG CHATBOT] Ticket resetado - queueId: ${ticket.queueId}, chatbot: ${ticket.chatbot}`);
+    
     await verifyQueue(wbot, msg, ticket, ticket.contact);
     return;
   }
 
-  // voltar para o menu anterior
-  if (!isNil(queue) && !isNil(ticket.queueOptionId) && messageBody == "#") {
-    const option = await QueueOption.findByPk(ticket.queueOptionId);
-    await ticket.update({ queueOptionId: option?.parentId });
-
-    // escolheu uma opção
-  } else if (!isNil(queue) && !isNil(ticket.queueOptionId)) {
-    const count = await QueueOption.count({
-      where: { parentId: ticket.queueOptionId },
-    });
-    let option: any = {};
-    if (count == 1) {
-      option = await QueueOption.findOne({
-        where: { parentId: ticket.queueOptionId },
-      });
-    } else {
-      option = await QueueOption.findOne({
-        where: {
-          option: messageBody || "",
-          parentId: ticket.queueOptionId,
-        },
-      });
-    }
-    if (option) {
-      await ticket.update({ queueOptionId: option?.id });
-    }
-
-    // não leu a primeira pergunta
-  } else if (!isNil(queue) && isNil(ticket.queueOptionId) && !dontReadTheFirstQuestion) {
-    const option = queue?.options.find((o) => o.option == messageBody);
-    if (option) {
-      await ticket.update({ queueOptionId: option?.id });
-    }
-  }
-
-  await ticket.reload();
-
-  if (!isNil(queue) && isNil(ticket.queueOptionId)) {
+  // Se o ticket não tem queueOptionId, é a primeira interação com o chatbot
+  if (isNil(ticket.queueOptionId)) {
+    console.log(`[DEBUG CHATBOT] Primeira interação com chatbot - buscando opções principais`);
+    
+    // Buscar opções principais (parentId = null)
     const queueOptions = await QueueOption.findAll({
       where: { queueId: ticket.queueId, parentId: null },
       order: [
@@ -570,22 +571,49 @@ const handleChatbot = async (
       ],
     });
 
-    const botText = async () => {
-      let options = "";
+    console.log(`[DEBUG CHATBOT] Opções principais encontradas: ${queueOptions.length}`);
+    queueOptions.forEach(option => {
+      console.log(`[DEBUG CHATBOT] - Opção: ${option.option}, Título: ${option.title}`);
+    });
 
+    // Se o usuário enviou uma mensagem, verificar se corresponde a uma opção
+    if (messageBody && !dontReadTheFirstQuestion) {
+      const selectedOption = queueOptions.find((o) => o.option == messageBody);
+      if (selectedOption) {
+        console.log(`[DEBUG CHATBOT] Opção selecionada: ${selectedOption.option} - ${selectedOption.title}`);
+        await ticket.update({ queueOptionId: selectedOption.id });
+        
+        // Enviar mensagem de confirmação da opç��o selecionada
+        const confirmationBody = formatBody(`\u200e${selectedOption.message}\n\n*[ # ]* - Voltar ao Menu Principal`, ticket.contact);
+        await SendWhatsAppMessage({ body: confirmationBody, ticket });
+        return;
+      } else {
+        console.log(`[DEBUG CHATBOT] Opção inválida selecionada: ${messageBody}`);
+      }
+    }
+
+    // Mostrar opções principais
+    if (queueOptions.length > 0) {
+      let options = "";
       queueOptions.forEach((option, i) => {
         options += `*[ ${option.option} ]* - ${option.title}\n`;
       });
-      options += `\n*[ # ]* - Voltar Menu Inicial`;
+      options += `\n*[ # ]* - Voltar ao Menu Principal`;
 
       const textMessage = formatBody(`\u200e${queue.greetingMessage}\n\n${options}`, ticket.contact);
+      console.log(`[DEBUG CHATBOT] Enviando opções principais: ${textMessage}`);
       await SendWhatsAppMessage({ body: textMessage, ticket });
-    };
-    return botText();
+    } else {
+      console.log(`[DEBUG CHATBOT] Nenhuma opção encontrada para a queue ${queue.id}`);
+      // Se não há opções, desabilitar chatbot
+      await ticket.update({ chatbot: false });
+    }
 
-  } else if (!isNil(queue) && !isNil(ticket.queueOptionId)) {
-    const currentOption = await QueueOption.findByPk(ticket.queueOptionId);
-    const queueOptions = await QueueOption.findAll({
+  } else {
+    console.log(`[DEBUG CHATBOT] Usuário já tem queueOptionId: ${ticket.queueOptionId}`);
+    
+    // Verificar se há sub-opções
+    const subOptions = await QueueOption.findAll({
       where: { parentId: ticket.queueOptionId },
       order: [
         ["option", "ASC"],
@@ -593,20 +621,43 @@ const handleChatbot = async (
       ],
     });
 
-    if (queueOptions?.length > 1) {
-      const botText = async () => {
-        let options = "";
+    console.log(`[DEBUG CHATBOT] Sub-opções encontradas: ${subOptions.length}`);
 
-        queueOptions.forEach((option, i) => {
-          options += `*[ ${option.option} ]* - ${option.title}\n`;
-        });
-        options += `\n*[ # ]* - Voltar Menu Inicial`;
+    if (subOptions.length > 0) {
+      // Se o usuário enviou uma mensagem, verificar se corresponde a uma sub-opção
+      if (messageBody) {
+        const selectedSubOption = subOptions.find((o) => o.option == messageBody);
+        if (selectedSubOption) {
+          console.log(`[DEBUG CHATBOT] Sub-opção selecionada: ${selectedSubOption.option} - ${selectedSubOption.title}`);
+          await ticket.update({ queueOptionId: selectedSubOption.id });
+          
+          // Enviar mensagem de confirmação da sub-opção
+          const confirmationBody = formatBody(`\u200e${selectedSubOption.message}\n\n*[ # ]* - Voltar ao Menu Principal`, ticket.contact);
+          await SendWhatsAppMessage({ body: confirmationBody, ticket });
+          return;
+        } else if (messageBody == "#") {
+          // Voltar para o menu anterior
+          const currentOption = await QueueOption.findByPk(ticket.queueOptionId);
+          await ticket.update({ queueOptionId: currentOption?.parentId });
+          return;
+        }
+      }
 
-        const body = formatBody(`\u200e${currentOption.message}\n\n${options}`, ticket.contact);
-        await SendWhatsAppMessage({ body, ticket });
-      };
+      // Mostrar sub-opções
+      const currentOption = await QueueOption.findByPk(ticket.queueOptionId);
+      let options = "";
+      subOptions.forEach((option, i) => {
+        options += `*[ ${option.option} ]* - ${option.title}\n`;
+      });
+      options += `\n*[ # ]* - Voltar ao Menu Principal`;
 
-      return botText();
+      const body = formatBody(`\u200e${currentOption?.message || 'Escolha uma opção:'}\n\n${options}`, ticket.contact);
+      console.log(`[DEBUG CHATBOT] Enviando sub-opções: ${body}`);
+      await SendWhatsAppMessage({ body, ticket });
+    } else {
+      console.log(`[DEBUG CHATBOT] Nenhuma sub-opção encontrada, finalizando chatbot`);
+      // Se não há sub-opções, o chatbot terminou sua função
+      // Manter o ticket na fila para atendimento humano
     }
   }
 };
@@ -620,12 +671,21 @@ const handleMessage = async (msg: proto.IWebMessageInfo, wbot: Session, companyI
     const isGroup = msg.key.remoteJid?.endsWith("@g.us");
     const bodyMessage = getBodyMessage(msg);
 
+    console.log(`[DEBUG MAIN] Processando mensagem: "${bodyMessage}"`);
+
+    // Ignorar mensagens do próprio bot ou mensagens com caracteres especiais
     if (msg.key.fromMe) {
-      if (/\u200e/.test(bodyMessage)) return;
-      msgContact = await getContactMessage(msg, wbot);
-    } else {
-      msgContact = await getContactMessage(msg, wbot);
+      console.log(`[DEBUG MAIN] Mensagem do bot ignorada`);
+      return;
     }
+
+    // Ignorar mensagens que começam com caracteres especiais (mensagens do bot)
+    if (bodyMessage && (/\u200e/.test(bodyMessage) || bodyMessage.includes('*[') || bodyMessage.startsWith('‎'))) {
+      console.log(`[DEBUG MAIN] Mensagem com caracteres especiais ignorada: "${bodyMessage}"`);
+      return;
+    }
+
+    msgContact = await getContactMessage(msg, wbot);
 
     if (isGroup) {
       const grupoMeta = await wbot.groupMetadata(msg.key.remoteJid, false);
@@ -637,6 +697,8 @@ const handleMessage = async (msg: proto.IWebMessageInfo, wbot: Session, companyI
     const contact = await verifyContact(msgContact, wbot, companyId);
     const ticket = await FindOrCreateTicketService(contact, wbot.id!, 0, companyId, groupContact);
 
+    console.log(`[DEBUG MAIN] Ticket ID: ${ticket.id}, queueId: ${ticket.queueId}, chatbot: ${ticket.chatbot}, userId: ${ticket.userId}`);
+
     const hasMedia = msg.message?.imageMessage || msg.message?.videoMessage || msg.message?.documentMessage || msg.message.stickerMessage;
 
     if (hasMedia) {
@@ -645,8 +707,11 @@ const handleMessage = async (msg: proto.IWebMessageInfo, wbot: Session, companyI
       await verifyMessage(msg, ticket, contact);
     }
 
-    if (!ticket.queue && !isGroup && !msg.key.fromMe && !ticket.userId && whatsapp.queues.length >= 1) {
+    // Verificar se precisa mostrar opções de setores (apenas se não tem setor atribuído)
+    if (!ticket.queueId && !isGroup && !msg.key.fromMe && !ticket.userId && whatsapp.queues.length >= 1) {
+      console.log(`[DEBUG MAIN] Ticket sem setor - chamando verifyQueue`);
       await verifyQueue(wbot, msg, ticket, contact);
+      return; // Importante: retornar aqui para não continuar o processamento
     }
 
     // Reload ticket to get updated queue information
@@ -654,15 +719,18 @@ const handleMessage = async (msg: proto.IWebMessageInfo, wbot: Session, companyI
       include: [{ model: Queue, as: "queue" }, { model: User, as: "user" }, { model: Contact, as: "contact" }]
     });
 
-    const dontReadTheFirstQuestion = ticket.queue === null;
+    console.log(`[DEBUG MAIN] Após reload - queueId: ${ticket.queueId}, chatbot: ${ticket.chatbot}, queue: ${ticket.queue?.name}`);
 
-    // Handle chatbot logic for queues with options
+    // Handle chatbot logic for queues with options (apenas se tem setor e chatbot ativo)
     if (ticket.queue && ticket.chatbot && !msg.key.fromMe) {
-      await handleChatbot(ticket, msg, wbot, dontReadTheFirstQuestion);
+      console.log(`[DEBUG MAIN] Chamando handleChatbot para setor ${ticket.queue.name}`);
+      await handleChatbot(ticket, msg, wbot, false);
+      return; // Importante: retornar aqui para não continuar o processamento
     }
 
     // Handle provider logic for automated responses (like boleto, etc.)
     if (ticket.queue && !msg.key.fromMe) {
+      console.log(`[DEBUG MAIN] Chamando provider para setor ${ticket.queue.name}`);
       await provider(ticket, msg, companyId, contact, wbot as WASocket);
     }
   } catch (err) {

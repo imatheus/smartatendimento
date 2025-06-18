@@ -230,8 +230,6 @@ const verifyQueue = async (
   }
 
   const selectedOption = message;
-  const choosenQueue = queues[+selectedOption - 1];
-
   const companyId = ticket.companyId;
 
   const botText = async () => {
@@ -248,6 +246,15 @@ const verifyQueue = async (
       body: textMessage
     })
   };
+
+  // Se é a primeira mensagem (ticket sem queue), sempre mostrar as opções
+  if (!ticket.queueId) {
+    await botText();
+    return;
+  }
+
+  // Se já tem queue definido, processar a seleção do usuário
+  const choosenQueue = queues[+selectedOption - 1];
 
   if (choosenQueue) {
     let chatbot = false;
@@ -301,8 +308,7 @@ const verifyQueue = async (
     }
 
   } else {
-    // SEMPRE mostrar as opções de setores para o usuário escolher
-    // Independente da quantidade de setores, o usuário deve selecionar
+    // Opção inválida - mostrar as opções novamente
     await botText();
   }
 
@@ -598,7 +604,7 @@ export const handleMessage = async (
       console.log(e);
     }
 
-    if (!ticket.queue && !fromMe && !ticket.userId && getSession?.queues?.length >= 1) {
+    if (!ticket.queueId && !fromMe && !ticket.userId && getSession?.queues?.length >= 1) {
       await verifyQueue(getSession, message, ticket, ticket.contact);
     }
 
