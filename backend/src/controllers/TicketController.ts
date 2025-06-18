@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getIO } from "../libs/socket";
 import Ticket from "../models/Ticket";
+import AppError from "../errors/AppError";
 
 import CreateTicketService from "../services/TicketServices/CreateTicketService";
 import DeleteTicketService from "../services/TicketServices/DeleteTicketService";
@@ -126,17 +127,40 @@ export const update = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { ticketId } = req.params;
-  const ticketData: TicketData = req.body;
-  const { companyId } = req.user;
+  try {
+    const { ticketId } = req.params;
+    const ticketData: TicketData = req.body;
+    const { companyId } = req.user;
 
-  const { ticket } = await UpdateTicketService({
-    ticketData,
-    ticketId,
-    companyId
-  });
+    const result = await UpdateTicketService({
+      ticketData,
+      ticketId,
+      companyId
+    });
 
-  return res.status(200).json(ticket);
+    // Check if result exists and has ticket property
+    if (!result || !result.ticket) {
+      return res.status(400).json({ error: "Failed to update ticket" });
+    }
+
+    const { ticket } = result;
+    return res.status(200).json(ticket);
+  } catch (error) {
+    console.error("Error updating ticket:", error);
+    
+    // Handle AppError instances with their specific status code and message
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ 
+        error: error.message
+      });
+    }
+    
+    // Handle other errors as internal server errors
+    return res.status(500).json({ 
+      error: "Internal server error", 
+      message: error.message || "Failed to update ticket"
+    });
+  }
 };
 
 export const remove = async (

@@ -14,6 +14,7 @@ import GetTicketWbot from "../../helpers/GetTicketWbot";
 import { verifyMessage } from "../WbotServices/wbotMessageListener";
 import { isNil } from "lodash";
 import sendFaceMessage from "../FacebookServices/sendFacebookMessage";
+import AppError from "../../errors/AppError";
 
 interface TicketData {
   status?: string;
@@ -71,6 +72,11 @@ const UpdateTicketService = async ({
     const oldStatus = ticket.status;
     const oldUserId = ticket.user?.id;
     const oldQueueId = ticket.queueId;
+
+    // Validação: Impedir aceitar ticket sem setor selecionado
+    if (status === "open" && !ticket.queueId) {
+      throw new AppError("Não é possível aceitar um ticket sem fila", 400);
+    }
 
     if (oldStatus === "closed") {
       await CheckContactOpenTickets(ticket.contact.id);
@@ -240,6 +246,7 @@ const UpdateTicketService = async ({
     return { ticket, oldStatus, oldUserId };
   } catch (err) {
     Sentry.captureException(err);
+    throw err; // Re-throw the error so it can be handled by the controller
   }
 };
 
