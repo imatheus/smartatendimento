@@ -319,7 +319,6 @@ const messages = {
           administration: "Administração",
           users: "Usuários",
           settings: "Configurações",
-          helps: "Ajuda",
           messagesAPI: "API",
           schedules: "Agendamentos",
           campaigns: "Campanhas",
@@ -525,9 +524,6 @@ const messages = {
           deleteMessage:
             "Todos os dados do usuário serão perdidos. Os atendimento abertos deste usuário serão movidos para o setor.",
         },
-      },
-      helps: {
-        title: "Central de Ajuda",
       },
       schedules: {
         title: "Agendamentos",

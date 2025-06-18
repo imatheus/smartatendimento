@@ -10,14 +10,13 @@ import {
     TableCell,
     TableRow,
     IconButton,
-    FormControlLabel,
-    Checkbox,
     Typography,
     Box
 } from "@material-ui/core";
 import { Formik, Form, Field } from 'formik';
 import ButtonWithSpinner from "../ButtonWithSpinner";
 import ConfirmationModal from "../ConfirmationModal";
+import BlackToggleSwitch from "../BlackToggleSwitch";
 import { Edit as EditIcon } from "@material-ui/icons";
 
 import { toast } from "react-toastify";
@@ -167,15 +166,11 @@ export function PlanManagerForm(props) {
                         <Grid xs={12} sm={4} md={4} item>
                             <Field name="useWhatsapp">
                                 {({ field }) => (
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                {...field}
-                                                checked={field.value}
-                                                color="primary"
-                                            />
-                                        }
+                                    <BlackToggleSwitch
                                         label="WhatsApp"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        name={field.name}
                                     />
                                 )}
                             </Field>
@@ -183,15 +178,11 @@ export function PlanManagerForm(props) {
                         <Grid xs={12} sm={4} md={4} item>
                             <Field name="useFacebook">
                                 {({ field }) => (
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                {...field}
-                                                checked={field.value}
-                                                color="primary"
-                                            />
-                                        }
+                                    <BlackToggleSwitch
                                         label="Facebook"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        name={field.name}
                                     />
                                 )}
                             </Field>
@@ -199,15 +190,11 @@ export function PlanManagerForm(props) {
                         <Grid xs={12} sm={4} md={4} item>
                             <Field name="useInstagram">
                                 {({ field }) => (
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                {...field}
-                                                checked={field.value}
-                                                color="primary"
-                                            />
-                                        }
+                                    <BlackToggleSwitch
                                         label="Instagram"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        name={field.name}
                                     />
                                 )}
                             </Field>

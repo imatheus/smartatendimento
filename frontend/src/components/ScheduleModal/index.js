@@ -131,7 +131,7 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 				toastError(err);
 			}
 		}
-	}, [scheduleId, contactId, open, user]);
+	}, [scheduleId, contactId, open, user, initialState, initialContact]);
 
 	const handleClose = () => {
 		onClose();

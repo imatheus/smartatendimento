@@ -13,6 +13,8 @@ import FindAllInvoiceService from "../services/InvoicesService/FindAllInvoiceSer
 import ListInvoicesServices from "../services/InvoicesService/ListInvoicesServices";
 import ShowInvoceService from "../services/InvoicesService/ShowInvoiceService";
 import UpdateInvoiceService from "../services/InvoicesService/UpdateInvoiceService";
+import CreateInvoiceService from "../services/InvoicesService/CreateInvoiceService";
+import GenerateInvoicesService from "../services/InvoicesService/GenerateInvoicesService";
 
 type IndexQuery = {
   searchParam: string;
@@ -31,6 +33,13 @@ type StorePlanData = {
 type UpdateInvoiceData = {
   status: string;
   id?: string;
+};
+
+type CreateInvoiceData = {
+  companyId: number;
+  detail?: string;
+  value?: number;
+  dueDate?: string;
 };
 
 export const index = async (req: Request, res: Response): Promise<Response> => {

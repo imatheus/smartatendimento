@@ -1,4 +1,4 @@
-import { Op, fn, where, col, Filterable, Includeable } from "sequelize";
+import { Op, fn, where, col, Filterable, Includeable, literal } from "sequelize";
 import { startOfDay, endOfDay, parseISO } from "date-fns";
 
 import Ticket from "../../models/Ticket";
@@ -9,7 +9,6 @@ import User from "../../models/User";
 import ShowUserService from "../UserServices/ShowUserService";
 import Tag from "../../models/Tag";
 import TicketTag from "../../models/TicketTag";
-import { intersection } from "lodash";
 import Whatsapp from "../../models/Whatsapp";
 
 interface Request {
@@ -54,8 +53,6 @@ const ListTicketsService = async ({
   // Construir condição de queue baseada na presença de "no-queue"
   let queueCondition;
   if (includeNoQueue && numericQueueIds.length > 0) {
-    // Se tem "no-queue" E setores específicos, incluir ambos
-    // NUNCA incluir "no-queue" no IN, apenas IDs numéricos
     queueCondition = { 
       [Op.or]: [
         { [Op.in]: numericQueueIds }, 
@@ -63,28 +60,23 @@ const ListTicketsService = async ({
       ] 
     };
   } else if (includeNoQueue) {
-    // Se tem apenas "no-queue", mostrar apenas tickets sem fila
     queueCondition = { [Op.is]: null };
   } else if (numericQueueIds.length > 0) {
-    // Se tem apenas setores específicos, mostrar apenas esses setores
-    // NUNCA incluir "no-queue" no IN, apenas IDs numéricos
     queueCondition = { [Op.in]: numericQueueIds };
   } else {
-    // Se nenhum checkbox está marcado, mostrar todos os tickets (com e sem fila)
-    queueCondition = null; // Sem filtro de queue
+    queueCondition = null;
   }
 
   let whereCondition: Filterable["where"] = {
     [Op.or]: [{ userId }, { status: "pending" }]
   };
   
-  // Só adicionar filtro de queueId se houver condição
   if (queueCondition !== null) {
     (whereCondition as any).queueId = queueCondition;
   }
-  let includeCondition: Includeable[];
 
-  includeCondition = [
+  // Otimização: Incluir apenas campos necessários
+  let includeCondition: Includeable[] = [
     {
       model: Contact,
       as: "contact",
@@ -116,7 +108,7 @@ const ListTicketsService = async ({
     if (queueCondition !== null) {
       whereCondition = { queueId: queueCondition };
     } else {
-      whereCondition = {}; // Sem filtros quando showAll e nenhum queue selecionado
+      whereCondition = {};
     }
   }
 
@@ -130,6 +122,7 @@ const ListTicketsService = async ({
   if (searchParam) {
     const sanitizedSearchParam = searchParam.toLocaleLowerCase().trim();
 
+    // Otimização: Incluir mensagens apenas quando necessário
     includeCondition = [
       ...includeCondition,
       {
@@ -172,6 +165,7 @@ const ListTicketsService = async ({
 
   if (date) {
     whereCondition = {
+      ...whereCondition,
       createdAt: {
         [Op.between]: [+startOfDay(parseISO(date)), +endOfDay(parseISO(date))]
       }
@@ -180,6 +174,7 @@ const ListTicketsService = async ({
 
   if (updatedAt) {
     whereCondition = {
+      ...whereCondition,
       updatedAt: {
         [Op.between]: [
           +startOfDay(parseISO(updatedAt)),
@@ -193,7 +188,6 @@ const ListTicketsService = async ({
     const user = await ShowUserService(userId);
     const userQueueIds = user.queues.map(queue => queue.id);
 
-    // Para withUnreadMessages, usar as filas do usuário ao invés das selecionadas
     let userQueueCondition;
     if (userQueueIds.length > 0) {
       userQueueCondition = { [Op.or]: [{ [Op.in]: userQueueIds }, { [Op.is]: null }] };
@@ -208,25 +202,22 @@ const ListTicketsService = async ({
     };
   }
 
+  // Otimização: Filtro de tags usando EXISTS ao invés de múltiplas queries
   if (Array.isArray(tags) && tags.length > 0) {
-    // Otimização: usar subquery ao invés de múltiplas queries
-    const ticketTagsSubquery = `
-      SELECT "ticketId" FROM "TicketTags" 
-      WHERE "tagId" IN (${tags.map(() => '?').join(',')})
-      GROUP BY "ticketId"
-      HAVING COUNT(DISTINCT "tagId") = ?
-    `;
-    
     whereCondition = {
       ...whereCondition,
-      id: {
-        [Op.in]: literal(`(${ticketTagsSubquery})`)
-      }
+      [Op.and]: [
+        literal(`EXISTS (
+          SELECT 1 FROM "TicketTags" tt 
+          WHERE tt."ticketId" = "Ticket"."id" 
+          AND tt."tagId" IN (${tags.join(',')})
+        )`)
+      ]
     };
   }
 
+  // Otimização: Filtro direto de usuários
   if (Array.isArray(users) && users.length > 0) {
-    // Otimização: filtro direto ao invés de queries separadas
     whereCondition = {
       ...whereCondition,
       userId: {

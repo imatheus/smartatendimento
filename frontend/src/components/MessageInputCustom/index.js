@@ -5,7 +5,6 @@ import { Picker } from "emoji-mart";
 import clsx from "clsx";
 
 import { makeStyles } from "@material-ui/core/styles";
-import Paper from "@material-ui/core/Paper";
 import InputBase from "@material-ui/core/InputBase";
 import { green } from "@material-ui/core/colors";
 import AttachFileIcon from "@material-ui/icons/AttachFile";
@@ -14,9 +13,8 @@ import MoodIcon from "@material-ui/icons/Mood";
 import SendIcon from "@material-ui/icons/Send";
 import CancelIcon from "@material-ui/icons/Cancel";
 import ClearIcon from "@material-ui/icons/Clear";
-import { FormControlLabel, Switch } from "@material-ui/core";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import { isString, isEmpty, isObject, has } from "lodash";
+import FlashOnIcon from "@material-ui/icons/FlashOn";
+import { FormControlLabel, Switch, Menu, MenuItem, ListItemText, Divider, Popper, Paper, ClickAwayListener } from "@material-ui/core";
 
 import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
@@ -143,6 +141,40 @@ const useStyles = makeStyles((theme) => ({
     color: "#6bcbef",
     fontWeight: 500,
   },
+
+  quickMessagesMenu: {
+    maxHeight: 300,
+    "& .MuiMenuItem-root": {
+      whiteSpace: "normal",
+      wordBreak: "break-word",
+    },
+  },
+
+  shortcodeChip: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: "50px",
+    padding: "4px 12px",
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    color: "#666",
+    display: "inline-block",
+    marginBottom: "4px",
+  },
+
+  autocompletePopper: {
+    zIndex: 1300,
+    maxWidth: 350,
+  },
+
+  autocompletePaper: {
+    maxHeight: 200,
+    overflow: "auto",
+    "& .MuiMenuItem-root": {
+      whiteSpace: "normal",
+      wordBreak: "break-word",
+      padding: "8px 16px",
+    },
+  },
 }));
 
 const EmojiOptions = (props) => {
@@ -195,6 +227,73 @@ const SignSwitch = (props) => {
     );
   }
   return null;
+};
+
+const QuickMessagesButton = (props) => {
+  const { disabled, quickMessages, onSelectMessage } = props;
+  const classes = useStyles();
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSelectMessage = (message) => {
+    onSelectMessage(message);
+    handleClose();
+  };
+
+  return (
+    <>
+      <IconButton
+        aria-label="quickMessages"
+        component="span"
+        disabled={disabled}
+        onClick={handleClick}
+      >
+        <FlashOnIcon className={classes.sendMessageIcons} />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        keepMounted
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        className={classes.quickMessagesMenu}
+        PaperProps={{
+          style: {
+            maxHeight: 300,
+            width: '350px',
+          },
+        }}
+      >
+        {quickMessages.length === 0 ? (
+          <MenuItem disabled>
+            <ListItemText primary="Nenhuma mensagem rápida cadastrada" />
+          </MenuItem>
+        ) : (
+          quickMessages.map((message, index) => [
+            <MenuItem key={`item-${index}`} onClick={() => handleSelectMessage(message.value)}>
+              <ListItemText
+                primary={
+                  <div>
+                    <span className={classes.shortcodeChip}>
+                      {message.shortcode}
+                    </span>
+                  </div>
+                }
+                secondary={message.message.length > 50 ? `${message.message.substring(0, 50)}...` : message.message}
+              />
+            </MenuItem>,
+            index < quickMessages.length - 1 && <Divider key={`divider-${index}`} />
+          ]).flat().filter(Boolean)
+        )}
+      </Menu>
+    </>
+  );
 };
 
 const FileInput = (props) => {
@@ -256,58 +355,64 @@ const CustomInput = (props) => {
     handleSendMessage,
     handleInputPaste,
     disableOption,
+    quickMessages,
   } = props;
   const classes = useStyles();
-  const [quickMessages, setQuickMessages] = useState([]);
-  const [options, setOptions] = useState([]);
-  const [popupOpen, setPopupOpen] = useState(false);
-
-  const { user } = useContext(AuthContext);
-
-  const { list: listQuickMessages } = useQuickMessages();
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [filteredMessages, setFilteredMessages] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
-    async function fetchData() {
-      const companyId = localStorage.getItem("companyId");
-      const messages = await listQuickMessages({ companyId, userId: user.id });
-      const options = messages.map((m) => {
-        let truncatedMessage = m.message;
-        if (isString(truncatedMessage) && truncatedMessage.length > 35) {
-          truncatedMessage = m.message.substring(0, 35) + "...";
-        }
-        return {
-          value: m.message,
-          label: `/${m.shortcode} - ${truncatedMessage}`,
-        };
-      });
-      setQuickMessages(options);
-    }
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (
-      isString(inputMessage) &&
-      !isEmpty(inputMessage) &&
-      inputMessage.length > 1
-    ) {
-      const firstWord = inputMessage.charAt(0);
-      setPopupOpen(firstWord.indexOf("/") > -1);
-
-      const filteredOptions = quickMessages.filter(
-        (m) => m.label.indexOf(inputMessage) > -1
+    if (inputMessage.startsWith('/') && inputMessage.length > 1) {
+      const searchTerm = inputMessage.substring(1).toLowerCase();
+      const filtered = quickMessages.filter(msg => 
+        msg.shortcode.toLowerCase().includes(searchTerm)
       );
-      setOptions(filteredOptions);
+      setFilteredMessages(filtered);
+      setShowAutocomplete(filtered.length > 0);
+      setSelectedIndex(-1);
     } else {
-      setPopupOpen(false);
+      setShowAutocomplete(false);
+      setFilteredMessages([]);
+      setSelectedIndex(-1);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputMessage]);
+  }, [inputMessage, quickMessages]);
 
   const onKeyPress = (e) => {
     if (loading || e.shiftKey) return;
-    else if (e.key === "Enter") {
+    
+    if (showAutocomplete && filteredMessages.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < filteredMessages.length - 1 ? prev + 1 : 0
+        );
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev > 0 ? prev - 1 : filteredMessages.length - 1
+        );
+        return;
+      }
+      if (e.key === "Tab" || e.key === "Enter") {
+        e.preventDefault();
+        if (selectedIndex >= 0) {
+          handleSelectAutocomplete(filteredMessages[selectedIndex]);
+        } else if (filteredMessages.length > 0) {
+          handleSelectAutocomplete(filteredMessages[0]);
+        }
+        return;
+      }
+      if (e.key === "Escape") {
+        setShowAutocomplete(false);
+        return;
+      }
+    }
+    
+    if (e.key === "Enter") {
       handleSendMessage();
     }
   };
@@ -329,57 +434,72 @@ const CustomInput = (props) => {
     if (input) {
       input.focus();
       inputRef.current = input;
+      setAnchorEl(input);
     }
+  };
+
+  const handleInputChange = (e) => {
+    setInputMessage(e.target.value);
+  };
+
+  const handleSelectAutocomplete = (message) => {
+    setInputMessage(message.message);
+    setShowAutocomplete(false);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const handleClickAway = () => {
+    setShowAutocomplete(false);
   };
 
   return (
     <div className={classes.messageInputWrapper}>
-      <Autocomplete
-        freeSolo
-        open={popupOpen}
-        id="grouped-demo"
+      <InputBase
+        disabled={disableOption()}
+        inputRef={setInputRef}
+        placeholder={renderPlaceholder()}
+        multiline
+        className={classes.messageInput}
+        maxRows={5}
         value={inputMessage}
-        options={options}
-        closeIcon={null}
-        getOptionLabel={(option) => {
-          if (isObject(option)) {
-            return option.label;
-          } else {
-            return option;
-          }
-        }}
-        onChange={(event, opt) => {
-          if (isObject(opt) && has(opt, "value")) {
-            setInputMessage(opt.value);
-            setTimeout(() => {
-              inputRef.current.scrollTop = inputRef.current.scrollHeight;
-            }, 200);
-          }
-        }}
-        onInputChange={(event, opt, reason) => {
-          if (reason === "input") {
-            setInputMessage(event.target.value);
-          }
-        }}
+        onChange={handleInputChange}
+        onKeyDown={onKeyPress}
         onPaste={onPaste}
-        onKeyPress={onKeyPress}
-        style={{ width: "100%" }}
-        renderInput={(params) => {
-          const { InputLabelProps, InputProps, ...rest } = params;
-          return (
-            <InputBase
-              {...params.InputProps}
-              {...rest}
-              disabled={disableOption()}
-              inputRef={setInputRef}
-              placeholder={renderPlaceholder()}
-              multiline
-              className={classes.messageInput}
-              maxRows={5}
-            />
-          );
-        }}
       />
+      
+      {showAutocomplete && (
+        <Popper
+          open={showAutocomplete}
+          anchorEl={anchorEl}
+          placement="top-start"
+          className={classes.autocompletePopper}
+        >
+          <ClickAwayListener onClickAway={handleClickAway}>
+            <Paper className={classes.autocompletePaper}>
+              {filteredMessages.map((message, index) => (
+                <MenuItem
+                  key={index}
+                  selected={index === selectedIndex}
+                  onClick={() => handleSelectAutocomplete(message)}
+                >
+                  <ListItemText
+                    primary={
+                      <div>
+                        <span className={classes.shortcodeChip}>
+                          {message.shortcode}
+                        </span>
+                      </div>
+                    }
+                    secondary={message.message.length > 50 ? `${message.message.substring(0, 50)}...` : message.message}
+                  />
+                </MenuItem>
+              ))}
+            </Paper>
+          </ClickAwayListener>
+        </Popper>
+      )}
     </div>
   );
 };
@@ -392,7 +512,8 @@ const MessageInputCustom = (props) => {
   const [inputMessage, setInputMessage] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [loading, setLoading] = useState(false);
-    const [percentLoading, setPercentLoading] = useState(0);
+  const [percentLoading, setPercentLoading] = useState(0);
+  const [quickMessages, setQuickMessages] = useState([]);
 
   const inputRef = useRef();
   const { setReplyingMessage, replyingMessage } =
@@ -400,6 +521,7 @@ const MessageInputCustom = (props) => {
   const { user } = useContext(AuthContext);
 
   const [signMessage, setSignMessage] = useLocalStorage("signOption", true);
+  const { list: listQuickMessages } = useQuickMessages();
 
   useEffect(() => {
     inputRef.current.focus();
@@ -415,6 +537,27 @@ const MessageInputCustom = (props) => {
     };
   }, [ticketId, setReplyingMessage]);
 
+  useEffect(() => {
+    const loadQuickMessages = async () => {
+      try {
+        const companyId = localStorage.getItem("companyId");
+        const messages = await listQuickMessages({ companyId, userId: user.id });
+        const formattedMessages = messages.map((m) => ({
+          shortcode: m.shortcode,
+          message: m.message,
+          value: m.message,
+        }));
+        setQuickMessages(formattedMessages);
+      } catch (error) {
+        console.error("Erro ao carregar mensagens rápidas:", error);
+      }
+    };
+
+    if (user?.id) {
+      loadQuickMessages();
+    }
+  }, [user.id, listQuickMessages]);
+
   // const handleChangeInput = e => {
   // 	if (isObject(e) && has(e, 'value')) {
   // 		setInputMessage(e.value);
@@ -426,6 +569,13 @@ const MessageInputCustom = (props) => {
   const handleAddEmoji = (e) => {
     let emoji = e.native;
     setInputMessage((prevState) => prevState + emoji);
+  };
+
+  const handleSelectQuickMessage = (message) => {
+    setInputMessage(message);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const handleChangeMedias = (e) => {
@@ -631,6 +781,12 @@ const MessageInputCustom = (props) => {
             handleChangeMedias={handleChangeMedias}
           />
 
+          <QuickMessagesButton
+            disabled={disableOption()}
+            quickMessages={quickMessages}
+            onSelectMessage={handleSelectQuickMessage}
+          />
+
           <SignSwitch
             width={props.width}
             setSignMessage={setSignMessage}
@@ -647,6 +803,7 @@ const MessageInputCustom = (props) => {
             handleSendMessage={handleSendMessage}
             handleInputPaste={handleInputPaste}
             disableOption={disableOption}
+            quickMessages={quickMessages}
           />
 
           <ActionButtons

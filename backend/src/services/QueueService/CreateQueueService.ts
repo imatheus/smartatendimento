@@ -3,6 +3,7 @@ import AppError from "../../errors/AppError";
 import Queue from "../../models/Queue";
 import Company from "../../models/Company";
 import Plan from "../../models/Plan";
+import Whatsapp from "../../models/Whatsapp";
 
 interface QueueData {
   name: string;
@@ -87,6 +88,20 @@ const CreateQueueService = async (queueData: QueueData): Promise<Queue> => {
     ...queueData,
     schedules: queueData.schedules || []
   });
+
+  // Automaticamente associar o novo setor a todos os WhatsApps da empresa
+  const whatsapps = await Whatsapp.findAll({
+    where: { companyId }
+  });
+
+  if (whatsapps.length > 0) {
+    console.log(`[CREATE QUEUE] Associando setor "${queue.name}" a ${whatsapps.length} WhatsApp(s)`);
+    
+    for (const whatsapp of whatsapps) {
+      await whatsapp.$add("queues", queue.id);
+      console.log(`[CREATE QUEUE] Setor "${queue.name}" associado ao WhatsApp "${whatsapp.name}"`);
+    }
+  }
 
   return queue;
 };

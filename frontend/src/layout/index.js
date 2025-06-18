@@ -310,7 +310,18 @@ const LoggedInLayout = ({ children }) => {
           >
             {greaterThenSm ? (
               <>
-                Olá <b>{user.name}</b>, Seja bem-vindo.
+                Olá <b>{user.name}</b>, {(() => {
+                  const now = new Date();
+                  const hour = now.getHours();
+                  
+                  if (hour >= 4 && hour < 12) {
+                    return "Bom dia!";
+                  } else if (hour >= 12 && hour < 18) {
+                    return "Boa tarde!";
+                  } else {
+                    return "Boa noite!";
+                  }
+                })()}
               </>
             ) : (
               user.name

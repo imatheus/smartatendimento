@@ -16,7 +16,6 @@ import NotificationsIcon from "@material-ui/icons/Notifications";
 import ClearAllIcon from "@material-ui/icons/ClearAll";
 
 import TicketListItem from "../TicketListItem";
-import { i18n } from "../../translate/i18n";
 import useTickets from "../../hooks/useTickets";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { socketConnection } from "../../services/socket";
@@ -95,8 +94,9 @@ const NotificationsPopOver = () => {
 
 	useEffect(() => {
 		// Filtrar apenas tickets com mensagens não lidas e que pertencem ao usuário
+		const userId = user.id;
 		const filteredTickets = tickets.filter(ticket => {
-			const belongsToUser = !ticket.userId || ticket.userId === user?.id;
+			const belongsToUser = !ticket.userId || ticket.userId === userId;
 			const hasUnreadMessages = ticket.unreadMessages > 0;
 			const isInUserQueue = !ticket.queueId || queues.some(queue => queue.id === ticket.queueId);
 			
@@ -104,7 +104,7 @@ const NotificationsPopOver = () => {
 		});
 		
 		setNotifications(filteredTickets);
-	}, [tickets, user?.id, queues]);
+	}, [tickets, user.id, queues]);
 
 	useEffect(() => {
 		ticketIdRef.current = ticketIdUrl;
@@ -133,6 +133,7 @@ const NotificationsPopOver = () => {
   useEffect(() => {
     const companyId = localStorage.getItem("companyId");
     const socket = socketConnection({ companyId });
+    const userId = user.id;
 
     socket.on("connect", () => socket.emit("joinNotification"));
 
@@ -184,7 +185,7 @@ const NotificationsPopOver = () => {
 			if (
 				data.action === "create" &&
 				!data.message.read &&
-				(data.ticket.userId === user?.id || !data.ticket.userId)
+				(data.ticket.userId === userId || !data.ticket.userId)
 			) {
 				setNotifications(prevState => {
 					const ticketIndex = prevState.findIndex(t => t.id === data.ticket.id);
@@ -198,7 +199,7 @@ const NotificationsPopOver = () => {
 				const shouldNotNotificate =
 					(data.message.ticketId === ticketIdRef.current &&
 						document.visibilityState === "visible") ||
-					(data.ticket.userId && data.ticket.userId !== user?.id) ||
+					(data.ticket.userId && data.ticket.userId !== userId) ||
 					data.ticket.isGroup;
 
 				if (shouldNotNotificate) return;
@@ -214,7 +215,7 @@ const NotificationsPopOver = () => {
     return () => {
       socket.disconnect();
     };
-  }, [user, profile, queues]);
+  }, [user.id, profile, queues]);
 
   const handleNotifications = (data) => {
     const { message, contact, ticket } = data;
