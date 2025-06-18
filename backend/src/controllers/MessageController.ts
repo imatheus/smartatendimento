@@ -5,6 +5,7 @@ import SetTicketMessagesAsRead from "../helpers/SetTicketMessagesAsRead";
 import { getIO } from "../libs/socket";
 import Message from "../models/Message";
 import Queue from "../models/Queue";
+import Ticket from "../models/Ticket";
 import User from "../models/User";
 import Whatsapp from "../models/Whatsapp";
 
@@ -111,12 +112,23 @@ export const remove = async (
   const { messageId } = req.params;
   const { companyId } = req.user;
 
-  const message = await DeleteWhatsAppMessage(messageId);
+  // First get the message to get the whatsappId and ticketId
+  const message = await Message.findByPk(messageId, {
+    include: [{ model: Ticket, as: "ticket" }]
+  });
+
+  if (!message) {
+    throw new AppError("Message not found", 404);
+  }
+
+  const whatsappId = message.ticket.whatsappId;
+  
+  const deletedMessage = await DeleteWhatsAppMessage(messageId, whatsappId);
 
   const io = getIO();
-  io.to(`ticket:${message.ticketId}`).emit(`company-${companyId}-appMessage`, {
+  io.to(`ticket:${deletedMessage.ticketId}`).emit(`company-${companyId}-appMessage`, {
     action: "update",
-    message
+    message: deletedMessage
   });
 
   return res.send();

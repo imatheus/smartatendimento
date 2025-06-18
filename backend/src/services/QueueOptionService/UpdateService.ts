@@ -16,7 +16,11 @@ const UpdateService = async (
 
   const queueOption = await ShowService(queueOptionId);
 
-  await queueOption.update(queueOptionData);
+  await queueOption.update({
+    ...queueOptionData,
+    queueId: typeof queueOptionData.queueId === 'string' ? parseInt(queueOptionData.queueId) : queueOptionData.queueId,
+    parentId: queueOptionData.parentId ? parseInt(queueOptionData.parentId) : null
+  });
 
   return queueOption;
 };

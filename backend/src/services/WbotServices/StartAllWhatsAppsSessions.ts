@@ -10,7 +10,7 @@ export const StartAllWhatsAppsSessions = async (
     if (whatsapps.length > 0) {
       whatsapps.forEach(whatsapp => {
         if(whatsapp.channel === 'whatsapp') {
-          StartWhatsAppSession(whatsapp, companyId);
+          StartWhatsAppSession(whatsapp);
         }
       });
     }

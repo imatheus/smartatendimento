@@ -155,7 +155,7 @@ const UpdateTicketService = async ({
             text: "\u200eVocê foi transferido, em breve iremos iniciar seu atendimento."
           }
         );
-        await verifyMessage(queueChangedMessage, ticket, ticket.contact);
+        await verifyMessage(queueChangedMessage as any, ticket, ticket.contact);
       }
 
       if (["facebook", "instagram"].includes(ticket.channel)) {

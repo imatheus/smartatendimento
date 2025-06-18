@@ -60,7 +60,7 @@ const UpdateService = async ({
   }
 
   // Se a data de envio mudou, validar e reagendar
-  const shouldReschedule = sendAt && sendAt !== schedule.sendAt && schedule.status === 'PENDENTE';
+  const shouldReschedule = sendAt && new Date(sendAt).getTime() !== schedule.sendAt.getTime() && schedule.status === 'PENDENTE';
   
   if (shouldReschedule) {
     // Validar nova data
@@ -95,8 +95,8 @@ const UpdateService = async ({
 
   await schedule.update({
     body,
-    sendAt,
-    sentAt,
+    sendAt: sendAt ? new Date(sendAt) : schedule.sendAt,
+    sentAt: sentAt ? new Date(sentAt) : schedule.sentAt,
     contactId,
     ticketId,
     userId,

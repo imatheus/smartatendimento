@@ -152,10 +152,10 @@ export const verifyMessageMedia = async (
 
   // eslint-disable-next-line no-eval
   const { fileTypeFromBuffer } = await (eval('import("file-type")') as Promise<
-    typeof import("file-type")
+    any
   >);
 
-  const type = await fileTypeFromBuffer(data);
+  const type = await fileTypeFromBuffer(Buffer.from(data));
 
   const fileName = `${new Date().getTime()}.${type.ext}`;
 
@@ -247,13 +247,6 @@ const verifyQueue = async (
       ticket,
       body: textMessage
     })
-
-    // const sendMsg = await wbot.sendMessage(
-    //   `${contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
-    //   textMessage
-    // );
-
-    // await verifyMessage(sendMsg, ticket, ticket.contact);
   };
 
   if (choosenQueue) {
@@ -266,7 +259,6 @@ const verifyQueue = async (
       ticketId: ticket.id,
       companyId: ticket.companyId,
     });
-
 
     /* Tratamento para envio de mensagem quando a fila está fora do expediente */
     if (choosenQueue?.options?.length === 0) {
@@ -291,12 +283,6 @@ const verifyQueue = async (
             body: body
           })
 
-          // const sentMessage = await wbot.sendMessage(
-          //   `${contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`, {
-          //   text: body,
-          // }
-          // );
-          // await verifyMessage(sentMessage, ticket, contact);
           await UpdateTicketService({
             ticketData: { queueId: null, chatbot },
             ticketId: ticket.id,
@@ -312,12 +298,12 @@ const verifyQueue = async (
         ticket,
         body: body
       })
-      // await verifyMessage(sentMessage, ticket, contact);
     }
 
   } else {
+    // SEMPRE mostrar as opções de setores para o usuário escolher
+    // Independente da quantidade de setores, o usuário deve selecionar
     await botText();
-
   }
 
 };

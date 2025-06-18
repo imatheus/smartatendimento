@@ -16,8 +16,8 @@ export const GetWbotMessage = async (
   const fetchWbotMessagesGradually = async (): Promise<
     proto.WebMessageInfo | Message | null | undefined
   > => {
-    if (getSock.type === "legacy") {
-      const wbot: WALegacySocket = getSock;
+    if ((getSock as any).type === "legacy") {
+      const wbot: WALegacySocket = getSock as any;
       const chatMessages = await wbot.fetchMessagesFromWA(
         `${ticket.contact.number}@${
           ticket.isGroup ? "g.us" : "s.whatsapp.net"

@@ -244,7 +244,7 @@ export const verifyRating = (ticketTraking: TicketTraking): boolean => {
 
 const getQuotedMessageId = (msg: proto.IWebMessageInfo): string | null => {
   const body = extractMessageContent(msg.message);
-  return body?.contextInfo?.stanzaId || null;
+  return (body as any)?.contextInfo?.stanzaId || null;
 };
 
 const getMeSocket = (wbot: Session): IMe => {
@@ -425,19 +425,30 @@ const isValidMsg = (msg: proto.IWebMessageInfo): boolean => {
 const verifyQueue = async (wbot: Session, msg: proto.IWebMessageInfo, ticket: Ticket, contact: Contact) => {
   const { queues, greetingMessage } = await ShowWhatsAppService(wbot.id!, ticket.companyId);
 
+  // Debug: Log para verificar quantos setores estão sendo retornados
+  console.log(`[DEBUG] Setores encontrados: ${queues.length}`);
+  queues.forEach((queue, index) => {
+    console.log(`[DEBUG] Setor ${index + 1}: ${queue.name} (ID: ${queue.id})`);
+  });
+
   // Se não há setores cadastrados, não faz nada
   if (queues.length === 0) {
+    console.log(`[DEBUG] Nenhum setor encontrado, retornando...`);
     return;
   }
 
   const selectedOption = getBodyMessage(msg);
+  console.log(`[DEBUG] Opção selecionada pelo usuário: "${selectedOption}"`);
+  
   const choosenQueue = queues.find((q, i) => i + 1 === +selectedOption);
+  console.log(`[DEBUG] Setor escolhido:`, choosenQueue ? `${choosenQueue.name} (ID: ${choosenQueue.id})` : 'Nenhum');
 
   if (choosenQueue) {
     let chatbot = false;
     if (choosenQueue?.options) {
       chatbot = choosenQueue?.options?.length > 0;
     }
+    console.log(`[DEBUG] Atribuindo setor ${choosenQueue.name} ao ticket ${ticket.id}`);
     await UpdateTicketService({ 
       ticketData: { queueId: choosenQueue.id, chatbot }, 
       ticketId: ticket.id, 
@@ -445,11 +456,14 @@ const verifyQueue = async (wbot: Session, msg: proto.IWebMessageInfo, ticket: Ti
     });
   } else {
     // SEMPRE mostrar as opções de setores para o usuário escolher
-    // Mesmo que haja apenas 1 setor, o usuário deve selecionar
+    // Independente da quantidade de setores, o usuário deve selecionar
+    console.log(`[DEBUG] Mostrando opções de setores para o usuário`);
     let options = "";
     queues.forEach((queue, index) => {
       options += `*[ ${index + 1} ]* - ${queue.name}\n`;
     });
+    
+    console.log(`[DEBUG] Mensagem que será enviada:`, `${greetingMessage}\n\n${options}`);
     const body = formatBody(`\u200e${greetingMessage}\n\n${options}`, contact);
     await SendWhatsAppMessage({ body, ticket });
   }

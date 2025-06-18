@@ -20,7 +20,7 @@ const UpdateService = async (data: Data): Promise<QuickMessage> => {
   await record.update({
     shortcode,
     message,
-    userId
+    userId: typeof userId === 'string' ? parseInt(userId) : userId
   });
 
   return record;

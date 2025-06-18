@@ -54,11 +54,11 @@ const ListService = async ({
     group: ['Tag.id']
   });
 
-  const hasMore = count > offset + tags.length;
+  const hasMore = Array.isArray(count) ? count.length > offset + tags.length : count > offset + tags.length;
 
   return {
     tags,
-    count,
+    count: Array.isArray(count) ? count.length : count,
     hasMore
   };
 };

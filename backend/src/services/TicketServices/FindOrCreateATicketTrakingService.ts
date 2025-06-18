@@ -30,11 +30,10 @@ const FindOrCreateATicketTrakingService = async ({
   }
 
   const newRecord = await TicketTraking.create({
-    ticketId,
-    companyId,
-    whatsappId,
-    userId,
-    channel
+    ticketId: typeof ticketId === 'string' ? parseInt(ticketId) : ticketId,
+    companyId: typeof companyId === 'string' ? parseInt(companyId) : companyId,
+    whatsappId: typeof whatsappId === 'string' ? parseInt(whatsappId) : whatsappId,
+    userId: typeof userId === 'string' ? parseInt(userId) : userId
   });
 
   return newRecord;

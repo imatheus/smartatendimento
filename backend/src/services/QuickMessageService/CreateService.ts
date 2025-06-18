@@ -27,7 +27,11 @@ const CreateService = async (data: Data): Promise<QuickMessage> => {
     throw new AppError(err.message);
   }
 
-  const record = await QuickMessage.create(data);
+  const record = await QuickMessage.create({
+    ...data,
+    companyId: typeof data.companyId === 'string' ? parseInt(data.companyId) : data.companyId,
+    userId: typeof data.userId === 'string' ? parseInt(data.userId) : data.userId
+  });
 
   return record;
 };

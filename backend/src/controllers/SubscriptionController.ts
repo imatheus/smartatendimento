@@ -15,7 +15,7 @@ const app = express();
 
 
 export const index = async (req: Request, res: Response): Promise<Response> => {
-  const gerencianet = Gerencianet(options);
+  const gerencianet = new Gerencianet(options);
   return res.json(gerencianet.getSubscriptions());
 };
 
@@ -23,7 +23,7 @@ export const createSubscription = async (
   req: Request,
   res: Response
   ): Promise<Response> => {
-    const gerencianet = Gerencianet(options);
+    const gerencianet = new Gerencianet(options);
     const { companyId } = req.user;
 
   const schema = Yup.object().shape({
@@ -134,7 +134,7 @@ export const createWebhook = async (
   };
 
   try {
-    const gerencianet = Gerencianet(options);
+    const gerencianet = new Gerencianet(options);
     const create = await gerencianet.pixConfigWebhook(params, body);
     return res.json(create);
   } catch (error) {
@@ -152,7 +152,7 @@ export const webhook = async (
     return res.json({ ok: true });
   }
   if (req.body.pix) {
-    const gerencianet = Gerencianet(options);
+    const gerencianet = new Gerencianet(options);
     req.body.pix.forEach(async (pix: any) => {
       const detahe = await gerencianet.pixDetailCharge({
         txid: pix.txid

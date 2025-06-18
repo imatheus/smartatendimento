@@ -1,13 +1,41 @@
 import Whatsapp from "../models/Whatsapp";
 import GetWhatsappWbot from "./GetWhatsappWbot";
 import fs from "fs";
-
-import { getMessageOptions } from "../services/WbotServices/SendWhatsAppMedia";
+import path from "path";
 
 export type MessageData = {
   number: number | string;
   body: string;
   mediaPath?: string;
+};
+
+const getMessageOptions = async (body: string, mediaPath: string) => {
+  const mimeType = require('mime-types').lookup(mediaPath);
+  const mediaType = mimeType ? mimeType.split("/")[0] : "document";
+  
+  switch (mediaType) {
+    case "image":
+      return {
+        image: { url: mediaPath },
+        caption: body
+      };
+    case "video":
+      return {
+        video: { url: mediaPath },
+        caption: body
+      };
+    case "audio":
+      return {
+        audio: { url: mediaPath },
+        mimetype: mimeType
+      };
+    default:
+      return {
+        document: { url: mediaPath },
+        mimetype: mimeType,
+        fileName: path.basename(mediaPath)
+      };
+  }
 };
 
 export const SendMessage = async (
@@ -26,7 +54,6 @@ export const SendMessage = async (
         messageData.mediaPath
       );
       if (options) {
-        const body = fs.readFileSync(messageData.mediaPath);
         message = await wbot.sendMessage(chatId, {
           ...options
         });

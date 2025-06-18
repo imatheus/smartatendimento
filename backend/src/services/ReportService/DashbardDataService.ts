@@ -6,7 +6,7 @@ import sequelize from "../../database";
 
 export interface DashboardData {
   counters: any;
-  attendants: [];
+  attendants: any[];
 }
 
 export interface Params {
@@ -131,34 +131,32 @@ export default async function DashboardDataService(
     const finalReplacementsCounters = [companyId, ...replacements, companyId, companyId];
     const finalReplacementsAttendants = [companyId, ...replacementsAttendants, companyId];
 
-    // Execute queries with timeout
+    // Execute queries
     const [countersResult, attendantsResult] = await Promise.all([
       sequelize.query(countersQuery, {
         replacements: finalReplacementsCounters,
         type: QueryTypes.SELECT,
-        plain: true,
-        timeout: 15000 // 15 seconds timeout
+        plain: true
       }),
       sequelize.query(attendantsQuery, {
         replacements: finalReplacementsAttendants,
-        type: QueryTypes.SELECT,
-        timeout: 15000 // 15 seconds timeout
+        type: QueryTypes.SELECT
       })
     ]);
 
     // Validate and sanitize counters data
     const sanitizedCounters = {
-      supportHappening: Number(countersResult?.supportHappening) || 0,
-      supportPending: Number(countersResult?.supportPending) || 0,
-      supportFinished: Number(countersResult?.supportFinished) || 0,
-      avgSupportTime: Number(countersResult?.avgSupportTime) || 0,
-      avgWaitTime: Number(countersResult?.avgWaitTime) || 0,
-      leads: Number(countersResult?.leads) || 0
+      supportHappening: Number((countersResult as any)?.supportHappening) || 0,
+      supportPending: Number((countersResult as any)?.supportPending) || 0,
+      supportFinished: Number((countersResult as any)?.supportFinished) || 0,
+      avgSupportTime: Number((countersResult as any)?.avgSupportTime) || 0,
+      avgWaitTime: Number((countersResult as any)?.avgWaitTime) || 0,
+      leads: Number((countersResult as any)?.leads) || 0
     };
 
     // Validate and sanitize attendants data
     const sanitizedAttendants = Array.isArray(attendantsResult) 
-      ? attendantsResult.map(attendant => ({
+      ? (attendantsResult as any[]).map((attendant: any) => ({
           id: attendant.id,
           name: attendant.name || 'Nome não disponível',
           online: Boolean(attendant.online),

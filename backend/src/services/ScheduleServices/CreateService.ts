@@ -51,16 +51,14 @@ const CreateService = async ({
 
   console.log("🔧 CreateService - Creating schedule in database");
 
-  const schedule = await Schedule.create(
-    {
-      body,
-      sendAt,
-      contactId,
-      companyId,
-      userId,
-      status: 'PENDENTE'
-    }
-  );
+  const schedule = await Schedule.create({
+    body,
+    sendAt: new Date(sendAt),
+    contactId: typeof contactId === 'string' ? parseInt(contactId) : contactId,
+    companyId: typeof companyId === 'string' ? parseInt(companyId) : companyId,
+    userId: typeof userId === 'string' ? parseInt(userId) : userId,
+    status: 'PENDENTE'
+  });
 
   console.log("🔧 CreateService - Schedule created, reloading...");
   await schedule.reload();

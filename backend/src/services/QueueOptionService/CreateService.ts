@@ -9,7 +9,11 @@ interface QueueOptionData {
 }
 
 const CreateService = async (queueOptionData: QueueOptionData): Promise<QueueOption> => {
-  const queueOption = await QueueOption.create(queueOptionData);
+  const queueOption = await QueueOption.create({
+    ...queueOptionData,
+    queueId: typeof queueOptionData.queueId === 'string' ? parseInt(queueOptionData.queueId) : queueOptionData.queueId,
+    parentId: queueOptionData.parentId ? parseInt(queueOptionData.parentId) : null
+  });
   return queueOption;
 };
 

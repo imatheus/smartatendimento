@@ -8,7 +8,7 @@ interface Data {
   name: string;
   status: string;
   confirmation: boolean;
-  scheduledAt: string;
+  scheduledAt: string | null;
   companyId: number;
   contactListId: number;
   message1?: string;
@@ -42,7 +42,13 @@ const CreateService = async (data: Data): Promise<Campaign> => {
     data.status = "PROGRAMADA";
   }
 
-  const record = await Campaign.create(data);
+  // Convert scheduledAt string to Date if provided
+  const campaignData = {
+    ...data,
+    scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null
+  };
+
+  const record = await Campaign.create(campaignData);
 
   await record.reload({
     include: [

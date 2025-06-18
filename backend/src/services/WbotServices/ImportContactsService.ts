@@ -15,8 +15,8 @@ const ImportContactsService = async (companyId: number): Promise<void> => {
   let phoneContacts;
 
   try {
-    if (wbot.type === "legacy") {
-      phoneContacts = wbot.store.contacts;
+    if ((wbot as any).type === "legacy") {
+      phoneContacts = (wbot as any).store.contacts;
     }
     if (wbot.type === "md") {
       const contactsString = await ShowBaileysService(wbot.id);
@@ -27,7 +27,7 @@ const ImportContactsService = async (companyId: number): Promise<void> => {
     logger.error(`Could not get whatsapp contacts from phone. Err: ${err}`);
   }
 
-  if (phoneContacts && wbot.type === "legacy") {
+  if (phoneContacts && (wbot as any).type === "legacy") {
     await Promise.all(
       Object.values(phoneContacts).map(async ({ id, name }) => {
         if (id === "status@broadcast" || id.split("@")[1] === "g.us") return;

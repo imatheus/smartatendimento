@@ -78,7 +78,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     token
   });
 
-  StartWhatsAppSession(whatsapp, companyId);
+  StartWhatsAppSession(whatsapp);
 
   const io = getIO();
   io.emit(`company-${companyId}-whatsapp`, {

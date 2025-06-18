@@ -72,7 +72,10 @@ const UpdateQueueService = async (
     throw new AppError("Não é permitido alterar registros de outra empresa");
   }
 
-  await queue.update(queueData);
+  await queue.update({
+    ...queueData,
+    schedules: queueData.schedules || []
+  });
 
   return queue;
 };

@@ -27,6 +27,13 @@ export const getWbot = (whatsappId: number): Session => {
   return sessions[sessionIndex];
 };
 
+export const removeWbot = (whatsappId: number): void => {
+  const sessionIndex = sessions.findIndex(s => s.id === whatsappId);
+  if (sessionIndex !== -1) {
+    sessions.splice(sessionIndex, 1);
+  }
+};
+
 export const initWbot = async (whatsapp: Whatsapp): Promise<Session> => {
   const { id, name, companyId } = whatsapp;
   const io = getIO();
@@ -68,7 +75,7 @@ export const initWbot = async (whatsapp: Whatsapp): Promise<Session> => {
         await whatsapp.update({ status: "CONNECTED", qrcode: "" });
         io.emit(`whatsappSession${companyId}`, { action: "update", session: whatsapp });
         console.log(`-> CONEXÃO ABERTA PARA ${name} <-`);
-        wbotMessageListener(wbot, companyId);
+        wbotMessageListener(wbot as any, companyId);
     }
 
     if (connection === 'close') {

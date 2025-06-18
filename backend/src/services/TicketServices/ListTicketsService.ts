@@ -80,7 +80,7 @@ const ListTicketsService = async ({
   
   // Só adicionar filtro de queueId se houver condição
   if (queueCondition !== null) {
-    whereCondition.queueId = queueCondition;
+    (whereCondition as any).queueId = queueCondition;
   }
   let includeCondition: Includeable[];
 

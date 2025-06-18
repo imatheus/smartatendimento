@@ -94,7 +94,7 @@ const ProcessScheduleJob = async (job: Job<ProcessScheduleData>): Promise<void> 
         messageData: {
           ...messageData,
           id: sentMessage.key.id,
-          timestamp: moment().unix()
+          ticketId: ticket.id
         },
         companyId: schedule.companyId
       });
