@@ -5,6 +5,7 @@ const TicketsContext = createContext();
 
 const TicketsContextProvider = ({ children }) => {
 	const [currentTicket, setCurrentTicket] = useState({ id: null, code: null });
+	const [refreshTickets, setRefreshTickets] = useState(0);
     const history = useHistory();
 
     useEffect(() => {
@@ -14,9 +15,18 @@ const TicketsContextProvider = ({ children }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentTicket])
 
+    const triggerRefresh = () => {
+        setRefreshTickets(prev => prev + 1);
+    };
+
 	return (
 		<TicketsContext.Provider
-			value={{ currentTicket, setCurrentTicket }}
+			value={{ 
+				currentTicket, 
+				setCurrentTicket, 
+				refreshTickets, 
+				triggerRefresh 
+			}}
 		>
 			{children}
 		</TicketsContext.Provider>

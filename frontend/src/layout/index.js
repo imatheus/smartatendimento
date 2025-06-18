@@ -18,20 +18,22 @@ import {
 
 import MenuIcon from "@material-ui/icons/Menu";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 
 import MainListItems from "./MainListItems";
 import NotificationsPopOver from "../components/NotificationsPopOver";
 import UserModal from "../components/UserModal";
 import { AuthContext } from "../context/Auth/AuthContext";
+import { useCustomTheme } from "../context/Theme/ThemeContext";
 import BackdropLoading from "../components/BackdropLoading";
 import { i18n } from "../translate/i18n";
 import toastError from "../errors/toastError";
 import logo from "../assets/logo.png"; 
 import { socketConnection } from "../services/socket";
-import ChatPopover from "../pages/Chat/ChatPopover";
 
 const drawerWidth = 300;
+const drawerCollapsedWidth = 72;
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -67,6 +69,14 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.enteringScreen,
     }),
   },
+  appBarShiftCollapsed: {
+    marginLeft: drawerCollapsedWidth,
+    width: `calc(100% - ${drawerCollapsedWidth}px)`,
+    transition: theme.transitions.create(["width", "margin"], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  },
   menuButton: {
     marginRight: 36,
   },
@@ -96,6 +106,16 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.up("sm")]: {
       width: theme.spacing(9),
     },
+  },
+  drawerPaperCollapsed: {
+    position: "relative",
+    whiteSpace: "nowrap",
+    width: drawerCollapsedWidth,
+    transition: theme.transitions.create("width", {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+    overflowX: "hidden",
   },
   appBarSpacer: {
     minHeight: "48px",
@@ -132,6 +152,7 @@ const LoggedInLayout = ({ children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerVariant, setDrawerVariant] = useState("permanent");
   const { user } = useContext(AuthContext);
+  const { drawerCollapsed, toggleDrawerCollapse } = useCustomTheme();
 
   const theme = useTheme();
   const greaterThenSm = useMediaQuery(theme.breakpoints.up("sm"));
@@ -212,24 +233,34 @@ const LoggedInLayout = ({ children }) => {
     <div className={classes.root}>
       <Drawer
         variant={drawerVariant}
-        className={drawerOpen ? classes.drawerPaper : classes.drawerPaperClose}
+        className={
+          drawerCollapsed 
+            ? classes.drawerPaperCollapsed 
+            : drawerOpen 
+              ? classes.drawerPaper 
+              : classes.drawerPaperClose
+        }
         classes={{
           paper: clsx(
-            classes.drawerPaper,
-            !drawerOpen && classes.drawerPaperClose
+            drawerCollapsed 
+              ? classes.drawerPaperCollapsed
+              : classes.drawerPaper,
+            !drawerOpen && !drawerCollapsed && classes.drawerPaperClose
           ),
         }}
         open={drawerOpen}
       >
         <div className={classes.toolbarIcon}>
-          <img src={logo} style={{ margin: "0 auto", height: '100%', width: '100%',alignSelf: 'center' }} alt="logo" />
-          <IconButton onClick={() => setDrawerOpen(!drawerOpen)}>
-            <ChevronLeftIcon />
+          {!drawerCollapsed && (
+            <img src={logo} style={{ margin: "0 auto", height: '100%', width: '100%',alignSelf: 'center' }} alt="logo" />
+          )}
+          <IconButton onClick={drawerCollapsed ? toggleDrawerCollapse : () => setDrawerOpen(!drawerOpen)}>
+            {drawerCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </div>
         <Divider />
         <List className={classes.containerWithScroll}>
-          <MainListItems drawerClose={drawerClose} />
+          <MainListItems drawerClose={drawerClose} drawerCollapsed={drawerCollapsed} />
         </List>
         <Divider />
       </Drawer>
@@ -240,7 +271,11 @@ const LoggedInLayout = ({ children }) => {
       />
       <AppBar
         position="absolute"
-        className={clsx(classes.appBar, drawerOpen && classes.appBarShift)}
+        className={clsx(
+          classes.appBar, 
+          drawerCollapsed && classes.appBarShiftCollapsed,
+          drawerOpen && !drawerCollapsed && classes.appBarShift
+        )}
         color="primary"
       >
         <Toolbar variant="dense" className={classes.toolbar}>
@@ -256,6 +291,16 @@ const LoggedInLayout = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
+          {drawerOpen && (
+            <IconButton
+              variant="contained"
+              aria-label="collapse drawer"
+              onClick={toggleDrawerCollapse}
+              style={{ marginRight: 16 }}
+            >
+              {drawerCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </IconButton>
+          )}
           <Typography
             component="h1"
             variant="h6"
@@ -272,8 +317,6 @@ const LoggedInLayout = ({ children }) => {
             )}
           </Typography>
           {user.id && <NotificationsPopOver />}
-
-          <ChatPopover />
 
           <div>
             <IconButton

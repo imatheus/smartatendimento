@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useReducer, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link as RouterLink, useHistory } from "react-router-dom";
 
 import ListItem from "@material-ui/core/ListItem";
@@ -6,7 +6,7 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import ListSubheader from "@material-ui/core/ListSubheader";
 import Divider from "@material-ui/core/Divider";
-import { Badge, Collapse, List } from "@material-ui/core";
+import { Badge, Collapse, List, Popover, MenuList, MenuItem } from "@material-ui/core";
 import DashboardOutlinedIcon from "@material-ui/icons/DashboardOutlined";
 import WhatsAppIcon from "@material-ui/icons/WhatsApp";
 import SyncAltIcon from "@material-ui/icons/SyncAlt";
@@ -30,12 +30,9 @@ import { WhatsAppsContext } from "../context/WhatsApp/WhatsAppsContext";
 import { AuthContext } from "../context/Auth/AuthContext";
 import { Can } from "../components/Can";
 import { socketConnection } from "../services/socket";
-import { isArray } from "lodash";
-import api from "../services/api";
-import toastError from "../errors/toastError";
 
 function ListItemLink(props) {
-  const { icon, primary, to, className } = props;
+  const { icon, primary, to, className, drawerCollapsed } = props;
 
   const renderLink = React.useMemo(
     () =>
@@ -47,132 +44,36 @@ function ListItemLink(props) {
 
   return (
     <li>
-      <ListItem button component={renderLink} className={className}>
-        {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
-        <ListItemText primary={primary} />
+      <ListItem 
+        button 
+        component={renderLink} 
+        className={className}
+        title={drawerCollapsed ? primary : ""}
+        style={{ 
+          justifyContent: drawerCollapsed ? 'center' : 'flex-start',
+          paddingLeft: drawerCollapsed ? 16 : 16,
+          paddingRight: drawerCollapsed ? 16 : 16
+        }}
+      >
+        {icon ? <ListItemIcon style={{ minWidth: drawerCollapsed ? 'auto' : '40px' }}>{icon}</ListItemIcon> : null}
+        {!drawerCollapsed && <ListItemText primary={primary} />}
       </ListItem>
     </li>
   );
 }
 
-const reducer = (state, action) => {
-  if (action.type === "LOAD_CHATS") {
-    const chats = action.payload;
-    const newChats = [];
-
-    if (isArray(chats)) {
-      chats.forEach((chat) => {
-        const chatIndex = state.findIndex((u) => u.id === chat.id);
-        if (chatIndex !== -1) {
-          state[chatIndex] = chat;
-        } else {
-          newChats.push(chat);
-        }
-      });
-    }
-
-    return [...state, ...newChats];
-  }
-
-  if (action.type === "UPDATE_CHATS") {
-    const chat = action.payload;
-    const chatIndex = state.findIndex((u) => u.id === chat.id);
-
-    if (chatIndex !== -1) {
-      state[chatIndex] = chat;
-      return [...state];
-    } else {
-      return [chat, ...state];
-    }
-  }
-
-  if (action.type === "DELETE_CHAT") {
-    const chatId = action.payload;
-
-    const chatIndex = state.findIndex((u) => u.id === chatId);
-    if (chatIndex !== -1) {
-      state.splice(chatIndex, 1);
-    }
-    return [...state];
-  }
-
-  if (action.type === "RESET") {
-    return [];
-  }
-
-  if (action.type === "CHANGE_CHAT") {
-    const changedChats = state.map((chat) => {
-      if (chat.id === action.payload.chat.id) {
-        return action.payload.chat;
-      }
-      return chat;
-    });
-    return changedChats;
-  }
-};
 
 const MainListItems = (props) => {
-  const { drawerClose } = props;
+  const { drawerClose, drawerCollapsed } = props;
   const { whatsApps } = useContext(WhatsAppsContext);
   const { user } = useContext(AuthContext);
   const [connectionWarning, setConnectionWarning] = useState(false);
   const [openCampaignSubmenu, setOpenCampaignSubmenu] = useState(false);
   const [showCampaigns, setShowCampaigns] = useState(false);
+  const [campaignPopoverAnchor, setCampaignPopoverAnchor] = useState(null);
   const history = useHistory();
 
-  const [, setInvisible] = useState(true);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [searchParam] = useState("");
-  const [chats, dispatch] = useReducer(reducer, []);
-
-  useEffect(() => {
-    dispatch({ type: "RESET" });
-    setPageNumber(1);
-  }, [searchParam]);
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchChats();
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParam, pageNumber]);
-
-  useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
-
-    socket.on(`company-${companyId}-chat`, (data) => {
-      if (data.action === "new-message") {
-        dispatch({ type: "CHANGE_CHAT", payload: data });
-      }
-      if (data.action === "update") {
-        dispatch({ type: "CHANGE_CHAT", payload: data });
-      }
-    });
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    let unreadsCount = 0;
-    if (chats.length > 0) {
-      for (let chat of chats) {
-        for (let chatUser of chat.users) {
-          if (chatUser.userId === user.id) {
-            unreadsCount += chatUser.unreads;
-          }
-        }
-      }
-    }
-    if (unreadsCount > 0) {
-      setInvisible(false);
-    } else {
-      setInvisible(true);
-    }
-  }, [chats, user.id]);
-
+  
   useEffect(() => {
     if (localStorage.getItem("cshow")) {
       setShowCampaigns(true);
@@ -201,15 +102,8 @@ const MainListItems = (props) => {
     return () => clearTimeout(delayDebounceFn);
   }, [whatsApps]);
 
-  const fetchChats = async () => {
-    try {
-      const { data } = await api.get("/chats/", {
-        params: { searchParam, pageNumber },
-      });
-      dispatch({ type: "LOAD_CHATS", payload: data.records });
-    } catch (err) {
-      toastError(err);
-    }
+  const handleCampaignPopoverClose = () => {
+    setCampaignPopoverAnchor(null);
   };
 
   return (
@@ -222,6 +116,7 @@ const MainListItems = (props) => {
             to="/"
             primary="Dashboard"
             icon={<DashboardOutlinedIcon />}
+            drawerCollapsed={drawerCollapsed}
           />
         )}
       />
@@ -230,30 +125,35 @@ const MainListItems = (props) => {
         to="/tickets"
         primary={i18n.t("mainDrawer.listItems.tickets")}
         icon={<WhatsAppIcon />}
+        drawerCollapsed={drawerCollapsed}
       />
 
       <ListItemLink
         to="/quick-messages"
         primary={i18n.t("mainDrawer.listItems.quickMessages")}
         icon={<FlashOnIcon />}
+        drawerCollapsed={drawerCollapsed}
       />
 
       <ListItemLink
         to="/contacts"
         primary={i18n.t("mainDrawer.listItems.contacts")}
         icon={<ContactPhoneOutlinedIcon />}
+        drawerCollapsed={drawerCollapsed}
       />
 
       <ListItemLink
         to="/schedules"
         primary={i18n.t("mainDrawer.listItems.schedules")}
         icon={<EventIcon />}
+        drawerCollapsed={drawerCollapsed}
       />
 
       <ListItemLink
         to="/tags"
         primary={i18n.t("mainDrawer.listItems.tags")}
         icon={<LocalOfferIcon />}
+        drawerCollapsed={drawerCollapsed}
       />
 
       
@@ -262,11 +162,13 @@ const MainListItems = (props) => {
         perform="drawer-admin-items:view"
         yes={() => (
           <>
-            <Divider />
-            <ListSubheader inset>
-              {i18n.t("mainDrawer.listItems.administration")}
-            </ListSubheader>
-            {showCampaigns && (
+            {!drawerCollapsed && <Divider />}
+            {!drawerCollapsed && (
+              <ListSubheader inset>
+                {i18n.t("mainDrawer.listItems.administration")}
+              </ListSubheader>
+            )}
+            {showCampaigns && !drawerCollapsed && (
               <>
                 <ListItem
                   button
@@ -319,6 +221,72 @@ const MainListItems = (props) => {
                 </Collapse>
               </>
             )}
+            {showCampaigns && drawerCollapsed && (
+              <>
+                <ListItem
+                  button
+                  onClick={(event) => setCampaignPopoverAnchor(event.currentTarget)}
+                  title={i18n.t("mainDrawer.listItems.campaigns")}
+                  style={{ 
+                    justifyContent: 'center',
+                    paddingLeft: 16,
+                    paddingRight: 16
+                  }}
+                >
+                  <ListItemIcon style={{ minWidth: 'auto' }}>
+                    <EventAvailableIcon />
+                  </ListItemIcon>
+                </ListItem>
+                <Popover
+                  open={Boolean(campaignPopoverAnchor)}
+                  anchorEl={campaignPopoverAnchor}
+                  onClose={handleCampaignPopoverClose}
+                  anchorOrigin={{
+                    vertical: 'center',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'center',
+                    horizontal: 'left',
+                  }}
+                  PaperProps={{
+                    style: {
+                      marginLeft: 8,
+                    }
+                  }}
+                >
+                  <MenuList>
+                    <MenuItem onClick={() => {
+                      history.push("/campaigns");
+                      handleCampaignPopoverClose();
+                    }}>
+                      <ListItemIcon>
+                        <ListIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Listagem" />
+                    </MenuItem>
+                    <MenuItem onClick={() => {
+                      history.push("/contact-lists");
+                      handleCampaignPopoverClose();
+                    }}>
+                      <ListItemIcon>
+                        <PeopleIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Listas de Contatos" />
+                    </MenuItem>
+                    <MenuItem onClick={() => {
+                      history.push("/campaigns-config");
+                      handleCampaignPopoverClose();
+                    }}>
+                      <ListItemIcon>
+                        <SettingsOutlinedIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Configurações" />
+                    </MenuItem>
+                  </MenuList>
+                </Popover>
+              </>
+            )}
                         <ListItemLink
               to="/connections"
               primary={i18n.t("mainDrawer.listItems.connections")}
@@ -327,32 +295,38 @@ const MainListItems = (props) => {
                   <SyncAltIcon />
                 </Badge>
               }
+              drawerCollapsed={drawerCollapsed}
             />
             <ListItemLink
               to="/queues"
               primary={i18n.t("mainDrawer.listItems.queues")}
               icon={<AccountTreeOutlinedIcon />}
+              drawerCollapsed={drawerCollapsed}
             />
             <ListItemLink
               to="/users"
               primary={i18n.t("mainDrawer.listItems.users")}
               icon={<PeopleAltOutlinedIcon />}
+              drawerCollapsed={drawerCollapsed}
             />
             <ListItemLink
               to="/messages-api"
               primary={i18n.t("mainDrawer.listItems.messagesAPI")}
               icon={<CodeRoundedIcon />}
+              drawerCollapsed={drawerCollapsed}
             />
              <ListItemLink
                 to="/financeiro"
                 primary={i18n.t("mainDrawer.listItems.financeiro")}
                 icon={<LocalAtmIcon />}
+                drawerCollapsed={drawerCollapsed}
               />
 
             <ListItemLink
               to="/settings"
               primary={i18n.t("mainDrawer.listItems.settings")}
               icon={<SettingsOutlinedIcon />}
+              drawerCollapsed={drawerCollapsed}
             />
 {}
           </>

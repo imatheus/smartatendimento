@@ -263,7 +263,7 @@ const messages = {
         },
         tabs: {
           open: { title: "Em Aberto" },
-          closed: { title: "Resolvidos" },
+          closed: { title: "Arquivados" },
           search: { title: "Busca" },
         },
         search: {

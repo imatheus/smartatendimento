@@ -10,6 +10,7 @@ import TicketsListSkeleton from "../TicketsListSkeleton";
 import useTickets from "../../hooks/useTickets";
 import { i18n } from "../../translate/i18n";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { TicketsContext } from "../../context/Tickets/TicketsContext";
 import { socketConnection } from "../../services/socket";
 
 const useStyles = makeStyles((theme) => ({
@@ -27,6 +28,7 @@ const useStyles = makeStyles((theme) => ({
     flex: 1,
     maxHeight: "100%",
     overflowY: "scroll",
+    overflowX: "hidden",
     ...theme.scrollbarStyles,
     borderTop: "2px solid rgba(0, 0, 0, 0.12)",
   },
@@ -118,10 +120,19 @@ const reducer = (state, action) => {
       console.log(`✅ ADD_TICKET: Added ticket ${ticket.id}, new state length: ${newState.length}`);
       return newState;
     } else {
-      console.log(`��️ ADD_TICKET: Ticket ${ticket.id} already exists at index ${ticketIndex}`);
+      // Se o ticket já existe, atualizar com os novos dados
+      console.log(`🔄 ADD_TICKET: Ticket ${ticket.id} already exists, updating it`);
+      const newState = [...state];
+      newState[ticketIndex] = ticket;
+      
+      // Se tem mensagens não lidas ou foi recém aceito, mover para o topo
+      if (ticket.unreadMessages > 0 || ticket.status === "open") {
+        const updatedTicket = newState.splice(ticketIndex, 1)[0];
+        newState.unshift(updatedTicket);
+      }
+      
+      return newState;
     }
-    
-    return state;
   }
 
   if (action.type === "UPDATE_TICKET") {
@@ -208,12 +219,13 @@ const TicketsListCustom = (props) => {
   const [ticketsList, dispatch] = useReducer(reducer, []);
   const [,] = useState([]);
   const { user } = useContext(AuthContext);
+  const { refreshTickets } = useContext(TicketsContext);
   const { profile, queues } = user;
 
   useEffect(() => {
     dispatch({ type: "RESET" });
     setPageNumber(1);
-  }, [status, searchParam, dispatch, showAll, tags, users, selectedQueueIds]);
+  }, [status, searchParam, dispatch, showAll, tags, users, selectedQueueIds, refreshTickets]);
 
   const { tickets, hasMore, loading } = useTickets({
     pageNumber,
@@ -306,10 +318,21 @@ const TicketsListCustom = (props) => {
       if (data.action === "update") {
         console.log(`🎯 TicketsListCustom(${status}): Update event - ticket status: ${data.ticket.status}, list status: ${status}, ticket ID: ${data.ticket.id}`);
         
-        // Se o status do ticket não corresponde ao status da lista atual, remove o ticket
+        // Se o status do ticket não corresponde ao status da lista atual
         if (data.ticket.status !== status) {
-          console.log(`❌ TicketsListCustom(${status}): Deleting ticket (status changed from ${status} to ${data.ticket.status})`);
-          dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+          console.log(`❌ TicketsListCustom(${status}): Ticket status changed from ${status} to ${data.ticket.status}`);
+          
+          // Se o ticket foi aceito (pending -> open) e estamos na lista "open", adicionar o ticket
+          if (status === "open" && data.ticket.status === "open" && shouldUpdateTicket(data.ticket)) {
+            console.log(`✅ TicketsListCustom(${status}): Adding accepted ticket to open list`);
+            dispatch({
+              type: "ADD_TICKET",
+              payload: data.ticket,
+            });
+          } else {
+            // Remover da lista atual se não pertence mais
+            dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+          }
           return;
         }
         
@@ -433,7 +456,7 @@ const TicketsListCustom = (props) => {
         className={classes.ticketsList}
         onScroll={handleScroll}
       >
-        <List style={{ paddingTop: 0 }}>
+        <List style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
           {ticketsList.length === 0 && !loading ? (
             <div className={classes.noTicketsDiv}>
               <span className={classes.noTicketsTitle}>
