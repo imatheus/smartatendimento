@@ -25,4 +25,224 @@
 		<noscript>You need to enable JavaScript to run this app.</noscript>
 		<div id="root"></div>
 	</body>
+
+	<!-- Smart Atendimento - Chat Web -->
+<div id="webchat_1750216130305"></div>
+<script>
+(function() {
+  // Configurações do Chat
+  var chatConfig = {
+    chatId: "webchat_1750216130305",
+    apiUrl: "http://localhost:8080",
+    name: "Chat Atendimento",
+    welcomeMessage: "Olá! Como posso ajudá-lo?",
+    primaryColor: "#1976d2",
+    position: "bottom-right",
+    companyName: "Minha Empresa"
+  };
+
+  // Criar estrutura do chat
+  var chatContainer = document.createElement('div');
+  chatContainer.id = 'smart-chat-container';
+  chatContainer.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    z-index: 9999;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border-radius: 10px;
+    overflow: hidden;
+    background: white;
+    display: none;
+  `;
+
+  // Botão flutuante
+  var chatButton = document.createElement('div');
+  chatButton.id = 'smart-chat-button';
+  chatButton.innerHTML = '💬';
+  chatButton.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: #1976d2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10000;
+    font-size: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+  `;
+
+  // Header do chat
+  var chatHeader = document.createElement('div');
+  chatHeader.style.cssText = `
+    background: #1976d2;
+    color: white;
+    padding: 15px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  `;
+  chatHeader.innerHTML = `
+    <span>Minha Empresa</span>
+    <span id="smart-chat-close" style="cursor: pointer; font-size: 18px;">&times;</span>
+  `;
+
+  // Área de mensagens
+  var chatMessages = document.createElement('div');
+  chatMessages.id = 'smart-chat-messages';
+  chatMessages.style.cssText = `
+    height: 350px;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f8f9fa;
+  `;
+
+  // Mensagem de boas-vindas
+  var welcomeMsg = document.createElement('div');
+  welcomeMsg.style.cssText = `
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  `;
+  welcomeMsg.innerHTML = `
+    <strong>Minha Empresa</strong><br>
+    Olá! Como posso ajudá-lo?
+  `;
+  chatMessages.appendChild(welcomeMsg);
+
+  // Área de input
+  var chatInput = document.createElement('div');
+  chatInput.style.cssText = `
+    padding: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 10px;
+  `;
+
+  var messageInput = document.createElement('input');
+  messageInput.type = 'text';
+  messageInput.placeholder = 'Digite sua mensagem...';
+  messageInput.style.cssText = `
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    outline: none;
+  `;
+
+  var sendButton = document.createElement('button');
+  sendButton.innerHTML = '➤';
+  sendButton.style.cssText = `
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 16px;
+  `;
+
+  chatInput.appendChild(messageInput);
+  chatInput.appendChild(sendButton);
+
+  // Montar chat
+  chatContainer.appendChild(chatHeader);
+  chatContainer.appendChild(chatMessages);
+  chatContainer.appendChild(chatInput);
+
+  // Adicionar ao DOM
+  document.body.appendChild(chatButton);
+  document.body.appendChild(chatContainer);
+
+  // Eventos
+  chatButton.onclick = function() {
+    chatContainer.style.display = 'block';
+    chatButton.style.display = 'none';
+  };
+
+  document.getElementById('smart-chat-close').onclick = function() {
+    chatContainer.style.display = 'none';
+    chatButton.style.display = 'flex';
+  };
+
+  // Função para enviar mensagem
+  function sendMessage() {
+    var message = messageInput.value.trim();
+    if (!message) return;
+
+    // Adicionar mensagem do usuário
+    var userMsg = document.createElement('div');
+    userMsg.style.cssText = `
+      background: #1976d2;
+      color: white;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      margin-left: 50px;
+      text-align: right;
+    `;
+    userMsg.textContent = message;
+    chatMessages.appendChild(userMsg);
+
+    // Limpar input
+    messageInput.value = '';
+
+    // Scroll para baixo
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Enviar para API
+    fetch(chatConfig.apiUrl + '/webchat/message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        chatId: chatConfig.chatId,
+        companyName: chatConfig.companyName
+      })
+    }).then(function(response) {
+      return response.json();
+    }).then(function(data) {
+      if (data.reply) {
+        var botMsg = document.createElement('div');
+        botMsg.style.cssText = `
+          background: white;
+          padding: 10px;
+          border-radius: 10px;
+          margin-bottom: 10px;
+          margin-right: 50px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        `;
+        botMsg.innerHTML = `<strong>Minha Empresa:</strong><br>` + data.reply;
+        chatMessages.appendChild(botMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }).catch(function(error) {
+      console.error('Erro ao enviar mensagem:', error);
+    });
+  }
+
+  sendButton.onclick = sendMessage;
+  messageInput.onkeypress = function(e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  };
+})();
+</script>
+<!-- Fim Smart Atendimento - Chat Web -->
 </html>

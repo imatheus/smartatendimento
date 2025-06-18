@@ -103,11 +103,13 @@ export const storeFacebook = async (
   const {
     facebookUserId,
     facebookUserToken,
-    addInstagram
+    addInstagram,
+    connectionType
   }: {
     facebookUserId: string;
     facebookUserToken: string;
     addInstagram: boolean;
+    connectionType?: string;
   } = req.body;
   const { companyId } = req.user;
 
@@ -124,17 +126,18 @@ export const storeFacebook = async (
   for await (const page of data) {
     const { name, access_token, id, instagram_business_account } = page;
 
-
     const acessTokenPage = await getAccessTokenFromPage(access_token);
 
-    if (instagram_business_account && addInstagram) {
+    // Se connectionType é "instagram", só criar conexões Instagram
+    if (connectionType === "instagram" && instagram_business_account) {
       const {
         id: instagramId,
         username,
         name: instagramName
       } = instagram_business_account;
+      
       pages.push({
-        name: `Insta ${username || instagramName}`,
+        name: `${username || instagramName}`,
         facebookUserId: facebookUserId,
         facebookPageUserId: instagramId,
         facebookUserToken: acessTokenPage,
@@ -149,8 +152,51 @@ export const storeFacebook = async (
         companyId
       });
 
-      // await subscribeApp(instagramId, acessTokenPage);
+      await subscribeApp(instagramId, acessTokenPage);
+    }
+    // Se connectionType é "facebook" ou não especificado, criar conexões Facebook
+    else if (connectionType === "facebook" || !connectionType) {
+      pages.push({
+        name,
+        facebookUserId: facebookUserId,
+        facebookPageUserId: id,
+        facebookUserToken: acessTokenPage,
+        tokenMeta: facebookUserToken,
+        isDefault: false,
+        channel: "facebook",
+        status: "CONNECTED",
+        greetingMessage: "",
+        farewellMessage: "",
+        queueIds: [],
+        isMultidevice: false,
+        companyId
+      });
 
+      await subscribeApp(id, acessTokenPage);
+    }
+    // Comportamento antigo: criar ambos se addInstagram for true
+    else if (addInstagram && instagram_business_account) {
+      const {
+        id: instagramId,
+        username,
+        name: instagramName
+      } = instagram_business_account;
+      
+      pages.push({
+        name: `${username || instagramName}`,
+        facebookUserId: facebookUserId,
+        facebookPageUserId: instagramId,
+        facebookUserToken: acessTokenPage,
+        tokenMeta: facebookUserToken,
+        isDefault: false,
+        channel: "instagram",
+        status: "CONNECTED",
+        greetingMessage: "",
+        farewellMessage: "",
+        queueIds: [],
+        isMultidevice: false,
+        companyId
+      });
 
       pages.push({
         name,
@@ -169,31 +215,11 @@ export const storeFacebook = async (
       });
 
       await subscribeApp(id, acessTokenPage);
-
-    }
-
-    if (!instagram_business_account) {
-      pages.push({
-        name,
-        facebookUserId: facebookUserId,
-        facebookPageUserId: id,
-        facebookUserToken: acessTokenPage,
-        tokenMeta: facebookUserToken,
-        isDefault: false,
-        channel: "facebook",
-        status: "CONNECTED",
-        greetingMessage: "",
-        farewellMessage: "",
-        queueIds: [],
-        isMultidevice: false,
-        companyId
-      });
-
-      await subscribeApp(page.id, acessTokenPage);
+      await subscribeApp(instagramId, acessTokenPage);
     }
   }
 
-  console.log(pages)
+  console.log("Pages to create:", pages);
 
   for await (const pageConection of pages) {
     const exist = await Whatsapp.findOne({
@@ -206,9 +232,12 @@ export const storeFacebook = async (
       await exist.update({
         ...pageConection
       });
-    }
-
-    if (!exist) {
+      
+      io.emit(`company-${companyId}-whatsapp`, {
+        action: "update",
+        whatsapp: exist
+      });
+    } else {
       const { whatsapp } = await CreateWhatsAppService(pageConection);
 
       io.emit(`company-${companyId}-whatsapp`, {
@@ -217,10 +246,71 @@ export const storeFacebook = async (
       });
     }
   }
-  return res.status(200);
+  
+  return res.status(200).json({ 
+    message: "Connections created successfully",
+    count: pages.length 
+  });
 };
 
+export const storeWebChat = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const {
+    name,
+    welcomeMessage,
+    primaryColor,
+    position,
+    companyName
+  }: {
+    name: string;
+    welcomeMessage: string;
+    primaryColor: string;
+    position: string;
+    companyName: string;
+  } = req.body;
+  const { companyId } = req.user;
 
+  try {
+    const { whatsapp } = await CreateWhatsAppService({
+      name,
+      status: "CONNECTED",
+      isDefault: false,
+      greetingMessage: welcomeMessage,
+      complationMessage: "",
+      outOfHoursMessage: "",
+      queueIds: [],
+      companyId,
+      channel: "webchat",
+      facebookUserId: "",
+      facebookUserToken: "",
+      facebookPageUserId: `webchat_${Date.now()}`,
+      tokenMeta: JSON.stringify({
+        primaryColor,
+        position,
+        companyName,
+        welcomeMessage
+      })
+    });
+
+    const io = getIO();
+    io.emit(`company-${companyId}-whatsapp`, {
+      action: "update",
+      whatsapp
+    });
+
+    return res.status(200).json({
+      message: "WebChat connection created successfully",
+      whatsapp
+    });
+  } catch (error) {
+    console.error("Error creating WebChat:", error);
+    return res.status(500).json({
+      error: "Failed to create WebChat connection"
+    });
+  }
+};
 
 export const show = async (req: Request, res: Response): Promise<Response> => {
   const { whatsappId } = req.params;
@@ -282,32 +372,15 @@ export const remove = async (
       action: "delete",
       whatsappId: +whatsappId
     });
-
   }
 
-  if (whatsapp.channel === "facebook" || whatsapp.channel === "instagram") {
-    const { facebookUserToken } = whatsapp;
+  if (whatsapp.channel === "facebook" || whatsapp.channel === "instagram" || whatsapp.channel === "webchat") {
+    await DeleteWhatsAppService(whatsappId);
 
-    const getAllSameToken = await Whatsapp.findAll({
-
-      where: {
-        facebookUserToken
-      }
+    io.emit(`company-${companyId}-whatsapp`, {
+      action: "delete",
+      whatsappId: +whatsappId
     });
-
-    await Whatsapp.destroy({
-      where: {
-        facebookUserToken
-      }
-    });
-
-    for await (const whatsapp of getAllSameToken) {
-      io.emit(`company-${companyId}-whatsapp`, {
-        action: "delete",
-        whatsappId: whatsapp.id
-      });
-    }
-
   }
 
   return res.status(200).json({ message: "Session disconnected." });

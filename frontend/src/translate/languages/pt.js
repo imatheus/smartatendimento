@@ -311,7 +311,7 @@ const messages = {
           quickMessages: "Respostas Rápidas",
           contacts: "Contatos",
           queues: "Setores & Chatbot",
-          tags: "Controle de Tags",
+          tags: "Etiquetas",
           administration: "Administração",
           users: "Usuários",
           settings: "Configurações",

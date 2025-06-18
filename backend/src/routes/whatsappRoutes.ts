@@ -9,6 +9,8 @@ whatsappRoutes.get("/whatsapp/", isAuth, WhatsAppController.index);
 
 whatsappRoutes.post("/facebook/", isAuth, WhatsAppController.storeFacebook);
 
+whatsappRoutes.post("/webchat/", isAuth, WhatsAppController.storeWebChat);
+
 whatsappRoutes.post("/whatsapp/", isAuth, WhatsAppController.store);
 
 whatsappRoutes.get("/whatsapp/:whatsappId", isAuth, WhatsAppController.show);
