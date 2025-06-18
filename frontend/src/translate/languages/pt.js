@@ -203,24 +203,6 @@ const messages = {
         },
         success: "Usuário salvo com sucesso.",
       },
-      scheduleModal: {
-        title: {
-          add: "Novo Agendamento",
-          edit: "Editar Agendamento",
-        },
-        form: {
-          body: "Mensagem",
-          contact: "Contato",
-          sendAt: "Data de Agendamento",
-          sentAt: "Data de Envio",
-        },
-        buttons: {
-          okAdd: "Adicionar",
-          okEdit: "Salvar",
-          cancel: "Cancelar",
-        },
-        success: "Agendamento salvo com sucesso.",
-      },
       tagModal: {
         title: {
           add: "Nova Tag",
@@ -320,7 +302,6 @@ const messages = {
           users: "Usuários",
           settings: "Configurações",
           messagesAPI: "API",
-          schedules: "Agendamentos",
           campaigns: "Campanhas",
           financeiro: "Financeiro",
         },
@@ -482,7 +463,7 @@ const messages = {
           deleted: "Registro excluído",
         },
       },
-            campaignsConfig: {
+      campaignsConfig: {
         title: "Configurações de Campanhas",
       },
       queues: {
@@ -523,27 +504,6 @@ const messages = {
           deleteTitle: "Excluir",
           deleteMessage:
             "Todos os dados do usuário serão perdidos. Os atendimento abertos deste usuário serão movidos para o setor.",
-        },
-      },
-      schedules: {
-        title: "Agendamentos",
-        confirmationModal: {
-          deleteTitle: "Você tem certeza que quer excluir este Agendamento?",
-          deleteMessage: "Esta ação não pode ser revertida.",
-        },
-        table: {
-          contact: "Contato",
-          body: "Mensagem",
-          sendAt: "Data de Agendamento",
-          sentAt: "Data de Envio",
-          status: "Status",
-          actions: "Ações",
-        },
-        buttons: {
-          add: "Novo Agendamento",
-        },
-        toasts: {
-          deleted: "Agendamento excluído com sucesso.",
         },
       },
       tags: {
@@ -603,7 +563,6 @@ const messages = {
         extraInfo: "Outras informações",
       },
       ticketOptionsMenu: {
-        schedule: "Agendamento",
         delete: "Deletar",
         transfer: "Transferir",
         registerAppointment: "Observações do Contato",

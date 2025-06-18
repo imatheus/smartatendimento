@@ -23,7 +23,6 @@ import { AuthProvider } from "../context/Auth/AuthContext";
 import { TicketsContextProvider } from "../context/Tickets/TicketsContext";
 import { WhatsAppsProvider } from "../context/WhatsApp/WhatsAppsContext";
 import Route from "./Route";
-import Schedules from "../pages/Schedules";
 import Campaigns from "../pages/Campaigns";
 import CampaignsConfig from "../pages/CampaignsConfig";
 import CampaignReport from "../pages/CampaignReport";
@@ -67,12 +66,6 @@ const Routes = () => {
                   exact
                   path="/quick-messages"
                   component={QuickMessages}
-                  isPrivate
-                />
-                <Route
-                  exact
-                  path="/schedules"
-                  component={Schedules}
                   isPrivate
                 />
                 <Route exact path="/tags" component={Tags} isPrivate />

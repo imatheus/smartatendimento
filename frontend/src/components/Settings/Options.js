@@ -78,24 +78,19 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function Options(props) {
-  const { settings, scheduleTypeChanged } = props;
+  const { settings } = props;
   const classes = useStyles();
   const { darkMode, toggleDarkMode, drawerCollapsed, toggleDrawerCollapse } = useCustomTheme();
   const [userRating, setUserRating] = useState("disabled");
-  const [scheduleType, setScheduleType] = useState("disabled");
   const [callType, setCallType] = useState("enabled");
   const [chatbotType, setChatbotType] = useState("");
   const [CheckMsgIsGroup, setCheckMsgIsGroupType] = useState("enabled");
 
   const [loadingUserRating, setLoadingUserRating] = useState(false);
-  const [loadingScheduleType, setLoadingScheduleType] = useState(false);
   const [loadingCallType, setLoadingCallType] = useState(false);
   const [loadingChatbotType, setLoadingChatbotType] = useState(false);
   const [, setCheckMsgIsGroup] = useState(false);
 
-
-  
-  
   const [asaasType, setAsaasType] = useState("");
   const [loadingAsaasType, setLoadingAsaasType] = useState(false);
 
@@ -106,10 +101,6 @@ export default function Options(props) {
       const userRating = settings.find((s) => s.key === "userRating");
       if (userRating) {
         setUserRating(userRating.value);
-      }
-      const scheduleType = settings.find((s) => s.key === "scheduleType");
-      if (scheduleType) {
-        setScheduleType(scheduleType.value);
       }
       const callType = settings.find((s) => s.key === "call");
       if (callType) {
@@ -124,8 +115,6 @@ export default function Options(props) {
         setChatbotType(chatbotType.value);
       }
 
-      
-      
       const asaasType = settings.find((s) => s.key === "asaas");
       if (asaasType) {
         setAsaasType(asaasType.value);
@@ -143,29 +132,6 @@ export default function Options(props) {
     });
     toast.success("Operação atualizada com sucesso.");
     setLoadingUserRating(false);
-  }
-
-  async function handleScheduleType(value) {
-    setScheduleType(value);
-    setLoadingScheduleType(true);
-    await update({
-      key: "scheduleType",
-      value,
-    });
-    //toast.success("Oraçãpeo atualizada com sucesso.");
-    toast.success('Operação atualizada com sucesso.', {
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: false,
-      draggable: true,
-      theme: "light",
-      });
-    setLoadingScheduleType(false);
-    if (typeof scheduleTypeChanged === "function") {
-      scheduleTypeChanged(value);
-    }
   }
 
   async function handleCallType(value) {
@@ -199,13 +165,8 @@ export default function Options(props) {
     });
     toast.success("Operação atualizada com sucesso.");
     setCheckMsgIsGroup(false);
-    /*     if (typeof scheduleTypeChanged === "function") {
-          scheduleTypeChanged(value);
-        } */
   }
 
-  
-  
   async function handleChangeAsaas(value) {
     setAsaasType(value);
     setLoadingAsaasType(true);
@@ -278,27 +239,6 @@ export default function Options(props) {
         </Grid>
         <Grid xs={12} sm={6} md={4} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="schedule-type-label">
-              Gerenciamento de Expediente
-            </InputLabel>
-            <Select
-              labelId="schedule-type-label"
-              value={scheduleType}
-              onChange={async (e) => {
-                handleScheduleType(e.target.value);
-              }}
-            >
-              <MenuItem value={"disabled"}>Desabilitado</MenuItem>
-              <MenuItem value={"queue"}>Gerenciamento Por Fila</MenuItem>
-              <MenuItem value={"company"}>Gerenciamento Por Empresa</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingScheduleType && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-        <Grid xs={12} sm={6} md={4} item>
-          <FormControl className={classes.selectContainer}>
             <InputLabel id="group-type-label">
               Ignorar Mensagens de Grupos
             </InputLabel>
@@ -313,7 +253,7 @@ export default function Options(props) {
               <MenuItem value={"enabled"}>Ativado</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingScheduleType && "Atualizando..."}
+              Ativar/desativar o processamento de mensagens de grupos
             </FormHelperText>
           </FormControl>
         </Grid>

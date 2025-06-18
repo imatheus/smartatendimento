@@ -6,7 +6,6 @@ import { makeStyles, Paper, Tabs, Tab } from "@material-ui/core";
 
 import TabPanel from "../../components/TabPanel";
 
-import SchedulesForm from "../../components/SchedulesForm";
 import CompaniesManager from "../../components/CompaniesManager";
 import PlansManager from "../../components/PlansManager";
 import Options from "../../components/Settings/Options";
@@ -57,15 +56,13 @@ const useStyles = makeStyles((theme) => ({
 const SettingsCustom = () => {
   const classes = useStyles();
   const [tab, setTab] = useState("options");
-  const [schedules, setSchedules] = useState([]);
   const [company, setCompany] = useState({});
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState({});
   const [settings, setSettings] = useState({});
-  const [schedulesEnabled, setSchedulesEnabled] = useState(false);
 
   const { getCurrentUserInfo } = useAuth();
-  const { find, updateSchedules } = useCompanies();
+  const { find } = useCompanies();
   const { getAll: getAllSettings } = useSettings();
 
   useEffect(() => {
@@ -76,17 +73,7 @@ const SettingsCustom = () => {
         const company = await find(companyId);
         const settingList = await getAllSettings();
         setCompany(company);
-        setSchedules(company.schedules);
         setSettings(settingList);
-
-        if (Array.isArray(settingList)) {
-          const scheduleType = settingList.find(
-            (d) => d.key === "scheduleType"
-          );
-          if (scheduleType) {
-            setSchedulesEnabled(scheduleType.value === "company");
-          }
-        }
 
         const user = await getCurrentUserInfo();
         setCurrentUser(user);
@@ -107,17 +94,7 @@ const SettingsCustom = () => {
           const company = await find(companyId);
           const settingList = await getAllSettings();
           setCompany(company);
-          setSchedules(company.schedules);
           setSettings(settingList);
-  
-          if (Array.isArray(settingList)) {
-            const scheduleType = settingList.find(
-              (d) => d.key === "scheduleType"
-            );
-            if (scheduleType) {
-              setSchedulesEnabled(scheduleType.value === "company");
-            }
-          }
   
           const user = await getCurrentUserInfo();
           setCurrentUser(user);
@@ -130,18 +107,6 @@ const SettingsCustom = () => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
 
     setTab(newValue);
-  };
-
-  const handleSubmitSchedules = async (data) => {
-    setLoading(true);
-    try {
-      setSchedules(data);
-      await updateSchedules({ id: company.id, schedules: data });
-      toast.success("Horários atualizados com sucesso.");
-    } catch (e) {
-      toast.error(e);
-    }
-    setLoading(false);
   };
 
   const isSuper = () => {
@@ -164,22 +129,10 @@ const SettingsCustom = () => {
           className={classes.tab}
         >
           <Tab label="Opções" value={"options"} />
-          {schedulesEnabled && <Tab label="Horários" value={"schedules"} />}
           {isSuper() ? <Tab label="Empresas" value={"companies"} /> : null}
           {isSuper() ? <Tab label="Planos" value={"plans"} /> : null}
         </Tabs>
         <Paper className={classes.paper} elevation={0}>
-          <TabPanel
-            className={classes.container}
-            value={tab}
-            name={"schedules"}
-          >
-            <SchedulesForm
-              loading={loading}
-              onSubmit={handleSubmitSchedules}
-              initialValues={schedules}
-            />
-          </TabPanel>
           <OnlyForSuperUser
             user={currentUser}
             yes={() => (
@@ -207,9 +160,6 @@ const SettingsCustom = () => {
           <TabPanel className={classes.container} value={tab} name={"options"}>
             <Options
               settings={settings}
-              scheduleTypeChanged={(value) =>
-                setSchedulesEnabled(value === "company")
-              }
             />
           </TabPanel>
         </Paper>

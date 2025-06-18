@@ -50,12 +50,12 @@ const useStyles = makeStyles((theme) => ({
   toolbarIcon: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     padding: "0 8px",
     minHeight: "48px",
   },
   appBar: {
-    zIndex: theme.zIndex.drawer + 1,
+    zIndex: theme.zIndex.drawer - 1,
     transition: theme.transitions.create(["width", "margin"], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
@@ -116,6 +116,7 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.enteringScreen,
     }),
     overflowX: "hidden",
+    overflowY: "auto",
   },
   appBarSpacer: {
     minHeight: "48px",
@@ -139,6 +140,7 @@ const useStyles = makeStyles((theme) => ({
     flex: 1,
     padding: theme.spacing(1),
     overflowY: "scroll",
+    overflowX: "hidden",
     ...theme.scrollbarStyles,
   },
 }));
@@ -251,12 +253,17 @@ const LoggedInLayout = ({ children }) => {
         open={drawerOpen}
       >
         <div className={classes.toolbarIcon}>
-          {!drawerCollapsed && (
-            <img src={logo} style={{ margin: "0 auto", height: '100%', width: '100%',alignSelf: 'center' }} alt="logo" />
-          )}
-          <IconButton onClick={drawerCollapsed ? toggleDrawerCollapse : () => setDrawerOpen(!drawerOpen)}>
-            {drawerCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </IconButton>
+          <img 
+            src={logo} 
+            style={{ 
+              margin: drawerCollapsed ? "0 auto" : "0", 
+              height: drawerCollapsed ? '50px' : '60px', 
+              width: drawerCollapsed ? '50px' : '60px',
+              alignSelf: 'center',
+              transition: 'all 0.3s ease'
+            }} 
+            alt="logo"
+          />
         </div>
         <Divider />
         <List className={classes.containerWithScroll}>

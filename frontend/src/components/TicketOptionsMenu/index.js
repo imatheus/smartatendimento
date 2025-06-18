@@ -11,16 +11,11 @@ import toastError from "../../errors/toastError";
 import { Can } from "../Can";
 import { AuthContext } from "../../context/Auth/AuthContext";
 
-import ScheduleModal from "../ScheduleModal";
-
 const TicketOptionsMenu = ({ ticket, menuOpen, handleClose, anchorEl }) => {
 	const [confirmationOpen, setConfirmationOpen] = useState(false);
 	const [transferTicketModalOpen, setTransferTicketModalOpen] = useState(false);
 	const isMounted = useRef(true);
 	const { user } = useContext(AuthContext);
-
-	const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
-	const [contactId, setContactId] = useState(null);
 
 	useEffect(() => {
 		return () => {
@@ -52,17 +47,6 @@ const TicketOptionsMenu = ({ ticket, menuOpen, handleClose, anchorEl }) => {
 		}
 	};
 
-	const handleOpenScheduleModal = () => {
-		handleClose();
-		setContactId(ticket.contact.id);
-		setScheduleModalOpen(true);
-	}
-
-	const handleCloseScheduleModal = () => {
-		setScheduleModalOpen(false);
-		setContactId(null);
-	}
-
 	return (
 		<>
 			<Menu
@@ -81,9 +65,6 @@ const TicketOptionsMenu = ({ ticket, menuOpen, handleClose, anchorEl }) => {
 				open={menuOpen}
 				onClose={handleClose}
 			>
-				<MenuItem onClick={handleOpenScheduleModal}>
-					{i18n.t("ticketOptionsMenu.schedule")}
-				</MenuItem>
 				<MenuItem onClick={handleOpenTransferModal}>
 					{i18n.t("ticketOptionsMenu.transfer")}
 				</MenuItem>
@@ -113,12 +94,6 @@ const TicketOptionsMenu = ({ ticket, menuOpen, handleClose, anchorEl }) => {
 				modalOpen={transferTicketModalOpen}
 				onClose={handleCloseTransferTicketModal}
 				ticketid={ticket.id}
-			/>
-			<ScheduleModal
-				open={scheduleModalOpen}
-				onClose={handleCloseScheduleModal}
-				aria-labelledby="form-dialog-title"
-				contactId={contactId}
 			/>
 		</>
 	);
