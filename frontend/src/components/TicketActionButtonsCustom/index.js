@@ -57,14 +57,12 @@ const TicketActionButtonsCustom = ({ ticket }) => {
 		setLoading(true);
 		try {
 			const updateData = {
-				status: status,
-				userId: userId || null,
+			status: status,
+			userId: userId || null,
 			};
-
-			// Quando fechando um ticket, adicionar justClose: true
-			if (status === "closed") {
-				updateData.justClose = true;
-			}
+			
+			// Não adicionar justClose para permitir o envio da pesquisa de avaliação
+			// justClose deve ser usado apenas em casos específicos onde não queremos a pesquisa
 
 			await api.put(`/tickets/${ticket.id}`, updateData);
 

@@ -209,28 +209,43 @@ const ListTicketsService = async ({
   }
 
   if (Array.isArray(tags) && tags.length > 0) {
-    // Otimização: usar subquery ao invés de múltiplas queries
-    const ticketTagsSubquery = `
-      SELECT "ticketId" FROM "TicketTags" 
-      WHERE "tagId" IN (${tags.map(() => '?').join(',')})
-      GROUP BY "ticketId"
-      HAVING COUNT(DISTINCT "tagId") = ?
-    `;
-    
+    const ticketsTagFilter: any[] | null = [];
+    for (let tag of tags) {
+      const ticketTags = await TicketTag.findAll({
+        where: { tagId: tag }
+      });
+      if (ticketTags) {
+        ticketsTagFilter.push(ticketTags.map(t => t.ticketId));
+      }
+    }
+
+    const ticketsIntersection: number[] = intersection(...ticketsTagFilter);
+
     whereCondition = {
       ...whereCondition,
       id: {
-        [Op.in]: literal(`(${ticketTagsSubquery})`)
+        [Op.in]: ticketsIntersection
       }
     };
   }
 
   if (Array.isArray(users) && users.length > 0) {
-    // Otimização: filtro direto ao invés de queries separadas
+    const ticketsUserFilter: any[] | null = [];
+    for (let user of users) {
+      const ticketUsers = await Ticket.findAll({
+        where: { userId: user }
+      });
+      if (ticketUsers) {
+        ticketsUserFilter.push(ticketUsers.map(t => t.id));
+      }
+    }
+
+    const ticketsIntersection: number[] = intersection(...ticketsUserFilter);
+
     whereCondition = {
       ...whereCondition,
-      userId: {
-        [Op.in]: users
+      id: {
+        [Op.in]: ticketsIntersection
       }
     };
   }

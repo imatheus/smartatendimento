@@ -24,7 +24,7 @@ const server = app.listen(process.env.PORT, async () => {
       await ProcessPendingSchedules();
     }, 5000); // Aguardar 5 segundos para garantir que tudo esteja inicializado
   });
-  logger.info(`Server started on port: ${process.env.PORT}`);
+  logger.info(`Application server started successfully on port ${process.env.PORT}`);
 });
 
 initIO(server);

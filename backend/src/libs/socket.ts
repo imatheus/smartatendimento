@@ -19,51 +19,53 @@ export const initIO = (httpServer: Server): SocketIOServer => {
   });
 
   io.on("connection", async (socket) => {
-    logger.info(`Client Connected: ${socket.id}`);
     const { userId, companyId } = socket.handshake.query;
-
+    
     if (userId && userId !== "undefined" && userId !== "null") {
       try {
         const user = await User.findByPk(userId as string);
         if (user) {
           user.online = true;
           await user.save();
-          socket.join(`user:${userId}`); // Join user-specific room for targeted events
-          logger.info(`User ${userId} marked as online`);
+          socket.join(`user:${userId}`);
+          logger.info(`User ${user.name} (ID: ${userId}) connected`);
         }
       } catch (err) {
-        logger.error(err, `Error updating user online status for userId: ${userId}`);
+        logger.error(err, `Error connecting user ${userId}`);
       }
+    } else {
+      logger.info(`Anonymous client connected`);
     }
 
     socket.on("joinChatBox", (ticketId: string) => {
-      logger.info(`Client joined ticket channel: ${ticketId}`);
       socket.join(`ticket:${ticketId}`);
+      logger.info(`Client joined ticket chat ${ticketId}`);
     });
 
     socket.on("joinNotification", () => {
-      logger.info("Client joined notification channel");
       socket.join("notification");
+      logger.info(`Client connected to notifications`);
     });
 
     socket.on("joinTickets", (status: string) => {
-      logger.info(`Client joined ${status} tickets channel`);
       socket.join(`status:${status}`);
+      logger.info(`Client connected to ${status} tickets`);
     });
 
     socket.on("disconnect", async () => {
-      logger.info(`Client disconnected: ${socket.id}`);
       if (userId && userId !== "undefined" && userId !== "null") {
         try {
           const user = await User.findByPk(userId as string);
           if (user) {
             user.online = false;
             await user.save();
-            logger.info(`User ${userId} marked as offline`);
+            logger.info(`User ${user.name} (ID: ${userId}) disconnected`);
           }
         } catch (err) {
-          logger.error(err, `Error updating user offline status for userId: ${userId}`);
+          logger.error(err, `Error disconnecting user ${userId}`);
         }
+      } else {
+        logger.info(`Anonymous client disconnected`);
       }
     });
 

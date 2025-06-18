@@ -228,7 +228,6 @@ const TicketListItemCustom = ({ ticket, setUpdate }) => {
     try {
       await api.put(`/tickets/${id}`, {
         status: "closed",
-        justClose: true,
         userId: user?.id,
       });
       

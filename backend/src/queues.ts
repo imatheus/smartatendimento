@@ -20,9 +20,9 @@ try {
   scheduleQueue = new Queue("ScheduleQueue", redisConfig);
   campaignQueue = new Queue("CampaignQueue", redisConfig);
   
-  logger.info("Queues initialized successfully");
+  logger.info("Background job queues initialized successfully");
 } catch (error) {
-  logger.error("Failed to initialize queues:", error);
+  logger.error("Failed to initialize background job queues:", error);
 }
 
 // Exportar filas (podem ser null se Redis não estiver disponível)
@@ -30,7 +30,7 @@ export { scheduleQueue, campaignQueue };
 
 export const startQueueProcess = async () => {
   try {
-    logger.info("Starting queue processes...");
+    logger.info("Starting background job processors...");
     
     if (!scheduleQueue || !campaignQueue) {
       logger.warn("Queues not initialized - Redis may not be available");
@@ -77,7 +77,7 @@ export const startQueueProcess = async () => {
       logger.warn("Failed to clean old jobs:", cleanError);
     }
     
-    logger.info("Queue processes started successfully");
+    logger.info("Background job processors started successfully");
     
   } catch (error) {
     logger.error("Failed to start queue processes:", error);

@@ -34,7 +34,22 @@ const FindOrCreateTicketService = async (
   let created = false;
 
   if (ticket) {
-    await ticket.update({ unreadMessages });
+    // Se o ticket estava fechado, resetar para estado inicial
+    if (ticket.status === "closed") {
+      await ticket.update({ 
+        unreadMessages,
+        status: "pending",
+        userId: null,
+        queueId: null,
+        chatbot: false,
+        queueOptionId: null
+      });
+      
+      // Recarregar o ticket para garantir que os valores foram atualizados
+      await ticket.reload();
+    } else {
+      await ticket.update({ unreadMessages });
+    }
   }
 
   if (!ticket && groupContact) {

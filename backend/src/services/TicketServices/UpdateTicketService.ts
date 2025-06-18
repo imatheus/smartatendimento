@@ -87,11 +87,10 @@ const UpdateTicketService = async ({
       if (setting?.value === "enabled") {
         if (ticketTraking.ratingAt == null && !justClose) {
 
-
           const ratingTxt = ratingMessage || "";
           let bodyRatingMessage = `\u200e${ratingTxt}\n\n`;
           bodyRatingMessage +=
-            "Digite de 1 à 3 para qualificar nosso atendimento:\n*1* - _Insatisfeito_\n*2* - _Satisfeito_\n*3* - _Muito Satisfeito_\n\n";
+            "Digite de 1 à 3 para qualificar nosso atendimento:\n*1* - 😡 Insatisfeito\n*2* - 🙄 Satisfeito\n*3* - 😁 Muito Satisfeito\n\n";
 
           if (ticket.channel === "whatsapp") {
             await SendWhatsAppMessage({ body: bodyRatingMessage, ticket });
@@ -115,8 +114,10 @@ const UpdateTicketService = async ({
 
           return { ticket, oldStatus, oldUserId };
         }
-        ticketTraking.ratingAt = moment().toDate();
-        ticketTraking.rated = false;
+        await ticketTraking.update({
+          ratingAt: moment().toDate(),
+          rated: false
+        });
       }
 
       if (!isNil(complationMessage) && complationMessage !== "") {
@@ -131,7 +132,10 @@ const UpdateTicketService = async ({
         }
       }
 
-      ticketTraking.finishedAt = moment().toDate();
+      // Só definir finishedAt se não há avaliação habilitada ou se já foi avaliado
+      if (setting?.value !== "enabled" || ticketTraking.rated) {
+        ticketTraking.finishedAt = moment().toDate();
+      }
       ticketTraking.whatsappId = ticket.whatsappId;
       ticketTraking.userId = ticket.userId;
 
@@ -204,16 +208,10 @@ const UpdateTicketService = async ({
 
     await ticketTraking.save();
 
-    console.log(`🔄 UpdateTicketService: Processing ticket ${ticket.id}`);
-    console.log(`🔄 Status change: ${oldStatus} -> ${ticket.status}`);
-    console.log(`🔄 User change: ${oldUserId} -> ${ticket.user?.id}`);
-    console.log(`🔄 JustClose: ${justClose}`);
-
     // Sempre emitir eventos quando o status ou usuário mudou
     if (ticket.status !== oldStatus || ticket.user?.id !== oldUserId) {
       // Remove da lista anterior se o status mudou
       if (ticket.status !== oldStatus) {
-        console.log(`📤 Emitting DELETE to status:${oldStatus} for ticket ${ticket.id}`);
         io.to(`status:${oldStatus}`).emit(`company-${companyId}-ticket`, {
           action: "delete",
           ticketId: ticket.id
@@ -221,7 +219,6 @@ const UpdateTicketService = async ({
       }
 
       // Adiciona/atualiza na nova lista
-      console.log(`📤 Emitting UPDATE to status:${ticket.status} for ticket ${ticket.id}`);
       io.to(`status:${ticket.status}`)
         .to("notification")
         .to(`ticket:${ticketId}`)
@@ -231,7 +228,6 @@ const UpdateTicketService = async ({
         });
     } else {
       // Se não houve mudança de status/usuário, apenas atualiza
-      console.log(`📤 Emitting UPDATE (no status change) to status:${ticket.status} for ticket ${ticket.id}`);
       io.to(`status:${ticket.status}`)
         .to("notification")
         .to(`ticket:${ticketId}`)

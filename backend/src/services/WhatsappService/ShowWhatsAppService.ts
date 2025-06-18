@@ -35,13 +35,7 @@ const ShowWhatsAppService = async (
     throw new AppError("ERR_NO_WAPP_FOUND", 404);
   }
 
-  // Debug: Log para verificar os setores carregados
-  console.log(`[DEBUG] WhatsApp ID: ${whatsapp.id}, Company ID: ${companyId}`);
-  console.log(`[DEBUG] Setores carregados no WhatsApp: ${whatsapp.queues?.length || 0}`);
-  whatsapp.queues?.forEach((queue, index) => {
-    console.log(`[DEBUG] Queue ${index + 1}: ${queue.name} (ID: ${queue.id})`);
-  });
-
+  
   return whatsapp;
 };
 
