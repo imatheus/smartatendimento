@@ -3,7 +3,8 @@ import React from "react";
 import MenuItem from "@material-ui/core/MenuItem";
 import FormControl from "@material-ui/core/FormControl";
 import Select from "@material-ui/core/Select";
-import { Checkbox, ListItemText } from "@material-ui/core";
+import { Checkbox, ListItemText, InputAdornment } from "@material-ui/core";
+import FilterListIcon from "@material-ui/icons/FilterList";
 import { i18n } from "../../translate/i18n";
 
 const TicketsQueueSelect = ({
@@ -47,6 +48,11 @@ const TicketsQueueSelect = ({
 					variant="outlined"
 					value={selectedQueueIds}
 					onChange={handleChange}
+					startAdornment={
+						<InputAdornment position="start">
+							<FilterListIcon fontSize="small" />
+						</InputAdornment>
+					}
 					MenuProps={{
 						anchorOrigin: {
 							vertical: "bottom",

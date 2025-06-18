@@ -157,13 +157,15 @@ const NewTicketModal = ({ modalOpen, onClose, initialContact }) => {
 						renderOption={renderOption}
 						filterOptions={createAddContactOption}
 						onChange={(e, newValue) => handleSelectOption(e, newValue)}
+						onInputChange={(event, newInputValue) => {
+							setSearchParam(newInputValue);
+						}}
 						renderInput={params => (
 							<TextField
 								{...params}
 								label={i18n.t("newTicketModal.fieldLabel")}
 								variant="outlined"
 								autoFocus
-								onChange={e => setSearchParam(e.target.value)}
 								onKeyPress={e => {
 									if (loading || !selectedContact) return;
 									else if (e.key === "Enter") {

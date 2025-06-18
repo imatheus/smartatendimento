@@ -10,6 +10,7 @@ import Tab from "@material-ui/core/Tab";
 import Badge from "@material-ui/core/Badge";
 import MoveToInboxIcon from "@material-ui/icons/MoveToInbox";
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
+import AddCommentIcon from "@material-ui/icons/AddComment";
 
 
 import NewTicketModal from "../NewTicketModal";
@@ -20,7 +21,7 @@ import { i18n } from "../../translate/i18n";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { Can } from "../Can";
 import TicketsQueueSelect from "../TicketsQueueSelect";
-import { Button } from "@material-ui/core";
+import { Button, IconButton } from "@material-ui/core";
 import { TagsFilter } from "../TagsFilter";
 import { UsersFilter } from "../UsersFilter";
 
@@ -209,33 +210,43 @@ const TicketsManagerTabs = () => {
         }}
       />
       <Paper elevation={0} square className={classes.tabsHeader}>
-        <Tabs
-          value={tab}
-          onChange={handleChangeTab}
-          variant="fullWidth"
-          indicatorColor="primary"
-          textColor="primary"
-          aria-label="icon label tabs example"
-        >
-          <Tab
-            value={"open"}
-            icon={<MoveToInboxIcon />}
-            label={i18n.t("tickets.tabs.open.title")}
-            classes={{ root: classes.tab }}
-          />
-          <Tab
-            value={"closed"}
-            icon={<CheckBoxIcon />}
-            label={i18n.t("tickets.tabs.closed.title")}
-            classes={{ root: classes.tab }}
-          />
-          <Tab
-            value={"search"}
-            icon={<SearchIcon />}
-            label={i18n.t("tickets.tabs.search.title")}
-            classes={{ root: classes.tab }}
-          />
-        </Tabs>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Tabs
+            value={tab}
+            onChange={handleChangeTab}
+            indicatorColor="primary"
+            textColor="primary"
+            aria-label="icon label tabs example"
+            style={{ flex: 1 }}
+          >
+            <Tab
+              value={"open"}
+              icon={<MoveToInboxIcon />}
+              label={i18n.t("tickets.tabs.open.title")}
+              classes={{ root: classes.tab }}
+            />
+            <Tab
+              value={"closed"}
+              icon={<CheckBoxIcon />}
+              label={i18n.t("tickets.tabs.closed.title")}
+              classes={{ root: classes.tab }}
+            />
+            <Tab
+              value={"search"}
+              icon={<SearchIcon />}
+              label={i18n.t("tickets.tabs.search.title")}
+              classes={{ root: classes.tab }}
+            />
+          </Tabs>
+          <IconButton
+            color="primary"
+            onClick={() => setNewTicketModalOpen(true)}
+            title={i18n.t("ticketsManager.buttons.newTicket")}
+            style={{ marginRight: 8 }}
+          >
+            <AddCommentIcon />
+          </IconButton>
+        </div>
       </Paper>
       <Paper square elevation={0} className={classes.ticketOptionsBox}>
         {tab === "search" ? (
@@ -250,15 +261,7 @@ const TicketsManagerTabs = () => {
             />
           </div>
         ) : (
-          <>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={() => setNewTicketModalOpen(true)}
-            >
-              {i18n.t("ticketsManager.buttons.newTicket")}
-            </Button>
-                      </>
+          <div style={{ flex: 1 }}></div>
         )}
         <Can
           role={user.profile}
