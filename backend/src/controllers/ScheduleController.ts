@@ -32,29 +32,50 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 };
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
-  const {
-    body,
-    sendAt,
-    contactId,
-    userId
-  } = req.body;
-  const { companyId } = req.user;
+  try {
+    console.log("📝 Creating schedule - Request received:", req.body);
+    
+    const {
+      body,
+      sendAt,
+      contactId,
+      userId
+    } = req.body;
+    const { companyId } = req.user;
 
-  const schedule = await CreateService({
-    body,
-    sendAt,
-    contactId,
-    companyId,
-    userId
-  });
+    console.log("📝 Creating schedule - Calling CreateService with:", {
+      body: body?.substring(0, 50) + "...",
+      sendAt,
+      contactId,
+      companyId,
+      userId
+    });
 
-  const io = getIO();
-  io.emit("schedule", {
-    action: "create",
-    schedule
-  });
+    const schedule = await CreateService({
+      body,
+      sendAt,
+      contactId,
+      companyId,
+      userId
+    });
 
-  return res.status(200).json(schedule);
+    console.log("📝 Creating schedule - Schedule created successfully:", schedule.id);
+
+    const io = getIO();
+    io.emit("schedule", {
+      action: "create",
+      schedule
+    });
+
+    console.log("📝 Creating schedule - WebSocket event emitted");
+
+    return res.status(200).json(schedule);
+  } catch (error) {
+    console.error("❌ Error creating schedule:", error);
+    return res.status(400).json({ 
+      error: error.message || "Erro ao criar agendamento" 
+    });
+  }
 };
 
 export const show = async (req: Request, res: Response): Promise<Response> => {
@@ -70,39 +91,65 @@ export const update = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  if (req.user.profile !== "admin") {
-    throw new AppError("ERR_NO_PERMISSION", 403);
+  try {
+    console.log("✏️ Updating schedule - Request received:", { scheduleId: req.params.scheduleId, body: req.body });
+    
+    const { scheduleId } = req.params;
+    const scheduleData = req.body;
+    const { companyId } = req.user;
+
+    console.log("✏️ Updating schedule - Calling UpdateService");
+
+    const schedule = await UpdateService({ scheduleData, id: scheduleId, companyId });
+
+    console.log("✏️ Updating schedule - Schedule updated successfully:", schedule?.id);
+
+    const io = getIO();
+    io.emit("schedule", {
+      action: "update",
+      schedule
+    });
+
+    console.log("✏️ Updating schedule - WebSocket event emitted");
+
+    return res.status(200).json(schedule);
+  } catch (error) {
+    console.error("❌ Error updating schedule:", error);
+    return res.status(400).json({ 
+      error: error.message || "Erro ao atualizar agendamento" 
+    });
   }
-
-  const { scheduleId } = req.params;
-  const scheduleData = req.body;
-  const { companyId } = req.user;
-
-  const schedule = await UpdateService({ scheduleData, id: scheduleId, companyId });
-
-  const io = getIO();
-  io.emit("schedule", {
-    action: "update",
-    schedule
-  });
-
-  return res.status(200).json(schedule);
 };
 
 export const remove = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const { scheduleId } = req.params;
-  const { companyId } = req.user;
+  try {
+    console.log("🗑️ Deleting schedule - Request received:", { scheduleId: req.params.scheduleId });
+    
+    const { scheduleId } = req.params;
+    const { companyId } = req.user;
 
-  await DeleteService(scheduleId, companyId);
+    console.log("🗑️ Deleting schedule - Calling DeleteService");
 
-  const io = getIO();
-  io.emit("schedule", {
-    action: "delete",
-    scheduleId
-  });
+    await DeleteService(scheduleId, companyId);
 
-  return res.status(200).json({ message: "Schedule deleted" });
+    console.log("🗑️ Deleting schedule - Schedule deleted successfully");
+
+    const io = getIO();
+    io.emit("schedule", {
+      action: "delete",
+      scheduleId
+    });
+
+    console.log("🗑️ Deleting schedule - WebSocket event emitted");
+
+    return res.status(200).json({ message: "Schedule deleted" });
+  } catch (error) {
+    console.error("❌ Error deleting schedule:", error);
+    return res.status(400).json({ 
+      error: error.message || "Erro ao excluir agendamento" 
+    });
+  }
 };

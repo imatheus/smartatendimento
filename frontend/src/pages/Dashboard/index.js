@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import Paper from "@material-ui/core/Paper";
 import Container from "@material-ui/core/Container";
@@ -240,31 +240,32 @@ const Dashboard = () => {
     setLoading(false);
   }
 
-  useEffect(() => {
+  const loadCompanies = useCallback(async () => {
     const companyId = localStorage.getItem("companyId");
     
     if (!companyId) {
+      setCompaniesLoading(false);
       return;
     }
     
-    const loadCompanies = async () => {
-      try {
-        const companiesList = await finding(companyId);
-        if (companiesList && companiesList.dueDate) {
-          setCompanyDueDate(moment(companiesList.dueDate).format("DD/MM/yyyy"));
-        } else {
-          setCompanyDueDate("N/A");
-        }
-      } catch (e) {
-        console.error("Error loading company data:", e);
-        setCompanyDueDate("Erro");
-      } finally {
-        setCompaniesLoading(false);
+    try {
+      const companiesList = await finding(companyId);
+      if (companiesList && companiesList.dueDate) {
+        setCompanyDueDate(moment(companiesList.dueDate).format("DD/MM/yyyy"));
+      } else {
+        setCompanyDueDate("N/A");
       }
-    };
+    } catch (e) {
+      console.error("Error loading company data:", e);
+      setCompanyDueDate("Erro");
+    } finally {
+      setCompaniesLoading(false);
+    }
+  }, [finding]);
 
+  useEffect(() => {
     loadCompanies();
-  }, []) // Removido 'finding' da dependência para evitar re-execuções
+  }, [loadCompanies])
 
   function formatTime(minutes) {
     return moment()

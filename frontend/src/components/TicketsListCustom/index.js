@@ -106,6 +106,24 @@ const reducer = (state, action) => {
     return state;
   }
 
+  if (action.type === "ADD_TICKET") {
+    const ticket = action.payload;
+    
+    console.log(`🎫 ADD_TICKET: Adding ticket ${ticket.id} with status ${ticket.status}`);
+    
+    const ticketIndex = state.findIndex((t) => parseInt(t.id) === parseInt(ticket.id));
+    if (ticketIndex === -1) {
+      // Adiciona novo ticket no topo da lista
+      const newState = [ticket, ...state];
+      console.log(`✅ ADD_TICKET: Added ticket ${ticket.id}, new state length: ${newState.length}`);
+      return newState;
+    } else {
+      console.log(`��️ ADD_TICKET: Ticket ${ticket.id} already exists at index ${ticketIndex}`);
+    }
+    
+    return state;
+  }
+
   if (action.type === "UPDATE_TICKET") {
     const ticket = action.payload;
 
@@ -113,8 +131,14 @@ const reducer = (state, action) => {
     if (ticketIndex !== -1) {
       const newState = [...state];
       newState[ticketIndex] = ticket;
+      // Se o ticket tem mensagens não lidas, move para o topo
+      if (ticket.unreadMessages > 0) {
+        const updatedTicket = newState.splice(ticketIndex, 1)[0];
+        newState.unshift(updatedTicket);
+      }
       return newState;
     } else {
+      // Novo ticket sempre vai para o topo da lista
       const newState = [ticket, ...state];
       return newState;
     }
@@ -202,34 +226,67 @@ const TicketsListCustom = (props) => {
   });
 
   useEffect(() => {
+    console.log(`📥 TicketsListCustom(${status}): Loading tickets - received ${tickets.length} tickets`);
+    
     const queueIds = queues.map((q) => q.id);
+    console.log(`📥 TicketsListCustom(${status}): User queue IDs:`, queueIds);
+    console.log(`📥 TicketsListCustom(${status}): Selected queue IDs:`, selectedQueueIds);
+    
     const filteredTickets = tickets.filter(
       (t) => queueIds.indexOf(t.queueId) > -1
     );
 
+    console.log(`📥 TicketsListCustom(${status}): Filtered tickets count: ${filteredTickets.length}`);
+
     if (profile === "user") {
+      console.log(`📥 TicketsListCustom(${status}): Loading filtered tickets for user profile`);
       dispatch({ type: "LOAD_TICKETS", payload: filteredTickets });
     } else {
+      console.log(`📥 TicketsListCustom(${status}): Loading all tickets for admin profile`);
       dispatch({ type: "LOAD_TICKETS", payload: tickets });
     }
-  }, [tickets, status, searchParam, queues, profile]);
+  }, [tickets, status, searchParam, queues, profile, selectedQueueIds]);
 
   useEffect(() => {
     const companyId = localStorage.getItem("companyId");
     const socket = socketConnection({ companyId });
 
-    const shouldUpdateTicket = (ticket) =>
-      (!ticket.userId || ticket.userId === user?.id || showAll) &&
-      (!ticket.queueId || selectedQueueIds.indexOf(ticket.queueId) > -1);
-
-    const notBelongsToUserQueues = (ticket) =>
-      ticket.queueId && selectedQueueIds.indexOf(ticket.queueId) === -1;
+    const shouldUpdateTicket = (ticket) => {
+      // Para tickets pending, todos os usuários devem ver novos tickets (sem userId)
+      const userCheck = status === "pending" ? 
+        (!ticket.userId || showAll) : 
+        (!ticket.userId || ticket.userId === user?.id || showAll);
+      
+      // Para tickets pending, verificar tanto as filas selecionadas quanto as filas do usuário
+      const userQueueIds = queues.map((q) => q.id);
+      const queueCheck = !ticket.queueId || 
+        selectedQueueIds.indexOf(ticket.queueId) > -1 ||
+        (status === "pending" && userQueueIds.indexOf(ticket.queueId) > -1);
+      const profileCheck = profile === "admin" || profile === "user";
+      
+      console.log(`🔍 TicketsListCustom(${status}): shouldUpdateTicket check for ticket ${ticket.id}:`, {
+        userCheck,
+        queueCheck,
+        profileCheck,
+        ticketUserId: ticket.userId,
+        currentUserId: user?.id,
+        ticketQueueId: ticket.queueId,
+        selectedQueueIds,
+        showAll,
+        profile,
+        status
+      });
+      
+      return userCheck && queueCheck && profileCheck;
+    };
 
     socket.on("connect", () => {
       console.log(`🔌 TicketsListCustom(${status}): Socket connected`);
       if (status) {
         console.log(`🔌 TicketsListCustom(${status}): Joining tickets room: ${status}`);
         socket.emit("joinTickets", status);
+        // Também se conectar às notificações gerais para receber todos os eventos
+        socket.emit("joinNotification");
       } else {
         console.log(`🔌 TicketsListCustom(${status}): Joining notification room`);
         socket.emit("joinNotification");
@@ -270,6 +327,25 @@ const TicketsListCustom = (props) => {
         }
       }
 
+      if (data.action === "create") {
+        console.log(`🎯 TicketsListCustom(${status}): Create event - ticket status: ${data.ticket.status}, list status: ${status}`);
+        console.log(`🎯 TicketsListCustom(${status}): Full ticket data:`, data.ticket);
+        
+        if (data.ticket.status === status) {
+          if (shouldUpdateTicket(data.ticket)) {
+            console.log(`✅ TicketsListCustom(${status}): Adding new ticket to list`);
+            dispatch({
+              type: "ADD_TICKET",
+              payload: data.ticket,
+            });
+          } else {
+            console.log(`❌ TicketsListCustom(${status}): Ticket doesn't pass shouldUpdateTicket check`);
+          }
+        } else {
+          console.log(`❌ TicketsListCustom(${status}): Ticket status ${data.ticket.status} doesn't match list status ${status}`);
+        }
+      }
+
       if (data.action === "delete") {
         console.log(`TicketsListCustom(${status}): Delete event for ticket ${data.ticketId}`);
         dispatch({ type: "DELETE_TICKET", payload: data.ticketId });
@@ -282,16 +358,23 @@ const TicketsListCustom = (props) => {
     });
 
     socket.on(`company-${companyId}-appMessage`, (data) => {
+      console.log(`💬 TicketsListCustom(${status}): AppMessage event:`, data);
+      
       const queueIds = queues.map((q) => q.id);
+      console.log(`💬 TicketsListCustom(${status}): User queue IDs:`, queueIds);
+      console.log(`💬 TicketsListCustom(${status}): Ticket queue ID:`, data.ticket.queue?.id);
+      
       if (
         profile === "user" &&
         (queueIds.indexOf(data.ticket.queue?.id) === -1 ||
           data.ticket.queue === null)
       ) {
+        console.log(`❌ TicketsListCustom(${status}): Message ignored - ticket not in user queues`);
         return;
       }
 
       if (data.action === "create" && shouldUpdateTicket(data.ticket)) {
+        console.log(`✅ TicketsListCustom(${status}): Updating ticket with unread messages`);
         dispatch({
           type: "UPDATE_TICKET_UNREAD_MESSAGES",
           payload: data.ticket,
@@ -314,8 +397,14 @@ const TicketsListCustom = (props) => {
   }, [status, showAll, user, selectedQueueIds, tags, users, profile, queues]);
 
   useEffect(() => {
+    console.log(`🔢 TicketsListCustom(${status}): Updating count - ticketsList.length = ${ticketsList.length}`);
+    console.log(`🔢 TicketsListCustom(${status}): Current tickets:`, ticketsList.map(t => ({ id: t.id, status: t.status, unreadMessages: t.unreadMessages })));
+    
     if (typeof updateCount === "function") {
       updateCount(ticketsList.length);
+      console.log(`🔢 TicketsListCustom(${status}): Called updateCount with ${ticketsList.length}`);
+    } else {
+      console.log(`⚠️ TicketsListCustom(${status}): updateCount is not a function:`, typeof updateCount);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketsList]);

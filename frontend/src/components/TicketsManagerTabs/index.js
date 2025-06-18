@@ -295,21 +295,19 @@ const TicketsManagerTabs = () => {
           />
         </Tabs>
         <Paper className={classes.ticketsWrapper}>
-          {tabOpen === "open" && (
-            <TicketsList
-              status="open"
-              showAll={showAllTickets}
-              selectedQueueIds={selectedQueueIds}
-              updateCount={(val) => setOpenCount(val)}
-            />
-          )}
-          {tabOpen === "pending" && (
-            <TicketsList
-              status="pending"
-              selectedQueueIds={selectedQueueIds}
-              updateCount={(val) => setPendingCount(val)}
-            />
-          )}
+          <TicketsList
+            status="open"
+            showAll={showAllTickets}
+            selectedQueueIds={selectedQueueIds}
+            updateCount={(val) => setOpenCount(val)}
+            style={{ display: tabOpen === "open" ? "block" : "none" }}
+          />
+          <TicketsList
+            status="pending"
+            selectedQueueIds={selectedQueueIds}
+            updateCount={(val) => setPendingCount(val)}
+            style={{ display: tabOpen === "pending" ? "block" : "none" }}
+          />
         </Paper>
       </TabPanel>
       <TabPanel value={tab} name="closed" className={classes.ticketsWrapper}>

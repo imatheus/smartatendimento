@@ -2,8 +2,6 @@ import Queue from "bull";
 import * as Sentry from "@sentry/node";
 
 import { logger } from "./utils/logger";
-import ProcessScheduleJob from "./services/ScheduleServices/ProcessScheduleJob";
-import ProcessCampaignJob from "./services/CampaignService/ProcessCampaignJob";
 
 const redisConfig = {
   redis: {
@@ -14,43 +12,75 @@ const redisConfig = {
   }
 };
 
-export const scheduleQueue = new Queue("ScheduleQueue", redisConfig);
-export const campaignQueue = new Queue("CampaignQueue", redisConfig);
+let scheduleQueue: Queue.Queue | null = null;
+let campaignQueue: Queue.Queue | null = null;
 
-// Processamento de agendamentos
-scheduleQueue.process("ProcessSchedule", ProcessScheduleJob);
-
-// Processamento de campanhas
-campaignQueue.process("ProcessCampaign", ProcessCampaignJob);
-
-// Event listeners para logs
-scheduleQueue.on("completed", (job, result) => {
-  logger.info(`Schedule job ${job.id} completed with result: ${result}`);
-});
-
-scheduleQueue.on("failed", (job, err) => {
-  logger.error(`Schedule job ${job.id} failed with error: ${err.message}`);
-  Sentry.captureException(err);
-});
-
-campaignQueue.on("completed", (job, result) => {
-  logger.info(`Campaign job ${job.id} completed with result: ${result}`);
-});
-
-campaignQueue.on("failed", (job, err) => {
-  logger.error(`Campaign job ${job.id} failed with error: ${err.message}`);
-  Sentry.captureException(err);
-});
-
-export const startQueueProcess = () => {
-  logger.info("Starting queue processes...");
+// Inicializar filas com tratamento de erro
+try {
+  scheduleQueue = new Queue("ScheduleQueue", redisConfig);
+  campaignQueue = new Queue("CampaignQueue", redisConfig);
   
-  // Limpar jobs antigos
-  scheduleQueue.clean(24 * 60 * 60 * 1000, "completed");
-  scheduleQueue.clean(24 * 60 * 60 * 1000, "failed");
-  
-  campaignQueue.clean(24 * 60 * 60 * 1000, "completed");
-  campaignQueue.clean(24 * 60 * 60 * 1000, "failed");
-  
-  logger.info("Queue processes started successfully");
+  logger.info("Queues initialized successfully");
+} catch (error) {
+  logger.error("Failed to initialize queues:", error);
+}
+
+// Exportar filas (podem ser null se Redis não estiver disponível)
+export { scheduleQueue, campaignQueue };
+
+export const startQueueProcess = async () => {
+  try {
+    logger.info("Starting queue processes...");
+    
+    if (!scheduleQueue || !campaignQueue) {
+      logger.warn("Queues not initialized - Redis may not be available");
+      return;
+    }
+
+    // Importar processadores dinamicamente
+    const ProcessScheduleJob = (await import("./services/ScheduleServices/ProcessScheduleJob")).default;
+    const ProcessCampaignJob = (await import("./services/CampaignService/ProcessCampaignJob")).default;
+
+    // Processamento de agendamentos
+    scheduleQueue.process("ProcessSchedule", ProcessScheduleJob);
+
+    // Processamento de campanhas
+    campaignQueue.process("ProcessCampaign", ProcessCampaignJob);
+
+    // Event listeners para logs
+    scheduleQueue.on("completed", (job, result) => {
+      logger.info(`Schedule job ${job.id} completed with result: ${result}`);
+    });
+
+    scheduleQueue.on("failed", (job, err) => {
+      logger.error(`Schedule job ${job.id} failed with error: ${err.message}`);
+      Sentry.captureException(err);
+    });
+
+    campaignQueue.on("completed", (job, result) => {
+      logger.info(`Campaign job ${job.id} completed with result: ${result}`);
+    });
+
+    campaignQueue.on("failed", (job, err) => {
+      logger.error(`Campaign job ${job.id} failed with error: ${err.message}`);
+      Sentry.captureException(err);
+    });
+
+    // Limpar jobs antigos
+    try {
+      await scheduleQueue.clean(24 * 60 * 60 * 1000, "completed");
+      await scheduleQueue.clean(24 * 60 * 60 * 1000, "failed");
+      
+      await campaignQueue.clean(24 * 60 * 60 * 1000, "completed");
+      await campaignQueue.clean(24 * 60 * 60 * 1000, "failed");
+    } catch (cleanError) {
+      logger.warn("Failed to clean old jobs:", cleanError);
+    }
+    
+    logger.info("Queue processes started successfully");
+    
+  } catch (error) {
+    logger.error("Failed to start queue processes:", error);
+    // Não falhar a inicialização do servidor se as filas falharem
+  }
 };

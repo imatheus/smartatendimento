@@ -28,7 +28,6 @@ import Schedules from "../pages/Schedules";
 import Campaigns from "../pages/Campaigns";
 import CampaignsConfig from "../pages/CampaignsConfig";
 import CampaignReport from "../pages/CampaignReport";
-import Annoucements from "../pages/Annoucements";
 import Subscription from "../pages/Subscription/";
 
 
@@ -100,12 +99,6 @@ const Routes = () => {
                   isPrivate
                 />
                 <Route exact path="/queues" component={Queues} isPrivate />
-                <Route
-                  exact
-                  path="/announcements"
-                  component={Annoucements}
-                  isPrivate
-                />
                 <Route
                   exact
                   path="/subscription"

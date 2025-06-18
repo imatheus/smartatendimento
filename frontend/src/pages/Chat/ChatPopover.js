@@ -22,6 +22,7 @@ import { isArray } from "lodash";
 import { socketConnection } from "../../services/socket";
 import { useDate } from "../../hooks/useDate";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import soundFile from "../../assets/chat_notify.mp3";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -104,7 +105,20 @@ export default function ChatPopover() {
   const [chats, dispatch] = useReducer(reducer, []);
   const [invisible, setInvisible] = useState(true);
   const { datetimeToClient } = useDate();
-    useEffect(() => {
+
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio(soundFile);
+      audio.volume = 0.5;
+      audio.play().catch(error => {
+        console.log("Erro ao reproduzir som de notificação do chat:", error);
+      });
+    } catch (error) {
+      console.log("Erro ao criar áudio de notificação do chat:", error);
+    }
+  };
+
+  useEffect(() => {
     if (!("Notification" in window)) {
       console.log("This browser doesn't support notifications");
     } else {
@@ -135,6 +149,8 @@ export default function ChatPopover() {
         dispatch({ type: "CHANGE_CHAT", payload: data });
         if (data.newMessage.senderId !== user.id) {
           console.log(data);
+          // Tocar som de notificação para mensagens de chat
+          playNotificationSound();
         }
       }
       if (data.action === "update") {

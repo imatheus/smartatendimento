@@ -27,8 +27,6 @@ import { AuthContext } from "../context/Auth/AuthContext";
 import BackdropLoading from "../components/BackdropLoading";
 import { i18n } from "../translate/i18n";
 import toastError from "../errors/toastError";
-import AnnouncementsPopover from "../components/AnnouncementsPopover";
-
 import logo from "../assets/logo.png"; 
 import { socketConnection } from "../services/socket";
 import ChatPopover from "../pages/Chat/ChatPopover";
@@ -274,8 +272,6 @@ const LoggedInLayout = ({ children }) => {
             )}
           </Typography>
           {user.id && <NotificationsPopOver />}
-
-          <AnnouncementsPopover />
 
           <ChatPopover />
 

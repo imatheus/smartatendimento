@@ -26,7 +26,6 @@ import Campaign from "../models/Campaign";
 import CampaignSetting from "../models/CampaignSetting";
 import Baileys from "../models/Baileys";
 import CampaignShipping from "../models/CampaignShipping";
-import Announcement from "../models/Announcement";
 import Chat from "../models/Chat";
 import ChatUser from "../models/ChatUser";
 import ChatMessage from "../models/ChatMessage";
@@ -67,7 +66,6 @@ const models = [
   CampaignSetting,
   Baileys,
   CampaignShipping,
-  Announcement,
   Chat,
   ChatUser,
   ChatMessage,

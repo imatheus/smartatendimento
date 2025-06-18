@@ -21,6 +21,8 @@ const CreateService = async ({
   companyId,
   userId
 }: Request): Promise<Schedule> => {
+  console.log("🔧 CreateService - Starting validation");
+  
   const schema = Yup.object().shape({
     body: Yup.string().required().min(5),
     sendAt: Yup.string().required()
@@ -28,17 +30,26 @@ const CreateService = async ({
 
   try {
     await schema.validate({ body, sendAt });
+    console.log("🔧 CreateService - Validation passed");
   } catch (err: any) {
+    console.log("🔧 CreateService - Validation failed:", err.message);
     throw new AppError(err.message);
   }
 
-  // Validar se a data de envio não é no passado
+  // Validar se a data de envio não é no passado (permitir até 2 minutos atrás)
   const sendAtMoment = moment(sendAt);
   const now = moment();
   
-  if (sendAtMoment.isBefore(now.subtract(1, 'minute'))) {
-    throw new AppError("A data de envio não pode ser no passado");
+  if (!sendAtMoment.isValid()) {
+    throw new AppError("Data de envio inválida");
   }
+  
+  if (sendAtMoment.isBefore(now.subtract(2, 'minutes'))) {
+    console.log("🔧 CreateService - Date validation failed");
+    throw new AppError("A data de envio deve ser pelo menos 1 minuto no futuro");
+  }
+
+  console.log("🔧 CreateService - Creating schedule in database");
 
   const schedule = await Schedule.create(
     {
@@ -51,17 +62,18 @@ const CreateService = async ({
     }
   );
 
+  console.log("🔧 CreateService - Schedule created, reloading...");
   await schedule.reload();
+  console.log("🔧 CreateService - Schedule reloaded successfully");
 
-  // Agendar o job para processamento
+  // Agendar o job para processamento (não falhar se não conseguir)
   try {
     await ScheduleJobService(schedule);
     logger.info(`Schedule ${schedule.id} created and job scheduled successfully`);
   } catch (error) {
-    logger.error(`Error scheduling job for schedule ${schedule.id}:`, error);
-    // Atualizar status para erro se não conseguir agendar
-    await schedule.update({ status: 'ERRO' });
-    throw new AppError("Erro ao agendar mensagem. Tente novamente.");
+    logger.warn(`Error scheduling job for schedule ${schedule.id}, but schedule was created:`, error);
+    // Não falhar a criação do agendamento se o job scheduling falhar
+    // O job será processado quando o sistema for reiniciado
   }
 
   return schedule;

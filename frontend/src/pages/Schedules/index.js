@@ -76,12 +76,7 @@ const reducer = (state, action) => {
 
   if (action.type === "DELETE_SCHEDULE") {
     const scheduleId = action.payload;
-
-    const scheduleIndex = state.findIndex((s) => s.id === scheduleId);
-    if (scheduleIndex !== -1) {
-      state.splice(scheduleIndex, 1);
-    }
-    return [...state];
+    return state.filter((s) => s.id !== scheduleId);
   }
 
   if (action.type === "RESET") {
@@ -156,13 +151,13 @@ const Schedules = () => {
     handleOpenScheduleModalFromContactId();
     const socket = socketConnection({ companyId: user.companyId });
 
-    socket.on("user", (data) => {
+    socket.on("schedule", (data) => {
       if (data.action === "update" || data.action === "create") {
-        dispatch({ type: "UPDATE_SCHEDULES", payload: data.schedules });
+        dispatch({ type: "UPDATE_SCHEDULES", payload: data.schedule });
       }
 
       if (data.action === "delete") {
-        dispatch({ type: "DELETE_USER", payload: +data.scheduleId });
+        dispatch({ type: "DELETE_SCHEDULE", payload: Number(data.scheduleId) });
       }
     });
 
@@ -195,19 +190,28 @@ const Schedules = () => {
   };
 
   const handleDeleteSchedule = async (scheduleId) => {
+    console.log("🗑️ Frontend - Starting delete for schedule:", scheduleId);
+    
     try {
+      console.log("🗑️ Frontend - Calling API delete");
       await api.delete(`/schedules/${scheduleId}`);
-      toast.success(i18n.t("schedules.toasts.deleted"));
+      
+      console.log("🗑️ Frontend - API delete successful");
+      toast.success("✅ Agendamento excluído com sucesso!");
+      
+      // Atualizar lista localmente (garantir que o ID seja número)
+      console.log("🗑️ Frontend - Updating local state");
+      dispatch({ type: "DELETE_SCHEDULE", payload: Number(scheduleId) });
+      
     } catch (err) {
+      console.error("🗑️ Frontend - Delete failed:", err);
       toastError(err);
+    } finally {
+      // Sempre fechar modal de confirmação
+      console.log("🗑️ Frontend - Closing confirmation modal");
+      setDeletingSchedule(null);
+      setConfirmModalOpen(false);
     }
-    setDeletingSchedule(null);
-    setSearchParam("");
-    setPageNumber(1);
-
-    dispatch({ type: "RESET" });
-    setPageNumber(1);
-    await fetchSchedules();
   };
 
   const loadMore = () => {
@@ -316,22 +320,34 @@ const Schedules = () => {
                     {capitalize(schedule.status)}
                   </TableCell>
                   <TableCell align="center">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEditSchedule(schedule)}
-                    >
-                      <EditIcon />
-                    </IconButton>
+                    {schedule.status === 'PENDENTE' && (
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEditSchedule(schedule)}
+                        title="Editar agendamento"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    )}
 
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        setConfirmModalOpen(true);
-                        setDeletingSchedule(schedule);
-                      }}
-                    >
-                      <DeleteOutlineIcon />
-                    </IconButton>
+                    {schedule.status === 'PENDENTE' && (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          setConfirmModalOpen(true);
+                          setDeletingSchedule(schedule);
+                        }}
+                        title="Excluir agendamento"
+                      >
+                        <DeleteOutlineIcon />
+                      </IconButton>
+                    )}
+                    
+                    {schedule.status !== 'PENDENTE' && (
+                      <span style={{ color: '#666', fontSize: '12px' }}>
+                        {schedule.status === 'ENVIADO' ? 'Enviado' : 'Erro'}
+                      </span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

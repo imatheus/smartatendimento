@@ -99,24 +99,33 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 		if (open) {
 			try {
 				(async () => {
+					// Carregar lista de contatos
 					const { data: contactList } = await api.get('/contacts/list', { params: { companyId: companyId } });
 					let customList = contactList.map((c) => ({id: c.id, name: c.name}));
 					if (isArray(customList)) {
 						setContacts([{id: "", name: ""}, ...customList]);
 					}
+					
+					// Se tem contactId, definir no schedule
 					if (contactId) {
 						setSchedule(prevState => {
 							return { ...prevState, contactId }
 						});
 					}
 
-					if (!scheduleId) return;
-
-					const { data } = await api.get(`/schedules/${scheduleId}`);
-					setSchedule(prevState => {
-						return { ...prevState, ...data, sendAt: moment(data.sendAt).format('YYYY-MM-DDTHH:mm') };
-					});
-					setCurrentContact(data.contact);
+					// Se é edição, carregar dados do agendamento
+					if (scheduleId) {
+						const { data } = await api.get(`/schedules/${scheduleId}`);
+						setSchedule({
+							...data,
+							sendAt: moment(data.sendAt).format('YYYY-MM-DDTHH:mm')
+						});
+						setCurrentContact(data.contact);
+					} else {
+						// Se é criação, resetar para estado inicial
+						setSchedule(initialState);
+						setCurrentContact(initialContact);
+					}
 				})()
 			} catch (err) {
 				toastError(err);
@@ -127,6 +136,8 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 	const handleClose = () => {
 		onClose();
 		setSchedule(initialState);
+		setCurrentContact(initialContact);
+		setSaving(false);
 	};
 
 	const handleSaveSchedule = async values => {
@@ -135,14 +146,14 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 		setSaving(true);
 		
 		try {
-			// Validar se a data não é no passado
+			// Validar se a data não é no passado (permitir até 2 minutos atrás para compensar delay)
 			const sendAtMoment = moment(values.sendAt);
 			const now = moment();
 			
-			if (sendAtMoment.isBefore(now.subtract(1, 'minute'))) {
-				toast.error("❌ A data de agendamento não pode ser no passado!");
+			if (sendAtMoment.isBefore(now.subtract(2, 'minutes'))) {
+				toast.error("❌ A data de agendamento deve ser pelo menos 1 minuto no futuro!");
 				setSaving(false);
-				return;
+				return Promise.reject(new Error("Data inválida"));
 			}
 			
 			// Mostrar data formatada na mensagem
@@ -170,17 +181,19 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 			}
 			
 			// Aguardar um pouco para o usuário ver a mensagem de sucesso, depois fechar modal
-			setTimeout(() => {
-				setCurrentContact(initialContact);
-				setSchedule(initialState);
-				setSaving(false);
-				handleClose();
-			}, 1500); // 1.5 segundos para ler a mensagem
+			return new Promise((resolve) => {
+				setTimeout(() => {
+					setSaving(false);
+					handleClose();
+					resolve();
+				}, 1500); // 1.5 segundos para ler a mensagem
+			});
 			
 		} catch (err) {
 			toastError(err);
 			setSaving(false);
 			// Não fechar o modal em caso de erro para o usuário poder tentar novamente
+			return Promise.reject(err);
 		}
 	};
 
@@ -200,11 +213,12 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 					initialValues={schedule}
 					enableReinitialize={true}
 					validationSchema={ScheduleSchema}
-					onSubmit={(values, actions) => {
-						setTimeout(() => {
-							handleSaveSchedule(values);
+					onSubmit={async (values, actions) => {
+						try {
+							await handleSaveSchedule(values);
+						} finally {
 							actions.setSubmitting(false);
-						}, 400);
+						}
 					}}
 				>
 					{({ touched, errors, isSubmitting, values }) => (
@@ -219,6 +233,7 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 											fullWidth
 											value={currentContact}
 											options={contacts}
+											disabled={saving}
 											onChange={(e, contact) => {
 												const contactId = contact ? contact.id : '';
 												setSchedule({ ...schedule, contactId });
@@ -245,6 +260,7 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 										variant="outlined"
 										margin="dense"
 										fullWidth
+										disabled={saving}
 									/>
 								</div>
 								<br />
@@ -261,6 +277,7 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 										helperText={touched.sendAt && errors.sendAt}
 										variant="outlined"
 										fullWidth
+										disabled={saving}
 									/>
 								</div>
 							</DialogContent>
@@ -268,7 +285,7 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 								<Button
 									onClick={handleClose}
 									color="secondary"
-									disabled={isSubmitting}
+									disabled={isSubmitting || saving}
 									variant="outlined"
 								>
 									{i18n.t("scheduleModal.buttons.cancel")}
@@ -277,14 +294,16 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 									<Button
 										type="submit"
 										color="primary"
-										disabled={isSubmitting}
+										disabled={isSubmitting || saving}
 										variant="contained"
 										className={classes.btnWrapper}
 									>
-										{scheduleId
-											? `${i18n.t("scheduleModal.buttons.okEdit")}`
-											: `${i18n.t("scheduleModal.buttons.okAdd")}`}
-										{isSubmitting && (
+										{saving 
+											? "Salvando..." 
+											: scheduleId
+												? `${i18n.t("scheduleModal.buttons.okEdit")}`
+												: `${i18n.t("scheduleModal.buttons.okAdd")}`}
+										{(isSubmitting || saving) && (
 											<CircularProgress
 												size={24}
 												className={classes.buttonProgress}

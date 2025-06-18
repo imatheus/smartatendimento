@@ -319,7 +319,6 @@ const messages = {
           messagesAPI: "API",
           schedules: "Agendamentos",
           campaigns: "Campanhas",
-          annoucements: "Informativos",
           financeiro: "Financeiro",
         },
         appBar: {
@@ -480,52 +479,7 @@ const messages = {
           deleted: "Registro excluído",
         },
       },
-      announcements: {
-        title: "Informativos",
-        searchPlaceholder: "Pesquisa",
-        buttons: {
-          add: "Novo Informativo",
-          contactLists: "Listas de Informativos",
-        },
-        table: {
-          priority: "Prioridade",
-          title: "Título",
-          text: "Texto",
-          mediaName: "Arquivo",
-          status: "Status",
-          actions: "Ações",
-        },
-        dialog: {
-          edit: "Edição de Informativo",
-          add: "Novo Informativo",
-          update: "Editar Informativo",
-          readonly: "Apenas Visualização",
-          form: {
-            priority: "Prioridade",
-            title: "Título",
-            text: "Texto",
-            mediaPath: "Arquivo",
-            status: "Status",
-          },
-          buttons: {
-            add: "Adicionar",
-            edit: "Atualizar",
-            okadd: "Ok",
-            cancel: "Cancelar",
-            close: "Fechar",
-            attach: "Anexar Arquivo",
-          },
-        },
-        confirmationModal: {
-          deleteTitle: "Excluir",
-          deleteMessage: "Esta ação não pode ser revertida.",
-        },
-        toasts: {
-          success: "Operação realizada com sucesso",
-          deleted: "Registro excluído",
-        },
-      },
-      campaignsConfig: {
+            campaignsConfig: {
         title: "Configurações de Campanhas",
       },
       queues: {
