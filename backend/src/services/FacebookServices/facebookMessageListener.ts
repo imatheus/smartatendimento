@@ -223,18 +223,9 @@ const verifyQueue = async (
     wbot.id!,
     ticket.companyId
   );
-  if (queues?.length === 1) {
-    const firstQueue = head(queues);
-    let chatbot = false;
-    if (firstQueue?.options) {
-      chatbot = firstQueue?.options?.length > 0;
-    }
-    await UpdateTicketService({
-      ticketData: { queueId: firstQueue?.id, chatbot },
-      ticketId: ticket.id,
-      companyId: ticket.companyId,
-    });
-
+  
+  // Se não há setores cadastrados, não faz nada
+  if (queues.length === 0) {
     return;
   }
 
@@ -249,7 +240,6 @@ const verifyQueue = async (
     queues.forEach((queue, index) => {
       options += `*[ ${index + 1} ]* - ${queue.name}\n`;
     });
-
 
     const textMessage = formatBody(`\u200e${greetingMessage}\n\n${options}`, contact)
 

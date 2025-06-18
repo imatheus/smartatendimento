@@ -111,9 +111,38 @@ const TicketsManagerTabs = () => {
   const [pendingCount, setPendingCount] = useState(0);
 
   const userQueueIds = user.queues.map((q) => q.id);
-  const [selectedQueueIds, setSelectedQueueIds] = useState(userQueueIds || []);
+  
+  // Função para carregar seleção salva do localStorage
+  const loadSavedSelection = () => {
+    try {
+      const savedSelection = localStorage.getItem(`selectedQueueIds_${user.id}`);
+      if (savedSelection) {
+        return JSON.parse(savedSelection);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar seleção salva:', error);
+    }
+    return userQueueIds || [];
+  };
+  
+  const [selectedQueueIds, setSelectedQueueIds] = useState(loadSavedSelection);
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  
+  // Função para salvar seleção no localStorage
+  const saveSelection = (queueIds) => {
+    try {
+      localStorage.setItem(`selectedQueueIds_${user.id}`, JSON.stringify(queueIds));
+    } catch (error) {
+      console.error('Erro ao salvar seleção:', error);
+    }
+  };
+  
+  // Wrapper para setSelectedQueueIds que também salva no localStorage
+  const handleQueueIdsChange = (queueIds) => {
+    setSelectedQueueIds(queueIds);
+    saveSelection(queueIds);
+  };
 
   useEffect(() => {
     if (user.profile.toUpperCase() === "ADMIN") {
@@ -231,34 +260,31 @@ const TicketsManagerTabs = () => {
             >
               {i18n.t("ticketsManager.buttons.newTicket")}
             </Button>
-            <Can
-              role={user.profile}
-              perform="tickets-manager:showall"
-              yes={() => (
-                <FormControlLabel
-                  label={i18n.t("tickets.buttons.showAll")}
-                  labelPlacement="start"
-                  control={
-                    <Switch
-                      size="small"
-                      checked={showAllTickets}
-                      onChange={() =>
-                        setShowAllTickets((prevState) => !prevState)
-                      }
-                      name="showAllTickets"
-                      color="primary"
-                    />
-                  }
-                />
-              )}
-            />
-          </>
+                      </>
         )}
-        <TicketsQueueSelect
-          style={{ marginLeft: 6 }}
-          selectedQueueIds={selectedQueueIds}
-          userQueues={user?.queues}
-          onChange={(values) => setSelectedQueueIds(values)}
+        <Can
+          role={user.profile}
+          perform="tickets-manager:showall"
+          yes={() => (
+            <TicketsQueueSelect
+              style={{ marginLeft: 6 }}
+              selectedQueueIds={selectedQueueIds}
+              userQueues={user?.queues}
+              onChange={handleQueueIdsChange}
+              showAllOption={true}
+              onShowAllChange={setShowAllTickets}
+              showAllTickets={showAllTickets}
+            />
+          )}
+          no={() => (
+            <TicketsQueueSelect
+              style={{ marginLeft: 6 }}
+              selectedQueueIds={selectedQueueIds}
+              userQueues={user?.queues}
+              onChange={handleQueueIdsChange}
+              showAllOption={false}
+            />
+          )}
         />
       </Paper>
       <TabPanel value={tab} name="open" className={classes.ticketsWrapper}>

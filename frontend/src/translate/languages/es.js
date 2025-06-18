@@ -200,6 +200,10 @@ const messages = {
 			},
 			ticketsQueueSelect: {
 				placeholder: "Linhas",
+				buttons: {
+					showAll: "Todos",
+					noQueue: "Sin Cola",
+				},
 			},
 			tickets: {
 				toasts: {

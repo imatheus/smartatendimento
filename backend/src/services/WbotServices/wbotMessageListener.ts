@@ -425,17 +425,8 @@ const isValidMsg = (msg: proto.IWebMessageInfo): boolean => {
 const verifyQueue = async (wbot: Session, msg: proto.IWebMessageInfo, ticket: Ticket, contact: Contact) => {
   const { queues, greetingMessage } = await ShowWhatsAppService(wbot.id!, ticket.companyId);
 
-  if (queues.length === 1) {
-    const firstQueue = head(queues);
-    let chatbot = false;
-    if (firstQueue?.options) {
-      chatbot = firstQueue?.options?.length > 0;
-    }
-    await UpdateTicketService({ 
-      ticketData: { queueId: firstQueue?.id, chatbot }, 
-      ticketId: ticket.id, 
-      companyId: ticket.companyId 
-    });
+  // Se não há setores cadastrados, não faz nada
+  if (queues.length === 0) {
     return;
   }
 
@@ -453,6 +444,8 @@ const verifyQueue = async (wbot: Session, msg: proto.IWebMessageInfo, ticket: Ti
       companyId: ticket.companyId 
     });
   } else {
+    // SEMPRE mostrar as opções de setores para o usuário escolher
+    // Mesmo que haja apenas 1 setor, o usuário deve selecionar
     let options = "";
     queues.forEach((queue, index) => {
       options += `*[ ${index + 1} ]* - ${queue.name}\n`;

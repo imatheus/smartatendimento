@@ -8,6 +8,7 @@ import { SerializeUser } from "../../helpers/SerializeUser";
 import Queue from "../../models/Queue";
 import Company from "../../models/Company";
 import Setting from "../../models/Setting";
+import Plan from "../../models/Plan";
 
 interface SerializedUser {
   id: number;
@@ -35,7 +36,16 @@ const AuthUserService = async ({
 }: Request): Promise<Response> => {
   const user = await User.findOne({
     where: { email },
-    include: ["queues", { model: Company, include: [{ model: Setting }] }]
+    include: [
+      "queues", 
+      { 
+        model: Company, 
+        include: [
+          { model: Setting },
+          { model: Plan, as: "plan" }
+        ] 
+      }
+    ]
   });
 
   if (!user) {

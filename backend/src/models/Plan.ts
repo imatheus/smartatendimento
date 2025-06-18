@@ -34,6 +34,18 @@ class Plan extends Model<Plan> {
   @Column
   value: number;
 
+  @AllowNull(false)
+  @Column
+  useWhatsapp: boolean;
+
+  @AllowNull(false)
+  @Column
+  useFacebook: boolean;
+
+  @AllowNull(false)
+  @Column
+  useInstagram: boolean;
+
   @CreatedAt
   createdAt: Date;
 

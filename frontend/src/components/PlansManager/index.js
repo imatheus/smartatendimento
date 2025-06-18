@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
     makeStyles,
     Paper,
@@ -9,7 +9,11 @@ import {
     TableBody,
     TableCell,
     TableRow,
-    IconButton
+    IconButton,
+    FormControlLabel,
+    Checkbox,
+    Typography,
+    Box
 } from "@material-ui/core";
 import { Formik, Form, Field } from 'formik';
 import ButtonWithSpinner from "../ButtonWithSpinner";
@@ -18,6 +22,8 @@ import { Edit as EditIcon } from "@material-ui/icons";
 
 import { toast } from "react-toastify";
 import usePlans from "../../hooks/usePlans";
+import { i18n } from "../../translate/i18n";
+import { AuthContext } from "../../context/Auth/AuthContext";
 
 
 const useStyles = makeStyles(theme => ({
@@ -66,7 +72,10 @@ export function PlanManagerForm(props) {
         users: 0,
         connections: 0,
         queues: 0,
-        value: 0
+        value: 0,
+        useWhatsapp: true,
+        useFacebook: false,
+        useInstagram: false
     });
 
     useEffect(() => {
@@ -149,6 +158,61 @@ export function PlanManagerForm(props) {
                             />
                         </Grid>
                         <Grid xs={12} item>
+                            <Box mt={2} mb={1}>
+                                <Typography variant="h6" color="textSecondary">
+                                    Canais Permitidos
+                                </Typography>
+                            </Box>
+                        </Grid>
+                        <Grid xs={12} sm={4} md={4} item>
+                            <Field name="useWhatsapp">
+                                {({ field }) => (
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                {...field}
+                                                checked={field.value}
+                                                color="primary"
+                                            />
+                                        }
+                                        label="WhatsApp"
+                                    />
+                                )}
+                            </Field>
+                        </Grid>
+                        <Grid xs={12} sm={4} md={4} item>
+                            <Field name="useFacebook">
+                                {({ field }) => (
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                {...field}
+                                                checked={field.value}
+                                                color="primary"
+                                            />
+                                        }
+                                        label="Facebook"
+                                    />
+                                )}
+                            </Field>
+                        </Grid>
+                        <Grid xs={12} sm={4} md={4} item>
+                            <Field name="useInstagram">
+                                {({ field }) => (
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                {...field}
+                                                checked={field.value}
+                                                color="primary"
+                                            />
+                                        }
+                                        label="Instagram"
+                                    />
+                                )}
+                            </Field>
+                        </Grid>
+                        <Grid xs={12} item>
                             <Grid justifyContent="flex-end" spacing={1} container>
                                 <Grid xs={4} md={1} item>
                                     <ButtonWithSpinner className={classes.fullWidth} loading={loading} onClick={() => onCancel()} variant="contained">
@@ -191,6 +255,7 @@ export function PlansManagerGrid(props) {
                         <TableCell align="center">Usuários</TableCell>
                         <TableCell align="center">Conexões</TableCell>
                         <TableCell align="center">Filas</TableCell>
+                        <TableCell align="center">Canais</TableCell>
                         <TableCell align="center">Valor</TableCell>
                     </TableRow>
                 </TableHead>
@@ -206,6 +271,13 @@ export function PlansManagerGrid(props) {
                             <TableCell align="center">{row.users || '-'}</TableCell>
                             <TableCell align="center">{row.connections || '-'}</TableCell>
                             <TableCell align="center">{row.queues || '-'}</TableCell>
+                            <TableCell align="center">
+                                {[
+                                    row.useWhatsapp && 'WhatsApp',
+                                    row.useFacebook && 'Facebook',
+                                    row.useInstagram && 'Instagram'
+                                ].filter(Boolean).join(', ') || '-'}
+                            </TableCell>
                             <TableCell align="center">{row.value.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }) || '-'}</TableCell>
                         </TableRow>
                     ))}
@@ -218,6 +290,7 @@ export function PlansManagerGrid(props) {
 export default function PlansManager() {
     const classes = useStyles()
     const { list, save, update, remove } = usePlans()
+    const { refreshUserData } = useContext(AuthContext)
 
     const [showConfirmDialog, setShowConfirmDialog] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -227,7 +300,10 @@ export default function PlansManager() {
         users: 0,
         connections: 0,
         queues: 0,
-        value: 0
+        value: 0,
+        useWhatsapp: true,
+        useFacebook: false,
+        useInstagram: false
     })
 
     useEffect(() => {
@@ -250,13 +326,51 @@ export default function PlansManager() {
     }
 
     const handleSubmit = async (data) => {
+        // Validar campos obrigatórios
+        if (!data.name || data.name.trim() === '') {
+            toast.error('O nome do plano é obrigatório');
+            return;
+        }
+
+        // Converter e validar valores numéricos
+        const value = typeof data.value === 'string' ? 
+            parseFloat(data.value.replace(",", ".")) : 
+            parseFloat(data.value) || 0;
+
+        const users = parseInt(data.users) || 0;
+        const connections = parseInt(data.connections) || 0;
+        const queues = parseInt(data.queues) || 0;
+
+        if (isNaN(value) || value < 0) {
+            toast.error('O valor deve ser um número válido');
+            return;
+        }
+
+        if (users < 0 || connections < 0 || queues < 0) {
+            toast.error('Os valores de usuários, conexões e filas devem ser números positivos');
+            return;
+        }
+
+        // Validar se pelo menos um canal está selecionado
+        const useWhatsapp = data.useWhatsapp !== undefined ? data.useWhatsapp : true;
+        const useFacebook = data.useFacebook !== undefined ? data.useFacebook : false;
+        const useInstagram = data.useInstagram !== undefined ? data.useInstagram : false;
+
+        if (!useWhatsapp && !useFacebook && !useInstagram) {
+            toast.error('Pelo menos um canal deve estar habilitado no plano');
+            return;
+        }
+
         const datanew = {
             id: data.id,
-            connections: data.connections,
-            name: data.name,
-            queues: data.queues,
-            users: data.users,
-            value: data.value.replace(",", ".")
+            connections: connections,
+            name: data.name.trim(),
+            queues: queues,
+            users: users,
+            value: value,
+            useWhatsapp: useWhatsapp,
+            useFacebook: useFacebook,
+            useInstagram: useInstagram
         }
         setLoading(true)
         try {
@@ -268,8 +382,44 @@ export default function PlansManager() {
             await loadPlans()
             handleCancel()
             toast.success('Operação realizada com sucesso!')
+            
+            // Atualizar os dados do usuário para refletir as mudanças do plano
+            setTimeout(async () => {
+                try {
+                    await refreshUserData();
+                    console.log('Dados do usuário atualizados após salvar plano');
+                } catch (error) {
+                    console.error('Erro ao atualizar dados do usuário:', error);
+                    // Fallback: recarregar a página se a atualização falhar
+                    window.location.reload();
+                }
+            }, 1000); // Aguarda 1s para mostrar o toast de sucesso
         } catch (e) {
-            toast.error('Não foi possível realizar a operação. Verifique se já existe uma plano com o mesmo nome ou se os campos foram preenchidos corretamente')
+            console.error('Erro ao salvar plano:', e);
+            
+            // Extrair a mensagem de erro
+            const errorMessage = e.response?.data?.message || e.message || '';
+            
+            // Verificar se é um erro conhecido e usar a tradução
+            if (errorMessage.includes('ERR_PLAN_NAME_ALREADY_EXISTS')) {
+                toast.error(i18n.t("backendErrors.ERR_PLAN_NAME_ALREADY_EXISTS"));
+            } else if (errorMessage.includes('ERR_PLAN_INVALID_NAME')) {
+                toast.error(i18n.t("backendErrors.ERR_PLAN_INVALID_NAME"));
+            } else if (errorMessage.includes('ERR_PLAN_INVALID_USERS')) {
+                toast.error(i18n.t("backendErrors.ERR_PLAN_INVALID_USERS"));
+            } else if (errorMessage.includes('ERR_PLAN_INVALID_CONNECTIONS')) {
+                toast.error(i18n.t("backendErrors.ERR_PLAN_INVALID_CONNECTIONS"));
+            } else if (errorMessage.includes('ERR_PLAN_INVALID_QUEUES')) {
+                toast.error(i18n.t("backendErrors.ERR_PLAN_INVALID_QUEUES"));
+            } else if (errorMessage.includes('ERR_PLAN_INVALID_VALUE')) {
+                toast.error(i18n.t("backendErrors.ERR_PLAN_INVALID_VALUE"));
+            } else if (errorMessage.includes('ERR_NO_PLAN_FOUND')) {
+                toast.error(i18n.t("backendErrors.ERR_NO_PLAN_FOUND"));
+            } else if (errorMessage) {
+                toast.error(`Erro: ${errorMessage}`);
+            } else {
+                toast.error('Não foi possível salvar o plano. Verifique os dados informados e tente novamente.');
+            }
         }
         setLoading(false)
     }
@@ -297,7 +447,10 @@ export default function PlansManager() {
             users: 0,
             connections: 0,
             queues: 0,
-            value: 0
+            value: 0,
+            useWhatsapp: true,
+            useFacebook: false,
+            useInstagram: false
         })
     }
 
@@ -308,7 +461,10 @@ export default function PlansManager() {
             users: data.users || 0,
             connections: data.connections || 0,
             queues: data.queues || 0,
-            value: data.value.toLocaleString('pt-br', { minimumFractionDigits: 2 }) || 0
+            value: data.value.toLocaleString('pt-br', { minimumFractionDigits: 2 }) || 0,
+            useWhatsapp: data.useWhatsapp !== undefined ? data.useWhatsapp : true,
+            useFacebook: data.useFacebook !== undefined ? data.useFacebook : false,
+            useInstagram: data.useInstagram !== undefined ? data.useInstagram : false
         })
     }
 

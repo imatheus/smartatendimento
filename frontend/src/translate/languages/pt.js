@@ -253,6 +253,10 @@ const messages = {
       },
       ticketsQueueSelect: {
         placeholder: "Setores",
+        buttons: {
+          showAll: "Todos",
+          noQueue: "Sem Fila",
+        },
       },
       tickets: {
         toasts: {
@@ -671,6 +675,13 @@ const messages = {
           "Esta cor já está em uso, escolha outra.",
         ERR_WAPP_GREETING_REQUIRED:
           "A mensagem de saudação é obrigatório quando há mais de um setor.",
+        ERR_PLAN_INVALID_NAME: "Nome do plano inválido. O nome deve ter pelo menos 2 caracteres.",
+        ERR_PLAN_NAME_ALREADY_EXISTS: "Já existe um plano com este nome.",
+        ERR_PLAN_INVALID_USERS: "Número de usuários inválido.",
+        ERR_PLAN_INVALID_CONNECTIONS: "Número de conexões inválido.",
+        ERR_PLAN_INVALID_QUEUES: "Número de filas inválido.",
+        ERR_PLAN_INVALID_VALUE: "Valor do plano inválido.",
+        ERR_NO_PLAN_FOUND: "Plano não encontrado.",
       },
     },
   },

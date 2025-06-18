@@ -8,6 +8,9 @@ interface PlanData {
   connections: number;
   queues: number;
   value: number;
+  useWhatsapp?: boolean;
+  useFacebook?: boolean;
+  useInstagram?: boolean;
 }
 
 const CreatePlanService = async (planData: PlanData): Promise<Plan> => {
@@ -30,11 +33,26 @@ const CreatePlanService = async (planData: PlanData): Promise<Plan> => {
           }
           return false;
         }
-      )
+      ),
+    users: Yup.number()
+      .min(0, "ERR_PLAN_INVALID_USERS")
+      .required("ERR_PLAN_INVALID_USERS"),
+    connections: Yup.number()
+      .min(0, "ERR_PLAN_INVALID_CONNECTIONS")
+      .required("ERR_PLAN_INVALID_CONNECTIONS"),
+    queues: Yup.number()
+      .min(0, "ERR_PLAN_INVALID_QUEUES")
+      .required("ERR_PLAN_INVALID_QUEUES"),
+    value: Yup.number()
+      .min(0, "ERR_PLAN_INVALID_VALUE")
+      .required("ERR_PLAN_INVALID_VALUE"),
+    useWhatsapp: Yup.boolean(),
+    useFacebook: Yup.boolean(),
+    useInstagram: Yup.boolean()
   });
 
   try {
-    await planSchema.validate({ name });
+    await planSchema.validate(planData);
   } catch (err) {
     throw new AppError(err.message);
   }

@@ -21,7 +21,7 @@ interface Request {
   showAll?: string;
   userId: string;
   withUnreadMessages?: string;
-  queueIds: number[];
+  queueIds: (number | string)[];
   tags: number[];
   users: number[];
   companyId: number;
@@ -47,10 +47,41 @@ const ListTicketsService = async ({
   withUnreadMessages,
   companyId
 }: Request): Promise<Response> => {
+  // Separar queueIds numéricos de "no-queue"
+  const numericQueueIds = queueIds.filter(id => typeof id === 'number' || (typeof id === 'string' && id !== 'no-queue')).map(id => Number(id));
+  const includeNoQueue = queueIds.includes('no-queue');
+  
+  // Construir condição de queue baseada na presença de "no-queue"
+  let queueCondition;
+  if (includeNoQueue && numericQueueIds.length > 0) {
+    // Se tem "no-queue" E setores específicos, incluir ambos
+    // NUNCA incluir "no-queue" no IN, apenas IDs numéricos
+    queueCondition = { 
+      [Op.or]: [
+        { [Op.in]: numericQueueIds }, 
+        { [Op.is]: null }
+      ] 
+    };
+  } else if (includeNoQueue) {
+    // Se tem apenas "no-queue", mostrar apenas tickets sem fila
+    queueCondition = { [Op.is]: null };
+  } else if (numericQueueIds.length > 0) {
+    // Se tem apenas setores específicos, mostrar apenas esses setores
+    // NUNCA incluir "no-queue" no IN, apenas IDs numéricos
+    queueCondition = { [Op.in]: numericQueueIds };
+  } else {
+    // Se nenhum checkbox está marcado, mostrar todos os tickets (com e sem fila)
+    queueCondition = null; // Sem filtro de queue
+  }
+
   let whereCondition: Filterable["where"] = {
-    [Op.or]: [{ userId }, { status: "pending" }],
-    queueId: { [Op.or]: [queueIds, null] }
+    [Op.or]: [{ userId }, { status: "pending" }]
   };
+  
+  // Só adicionar filtro de queueId se houver condição
+  if (queueCondition !== null) {
+    whereCondition.queueId = queueCondition;
+  }
   let includeCondition: Includeable[];
 
   includeCondition = [
@@ -82,7 +113,11 @@ const ListTicketsService = async ({
   ];
 
   if (showAll === "true") {
-    whereCondition = { queueId: { [Op.or]: [queueIds, null] } };
+    if (queueCondition !== null) {
+      whereCondition = { queueId: queueCondition };
+    } else {
+      whereCondition = {}; // Sem filtros quando showAll e nenhum queue selecionado
+    }
   }
 
   if (status) {
@@ -158,9 +193,17 @@ const ListTicketsService = async ({
     const user = await ShowUserService(userId);
     const userQueueIds = user.queues.map(queue => queue.id);
 
+    // Para withUnreadMessages, usar as filas do usuário ao invés das selecionadas
+    let userQueueCondition;
+    if (userQueueIds.length > 0) {
+      userQueueCondition = { [Op.or]: [{ [Op.in]: userQueueIds }, { [Op.is]: null }] };
+    } else {
+      userQueueCondition = { [Op.is]: null };
+    }
+
     whereCondition = {
       [Op.or]: [{ userId }, { status: "pending" }],
-      queueId: { [Op.or]: [userQueueIds, null] },
+      queueId: userQueueCondition,
       unreadMessages: { [Op.gt]: 0 }
     };
   }

@@ -244,19 +244,31 @@ const TicketsListCustom = (props) => {
     console.log(`📥 TicketsListCustom(${status}): User queue IDs:`, queueIds);
     console.log(`📥 TicketsListCustom(${status}): Selected queue IDs:`, selectedQueueIds);
     
-    const filteredTickets = tickets.filter(
-      (t) => queueIds.indexOf(t.queueId) > -1
-    );
+    // Filtrar tickets baseado nos setores selecionados
+    let filteredTickets;
+    
+    if (selectedQueueIds.length === 0) {
+      // Se nenhum setor está selecionado, mostrar todos os tickets
+      filteredTickets = tickets;
+    } else {
+      filteredTickets = tickets.filter((t) => {
+        // Se "no-queue" está selecionado e o ticket não tem fila
+        if (selectedQueueIds.includes("no-queue") && !t.queueId) {
+          return true;
+        }
+        // Se o ticket tem fila e ela está selecionada (excluindo "no-queue")
+        if (t.queueId && selectedQueueIds.filter(id => id !== "no-queue").includes(t.queueId)) {
+          return true;
+        }
+        return false;
+      });
+    }
 
     console.log(`📥 TicketsListCustom(${status}): Filtered tickets count: ${filteredTickets.length}`);
 
-    if (profile === "user") {
-      console.log(`📥 TicketsListCustom(${status}): Loading filtered tickets for user profile`);
-      dispatch({ type: "LOAD_TICKETS", payload: filteredTickets });
-    } else {
-      console.log(`📥 TicketsListCustom(${status}): Loading all tickets for admin profile`);
-      dispatch({ type: "LOAD_TICKETS", payload: tickets });
-    }
+    // Sempre usar os tickets filtrados, independente do perfil
+    console.log(`📥 TicketsListCustom(${status}): Loading filtered tickets for ${profile} profile`);
+    dispatch({ type: "LOAD_TICKETS", payload: filteredTickets });
   }, [tickets, status, searchParam, queues, profile, selectedQueueIds]);
 
   useEffect(() => {
@@ -269,11 +281,30 @@ const TicketsListCustom = (props) => {
         (!ticket.userId || showAll) : 
         (!ticket.userId || ticket.userId === user?.id || showAll);
       
-      // Para tickets pending, verificar tanto as filas selecionadas quanto as filas do usuário
-      const userQueueIds = queues.map((q) => q.id);
-      const queueCheck = !ticket.queueId || 
-        selectedQueueIds.indexOf(ticket.queueId) > -1 ||
-        (status === "pending" && userQueueIds.indexOf(ticket.queueId) > -1);
+      // Verificar se o ticket deve ser mostrado baseado na seleção de filas
+      let queueCheck;
+      
+      if (selectedQueueIds.length === 0) {
+        // Se nenhum setor está selecionado, mostrar todos os tickets
+        queueCheck = true;
+      } else {
+        // Se "no-queue" está selecionado e o ticket não tem fila
+        if (selectedQueueIds.includes("no-queue") && !ticket.queueId) {
+          queueCheck = true;
+        }
+        // Se o ticket tem fila e ela está selecionada (excluindo "no-queue")
+        else if (ticket.queueId && selectedQueueIds.filter(id => id !== "no-queue").includes(ticket.queueId)) {
+          queueCheck = true;
+        }
+        // Para tickets pending, também verificar as filas do usuário
+        else if (status === "pending") {
+          const userQueueIds = queues.map((q) => q.id);
+          queueCheck = userQueueIds.indexOf(ticket.queueId) > -1;
+        }
+        else {
+          queueCheck = false;
+        }
+      }
       const profileCheck = profile === "admin" || profile === "user";
       
       console.log(`🔍 TicketsListCustom(${status}): shouldUpdateTicket check for ticket ${ticket.id}:`, {

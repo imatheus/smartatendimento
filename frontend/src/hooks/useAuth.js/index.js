@@ -152,6 +152,13 @@ Entre em contato com o Suporte para mais informações! `);
     try {
       await api.delete("/auth/logout");
       setIsAuth(false);
+      
+      // Limpar seleções de setores salvas antes de limpar o user
+      const userId = user.id;
+      if (userId) {
+        localStorage.removeItem(`selectedQueueIds_${userId}`);
+      }
+      
       setUser({});
       localStorage.removeItem("token");
       localStorage.removeItem("companyId");
@@ -175,6 +182,18 @@ Entre em contato com o Suporte para mais informações! `);
     }
   };
 
+  const refreshUserData = async () => {
+    try {
+      const { data } = await api.post("/auth/refresh_token");
+      if (data && data.user) {
+        setUser(data.user);
+        return data.user;
+      }
+    } catch (err) {
+      console.error("Erro ao atualizar dados do usuário:", err);
+    }
+  };
+
   return {
     isAuth,
     user,
@@ -182,6 +201,7 @@ Entre em contato com o Suporte para mais informações! `);
     handleLogin,
     handleLogout,
     getCurrentUserInfo,
+    refreshUserData,
   };
 };
 

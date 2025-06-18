@@ -138,6 +138,11 @@ export const ThemeProvider = ({ children }) => {
             backgroundColor: '#ffffff',
             color: '#151515',
           },
+          outlined: {
+            border: 'none !important',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1) !important',
+            borderRadius: '12px !important',
+          },
         },
         MuiTypography: {
           root: {
@@ -259,6 +264,11 @@ export const ThemeProvider = ({ children }) => {
           root: {
             backgroundColor: '#1e1e1e !important',
             color: '#ffffff !important',
+          },
+          outlined: {
+            border: 'none !important',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3) !important',
+            borderRadius: '12px !important',
           },
         },
         MuiListItem: {

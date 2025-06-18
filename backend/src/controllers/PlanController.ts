@@ -23,6 +23,9 @@ type StorePlanData = {
   connections: number | 0;
   queues: number | 0;
   value: number;
+  useWhatsapp?: boolean;
+  useFacebook?: boolean;
+  useInstagram?: boolean;
 };
 
 type UpdatePlanData = {
@@ -32,6 +35,9 @@ type UpdatePlanData = {
   connections?: number;
   queues?: number;
   value?: number;
+  useWhatsapp?: boolean;
+  useFacebook?: boolean;
+  useInstagram?: boolean;
 };
 
 export const index = async (req: Request, res: Response): Promise<Response> => {
@@ -99,7 +105,7 @@ export const update = async (
     throw new AppError(err.message);
   }
 
-  const { id, name, users, connections, queues, value } = planData;
+  const { id, name, users, connections, queues, value, useWhatsapp, useFacebook, useInstagram } = planData;
 
   const plan = await UpdatePlanService({
     id,
@@ -107,7 +113,10 @@ export const update = async (
     users,
     connections,
     queues,
-    value
+    value,
+    useWhatsapp,
+    useFacebook,
+    useInstagram
   });
 
   // const io = getIO();

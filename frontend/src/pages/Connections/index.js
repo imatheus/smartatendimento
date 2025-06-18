@@ -31,7 +31,6 @@ import {
 import WhatsAppIcon from "@material-ui/icons/WhatsApp";
 import FacebookIcon from "@material-ui/icons/Facebook";
 import InstagramIcon from "@material-ui/icons/Instagram";
-import WebIcon from "@material-ui/icons/Web";
 
 import MainContainer from "../../components/MainContainer";
 import MainHeader from "../../components/MainHeader";
@@ -44,9 +43,9 @@ import WhatsAppModal from "../../components/WhatsAppModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import QrcodeModal from "../../components/QrcodeModal";
 import FacebookModal from "../../components/FacebookModal";
-import WebChatModal from "../../components/WebChatModal";
 import { i18n } from "../../translate/i18n";
 import { WhatsAppsContext } from "../../context/WhatsApp/WhatsAppsContext";
+import { AuthContext } from "../../context/Auth/AuthContext";
 import toastError from "../../errors/toastError";
 
 const useStyles = makeStyles(theme => ({
@@ -112,10 +111,17 @@ const Connections = () => {
 	const classes = useStyles();
 
 	const { whatsApps, loading } = useContext(WhatsAppsContext);
+	const { user } = useContext(AuthContext);
+	
+	// Verificar quais canais estão permitidos no plano
+	const planChannels = user?.company?.plan || {};
+	const canUseWhatsapp = planChannels.useWhatsapp !== false; // Default true para compatibilidade
+	const canUseFacebook = planChannels.useFacebook === true;
+	const canUseInstagram = planChannels.useInstagram === true;
+	
 	const [whatsAppModalOpen, setWhatsAppModalOpen] = useState(false);
 	const [qrModalOpen, setQrModalOpen] = useState(false);
 	const [facebookModalOpen, setFacebookModalOpen] = useState(false);
-	const [webChatModalOpen, setWebChatModalOpen] = useState(false);
 	const [connectionType, setConnectionType] = useState("facebook");
 	const [selectedWhatsApp, setSelectedWhatsApp] = useState(null);
 	const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -161,17 +167,9 @@ const Connections = () => {
 		setFacebookModalOpen(true);
 	};
 
-	const handleOpenWebChatModal = () => {
-		setWebChatModalOpen(true);
-	};
-
 	const handleCloseFacebookModal = useCallback(() => {
 		setFacebookModalOpen(false);
 		setConnectionType("facebook");
-	}, []);
-
-	const handleCloseWebChatModal = useCallback(() => {
-		setWebChatModalOpen(false);
 	}, []);
 
 	const handleCloseWhatsAppModal = useCallback(() => {
@@ -339,8 +337,6 @@ const Connections = () => {
 				return <FacebookIcon style={{ color: "#1877F2" }} />;
 			case "instagram":
 				return <InstagramIcon style={{ color: "#E4405F" }} />;
-			case "webchat":
-				return <WebIcon style={{ color: "#FF9800" }} />;
 			default:
 				return <WhatsAppIcon style={{ color: "#25D366" }} />;
 		}
@@ -354,8 +350,6 @@ const Connections = () => {
 				return "Facebook";
 			case "instagram":
 				return "Instagram";
-			case "webchat":
-				return "Chat Web";
 			default:
 				return "WhatsApp";
 		}
@@ -386,46 +380,40 @@ const Connections = () => {
 				onClose={handleCloseFacebookModal}
 				connectionType={connectionType}
 			/>
-			<WebChatModal
-				open={webChatModalOpen}
-				onClose={handleCloseWebChatModal}
-			/>
 			<MainHeader>
 				<Title>{i18n.t("connections.title")}</Title>
 				<MainHeaderButtonsWrapper>
 					<Box className={classes.connectionButtons}>
-						<Button
-							variant="contained"
-							color="primary"
-							startIcon={<WhatsAppIcon />}
-							onClick={handleOpenWhatsAppModal}
-						>
-							WhatsApp
-						</Button>
-						<Button
-							variant="contained"
-							style={{ backgroundColor: "#1877F2", color: "white" }}
-							startIcon={<FacebookIcon />}
-							onClick={handleOpenFacebookModal}
-						>
-							Facebook
-						</Button>
-						<Button
-							variant="contained"
-							style={{ backgroundColor: "#E4405F", color: "white" }}
-							startIcon={<InstagramIcon />}
-							onClick={handleOpenInstagramModal}
-						>
-							Instagram
-						</Button>
-						<Button
-							variant="contained"
-							style={{ backgroundColor: "#FF9800", color: "white" }}
-							startIcon={<WebIcon />}
-							onClick={handleOpenWebChatModal}
-						>
-							Chat Web
-						</Button>
+						{canUseWhatsapp && (
+							<Button
+								variant="contained"
+								color="primary"
+								startIcon={<WhatsAppIcon />}
+								onClick={handleOpenWhatsAppModal}
+							>
+								WhatsApp
+							</Button>
+						)}
+						{canUseFacebook && (
+							<Button
+								variant="contained"
+								style={{ backgroundColor: "#1877F2", color: "white" }}
+								startIcon={<FacebookIcon />}
+								onClick={handleOpenFacebookModal}
+							>
+								Facebook
+							</Button>
+						)}
+						{canUseInstagram && (
+							<Button
+								variant="contained"
+								style={{ backgroundColor: "#E4405F", color: "white" }}
+								startIcon={<InstagramIcon />}
+								onClick={handleOpenInstagramModal}
+							>
+								Instagram
+							</Button>
+						)}
 					</Box>
 				</MainHeaderButtonsWrapper>
 			</MainHeader>
@@ -462,7 +450,16 @@ const Connections = () => {
 						) : (
 							<>
 								{whatsApps?.length > 0 &&
-									whatsApps.map(whatsApp => (
+									whatsApps
+										.filter(whatsApp => {
+											// Filtrar conexões baseado no plano
+											const channel = whatsApp.channel || "whatsapp";
+											if (channel === "whatsapp") return canUseWhatsapp;
+											if (channel === "facebook") return canUseFacebook;
+											if (channel === "instagram") return canUseInstagram;
+											return false; // Outros canais não permitidos
+										})
+										.map(whatsApp => (
 										<TableRow key={whatsApp.id}>
 											<TableCell align="center">
 												<Box display="flex" alignItems="center" justifyContent="center">
@@ -477,8 +474,7 @@ const Connections = () => {
 													className={classes.channelChip}
 													style={{
 														backgroundColor: whatsApp.channel === "facebook" ? "#1877F2" : 
-																		whatsApp.channel === "instagram" ? "#E4405F" : 
-																		whatsApp.channel === "webchat" ? "#FF9800" : "#25D366",
+																		whatsApp.channel === "instagram" ? "#E4405F" : "#25D366",
 														color: "white"
 													}}
 												/>

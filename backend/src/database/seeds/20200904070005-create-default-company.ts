@@ -13,6 +13,9 @@ module.exports = {
               connections: 10,
               queues: 10,
               value: 30,
+              useWhatsapp: true,
+              useFacebook: true,
+              useInstagram: true,
               createdAt: new Date(),
               updatedAt: new Date()
             }

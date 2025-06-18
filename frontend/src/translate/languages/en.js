@@ -197,6 +197,10 @@ const messages = {
 			},
 			ticketsQueueSelect: {
 				placeholder: "Queues",
+				buttons: {
+					showAll: "All",
+					noQueue: "No Queue",
+				},
 			},
 			tickets: {
 				toasts: {
