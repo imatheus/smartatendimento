@@ -3,23 +3,38 @@ import * as Sentry from "@sentry/node";
 import { QueryTypes } from "sequelize";
 import { isNil } from "lodash";
 
-
 import { logger } from "./utils/logger";
 import sequelize from "./database";
 import User from "./models/User";
+import { getIO } from "./libs/socket";
+
 const connection = process.env.REDIS_URI || "";
 
 export const userMonitor = new Queue("UserMonitor", connection);
 
 async function handleLoginStatus(job) {
-  const users: { id: number }[] = await sequelize.query(
-    `select id from "Users" where "updatedAt" < now() - '5 minutes'::interval and online = true`,
+  const users: { id: number; companyId: number }[] = await sequelize.query(
+    `select id, "companyId" from "Users" where "updatedAt" < now() - '5 minutes'::interval and online = true`,
     { type: QueryTypes.SELECT }
   );
   for (let item of users) {
     try {
       const user = await User.findByPk(item.id);
       await user.update({ online: false });
+      
+      // Emit socket event to notify clients about user going offline
+      try {
+        const io = getIO();
+        io.to(`company:${item.companyId}`).emit(`company-${item.companyId}-userStatus`, {
+          userId: user.id,
+          online: false,
+          updatedAt: new Date()
+        });
+      } catch (socketError) {
+        // Socket might not be initialized yet, just log and continue
+        logger.warn(`Could not emit socket event for user ${item.id}: ${socketError.message}`);
+      }
+      
       logger.info(`Usuário passado para offline: ${item.id}`);
     } catch (e: any) {
       Sentry.captureException(e);

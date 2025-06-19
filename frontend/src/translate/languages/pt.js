@@ -18,9 +18,9 @@ const messages = {
         },
       },
       login: {
-        title: "Seus dados de acesso",
+        title: "Login",
         form: {
-          email: "Email",
+          email: "E-mail",
           password: "Senha",
         },
         buttons: {

@@ -17,6 +17,7 @@ import ErrorIcon from '@material-ui/icons/Error';
 import moment from 'moment';
 
 import Rating from '@material-ui/lab/Rating';
+import useUserStatus from "../../hooks/useUserStatus";
 
 const useStyles = makeStyles(theme => ({
 	on: {
@@ -51,6 +52,7 @@ export function RatingBox ({ rating }) {
 export default function TableAttendantsStatus(props) {
     const { loading, attendants } = props
 	const classes = useStyles();
+    const { getUserStatus } = useUserStatus();
 
     function renderList () {
         if (!attendants || attendants.length === 0) {
@@ -63,21 +65,26 @@ export default function TableAttendantsStatus(props) {
             );
         }
 
-        return attendants.map((a, k) => (
-            <TableRow key={k}>
-                <TableCell>{a.name || 'Nome não disponível'}</TableCell>
-                <TableCell align="center" title="1 - Insatisfeito, 2 - Satisfeito, 3 - Muito Satisfeito" className={classes.pointer}>
-                    <RatingBox rating={a.rating} />
-                </TableCell>
-                <TableCell align="center">{formatTime(a.avgSupportTime || 0)}</TableCell>
-                <TableCell align="center">
-                    { a.online ?
-                        <CheckCircleIcon className={classes.on} />
-                        : <ErrorIcon className={classes.off} />
-                    }
-                </TableCell>
-            </TableRow>
-        ))
+        return attendants.map((a, k) => {
+            // Use real-time status from socket, fallback to initial data
+            const isOnline = getUserStatus(a.id) !== undefined ? getUserStatus(a.id) : a.online;
+            
+            return (
+                <TableRow key={k}>
+                    <TableCell>{a.name || 'Nome não disponível'}</TableCell>
+                    <TableCell align="center" title="1 - Insatisfeito, 2 - Satisfeito, 3 - Muito Satisfeito" className={classes.pointer}>
+                        <RatingBox rating={a.rating} />
+                    </TableCell>
+                    <TableCell align="center">{formatTime(a.avgSupportTime || 0)}</TableCell>
+                    <TableCell align="center">
+                        { isOnline ?
+                            <CheckCircleIcon className={classes.on} />
+                            : <ErrorIcon className={classes.off} />
+                        }
+                    </TableCell>
+                </TableRow>
+            );
+        });
     }
 
 	function formatTime(minutes){
@@ -97,22 +104,6 @@ export default function TableAttendantsStatus(props) {
                 </TableHead>
                 <TableBody>
                     { renderList() }
-                    {/* <TableRow>
-                        <TableCell>Nome 4</TableCell>
-                        <TableCell align="center">10</TableCell>
-                        <TableCell align="center">10 minutos</TableCell>
-                        <TableCell align="center">
-                            <CheckCircleIcon className={classes.off} />
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>Nome 5</TableCell>
-                        <TableCell align="center">10</TableCell>
-                        <TableCell align="center">10 minutos</TableCell>
-                        <TableCell align="center">
-                            <CheckCircleIcon className={classes.on} />
-                        </TableCell>
-                    </TableRow> */}
                 </TableBody>
             </Table>
         </TableContainer>

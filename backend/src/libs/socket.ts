@@ -28,6 +28,7 @@ export const initIO = (httpServer: Server): SocketIOServer => {
           user.online = true;
           await user.save();
           socket.join(`user:${userId}`);
+          socket.join(`company:${companyId}`);
           logger.info(`User ${user.name} (ID: ${userId}) connected`);
         }
       } catch (err) {
@@ -65,6 +66,29 @@ export const initIO = (httpServer: Server): SocketIOServer => {
       logger.info(`Typing event: Ticket ${ticketId}, fromMe: ${fromMe}, typing: ${typing}`);
     });
 
+    socket.on("userStatus", async () => {
+      if (userId && userId !== "undefined" && userId !== "null") {
+        try {
+          const user = await User.findByPk(userId as string);
+          if (user) {
+            user.online = true;
+            await user.save();
+            
+            // Broadcast user status update to all clients in the company
+            io.to(`company:${companyId}`).emit(`company-${companyId}-userStatus`, {
+              userId: user.id,
+              online: true,
+              updatedAt: new Date()
+            });
+            
+            logger.info(`User status updated: ${user.name} (ID: ${userId}) is online`);
+          }
+        } catch (err) {
+          logger.error(err, `Error updating user status ${userId}`);
+        }
+      }
+    });
+
     socket.on("disconnect", async () => {
       if (userId && userId !== "undefined" && userId !== "null") {
         try {
@@ -72,6 +96,14 @@ export const initIO = (httpServer: Server): SocketIOServer => {
           if (user) {
             user.online = false;
             await user.save();
+            
+            // Broadcast user status update to all clients in the company
+            io.to(`company:${companyId}`).emit(`company-${companyId}-userStatus`, {
+              userId: user.id,
+              online: false,
+              updatedAt: new Date()
+            });
+            
             logger.info(`User ${user.name} (ID: ${userId}) disconnected`);
           }
         } catch (err) {

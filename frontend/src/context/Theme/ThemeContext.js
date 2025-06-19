@@ -29,6 +29,17 @@ export const ThemeProvider = ({ children }) => {
     }
   }, []);
 
+  // Aplicar tema ao body dinamicamente
+  useEffect(() => {
+    if (darkMode) {
+      document.body.setAttribute('data-theme', 'dark');
+      document.body.classList.add('theme-dark');
+    } else {
+      document.body.removeAttribute('data-theme');
+      document.body.classList.remove('theme-dark');
+    }
+  }, [darkMode]);
+
   useEffect(() => {
     const i18nlocale = localStorage.getItem("i18nextLng");
     const browserLocale =
@@ -43,13 +54,6 @@ export const ThemeProvider = ({ children }) => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
     localStorage.setItem("darkMode", JSON.stringify(newDarkMode));
-    
-    // Recarrega a página quando desativar o modo noturno (dark -> light)
-    if (darkMode && !newDarkMode) {
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    }
   };
 
   const toggleDrawerCollapse = () => {
@@ -58,101 +62,129 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("drawerCollapsed", JSON.stringify(newDrawerCollapsed));
   };
 
+  // Cores base para o tema
+  const colors = {
+    light: {
+      primary: '#44b774',
+      secondary: '#f50057',
+      background: {
+        default: '#f5f5f5',
+        paper: '#ffffff',
+        drawer: '#44b774',
+        appBar: '#ffffff',
+      },
+      text: {
+        primary: '#151515',
+        secondary: '#666666',
+        inverse: '#ffffff',
+      },
+      border: '#e0e0e0',
+      shadow: 'rgba(0, 0, 0, 0.1)',
+    },
+    dark: {
+      primary: '#66bb6a',
+      secondary: '#f48fb1',
+      background: {
+        default: '#121212',
+        paper: '#1e1e1e',
+        drawer: '#1a1a1a',
+        appBar: '#1e1e1e',
+      },
+      text: {
+        primary: '#ffffff',
+        secondary: '#b0b0b0',
+        inverse: '#000000',
+      },
+      border: '#333333',
+      shadow: 'rgba(0, 0, 0, 0.3)',
+    }
+  };
+
+  const currentColors = darkMode ? colors.dark : colors.light;
+
+  const baseTheme = {
+    typography: {
+      fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+      h1: { fontWeight: 700 },
+      h2: { fontWeight: 700 },
+      h3: { fontWeight: 700 },
+      h4: { fontWeight: 700 },
+      h5: { fontWeight: 700 },
+      h6: { fontWeight: 700 },
+      subtitle1: { fontWeight: 600 },
+      subtitle2: { fontWeight: 600 },
+      button: { fontWeight: 600, textTransform: 'none' },
+    },
+    scrollbarStyles: {
+      '&::-webkit-scrollbar': {
+        width: '8px',
+        height: '8px',
+      },
+      '&::-webkit-scrollbar-thumb': {
+        backgroundColor: darkMode ? '#555555' : '#cccccc',
+        borderRadius: '4px',
+        '&:hover': {
+          backgroundColor: darkMode ? '#666666' : '#bbbbbb',
+        },
+      },
+      '&::-webkit-scrollbar-track': {
+        backgroundColor: darkMode ? '#2a2a2a' : '#f1f1f1',
+        borderRadius: '4px',
+      },
+    },
+    palette: {
+      type: darkMode ? 'dark' : 'light',
+      primary: {
+        main: currentColors.primary,
+        contrastText: currentColors.text.inverse,
+      },
+      secondary: {
+        main: currentColors.secondary,
+        contrastText: currentColors.text.inverse,
+      },
+      background: {
+        default: currentColors.background.default,
+        paper: currentColors.background.paper,
+      },
+      text: {
+        primary: currentColors.text.primary,
+        secondary: currentColors.text.secondary,
+      },
+      divider: currentColors.border,
+    },
+  };
+
   const lightTheme = createTheme(
     {
-      typography: {
-        fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        h1: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h2: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h3: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h4: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h5: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h6: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        subtitle1: {
-          fontWeight: 600,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        subtitle2: {
-          fontWeight: 600,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        button: {
-          fontWeight: 600,
-          textTransform: 'none',
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-      },
-      scrollbarStyles: {
-        '&::-webkit-scrollbar': {
-          width: '8px',
-          height: '8px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          boxShadow: 'inset 0 0 6px rgba(0, 0, 0, 0.3)',
-          backgroundColor: '#e8e8e8',
-        },
-      },
-      palette: {
-        type: 'light',
-        primary: { 
-          main: '#151515',
-          contrastText: '#ffffff'
-        },
-        secondary: { 
-          main: '#f50057',
-          contrastText: '#ffffff'
-        },
-        background: {
-          default: '#fafafa',
-          paper: '#ffffff',
-        },
-        text: {
-          primary: '#151515',
-          secondary: '#666666',
-        },
-        danger: { main: '#525252' },
-      },
+      ...baseTheme,
       overrides: {
-        MuiTab: {
-          root: {
-            fontWeight: 700,
-            textTransform: 'none',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        MuiCssBaseline: {
+          '@global': {
+            body: {
+              backgroundColor: currentColors.background.default,
+              color: currentColors.text.primary,
+            },
           },
         },
         MuiAppBar: {
           root: {
-            backgroundColor: '#151515 !important',
-            color: '#ffffff !important',
+            backgroundColor: `${currentColors.background.appBar} !important`,
+            color: `${currentColors.text.primary} !important`,
+            boxShadow: `0 2px 4px ${currentColors.shadow}`,
             '& .MuiIconButton-root': {
-              color: '#ffffff !important',
+              color: `${currentColors.text.primary} !important`,
+            },
+            '& .MuiTypography-root': {
+              color: `${currentColors.text.primary} !important`,
             },
           },
         },
         MuiDrawer: {
           paper: {
-            backgroundColor: '#151515 !important',
-            color: '#ffffff !important',
+            backgroundColor: `${currentColors.background.drawer} !important`,
+            color: `${currentColors.text.inverse} !important`,
             '& .MuiListItem-root': {
-              color: '#ffffff !important',
+              color: `${currentColors.text.inverse} !important`,
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1) !important',
               },
@@ -161,135 +193,197 @@ export const ThemeProvider = ({ children }) => {
               },
             },
             '& .MuiListItemIcon-root': {
-              color: '#ffffff !important',
-              minWidth: '40px',
+              color: `${currentColors.text.inverse} !important`,
             },
             '& .MuiListItemText-primary': {
-              color: '#ffffff !important',
-              fontWeight: 500,
+              color: `${currentColors.text.inverse} !important`,
             },
             '& .MuiDivider-root': {
               backgroundColor: 'rgba(255, 255, 255, 0.2) !important',
             },
             '& .MuiListSubheader-root': {
-              backgroundColor: '#151515 !important',
-              color: '#ffffff !important',
+              backgroundColor: 'transparent !important',
+              color: `${currentColors.text.inverse} !important`,
             },
             '& .MuiIconButton-root': {
-              color: '#ffffff !important',
+              color: `${currentColors.text.inverse} !important`,
             },
           },
         },
-        // Remover overrides globais para permitir cores padrão no conteúdo
         MuiPaper: {
           root: {
-            backgroundColor: '#ffffff',
-            color: '#151515',
+            backgroundColor: currentColors.background.paper,
+            color: currentColors.text.primary,
           },
           outlined: {
-            border: 'none !important',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1) !important',
-            borderRadius: '12px !important',
+            border: `1px solid ${currentColors.border}`,
+            boxShadow: `0 2px 8px ${currentColors.shadow}`,
+            borderRadius: '12px',
           },
         },
-        MuiTypography: {
+        MuiCard: {
           root: {
-            color: '#151515',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-          },
-          h1: {
-            fontWeight: 700,
-          },
-          h2: {
-            fontWeight: 700,
-          },
-          h3: {
-            fontWeight: 700,
-          },
-          h4: {
-            fontWeight: 700,
-          },
-          h5: {
-            fontWeight: 700,
-          },
-          h6: {
-            fontWeight: 700,
-          },
-        },
-        MuiButton: {
-          root: {
-            color: '#151515',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-            fontWeight: 600,
-            textTransform: 'none',
-          },
-        },
-        MuiIconButton: {
-          root: {
-            color: '#151515',
+            backgroundColor: currentColors.background.paper,
+            color: currentColors.text.primary,
+            boxShadow: `0 2px 8px ${currentColors.shadow}`,
           },
         },
         MuiTableCell: {
           root: {
-            color: '#151515',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+            color: currentColors.text.primary,
+            borderBottom: `1px solid ${currentColors.border}`,
           },
           head: {
+            backgroundColor: darkMode ? '#2a2a2a' : '#f5f5f5',
             fontWeight: 600,
-          },
-        },
-        MuiTableHead: {
-          root: {
-            backgroundColor: '#f5f5f5',
           },
         },
         MuiTextField: {
           root: {
             '& .MuiInputBase-root': {
-              color: '#151515',
-              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+              color: currentColors.text.primary,
+              backgroundColor: currentColors.background.paper,
             },
             '& .MuiInputLabel-root': {
-              color: '#666666',
-              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-              fontWeight: 500,
+              color: currentColors.text.secondary,
             },
             '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#cccccc',
+              borderColor: currentColors.border,
+            },
+            '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: currentColors.primary,
+            },
+          },
+        },
+        MuiButton: {
+          root: {
+            fontWeight: 600,
+            textTransform: 'none',
+          },
+          contained: {
+            boxShadow: `0 2px 4px ${currentColors.shadow}`,
+            '&:hover': {
+              boxShadow: `0 4px 8px ${currentColors.shadow}`,
+            },
+          },
+        },
+        MuiIconButton: {
+          root: {
+            color: currentColors.text.primary,
+          },
+        },
+        MuiMenuItem: {
+          root: {
+            color: currentColors.text.primary,
+            backgroundColor: currentColors.background.paper,
+            '&:hover': {
+              backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
             },
           },
         },
         MuiPopover: {
           paper: {
-            backgroundColor: '#ffffff',
-            color: '#151515',
+            backgroundColor: currentColors.background.paper,
+            color: currentColors.text.primary,
+            boxShadow: `0 4px 16px ${currentColors.shadow}`,
           },
         },
-        MuiMenuItem: {
-          root: {
-            color: '#151515',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-            '&:hover': {
-              backgroundColor: 'rgba(0, 0, 0, 0.04)',
-            },
+        MuiDialog: {
+          paper: {
+            backgroundColor: currentColors.background.paper,
+            color: currentColors.text.primary,
           },
         },
         MuiDialogTitle: {
           root: {
+            color: currentColors.text.primary,
             fontWeight: 700,
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
           },
         },
-        MuiCardHeader: {
-          title: {
-            fontWeight: 700,
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        MuiDialogContent: {
+          root: {
+            color: currentColors.text.primary,
+          },
+        },
+        MuiChip: {
+          root: {
+            backgroundColor: darkMode ? '#333333' : '#e0e0e0',
+            color: currentColors.text.primary,
+          },
+        },
+        MuiTab: {
+          root: {
+            color: currentColors.text.secondary,
+            fontWeight: 600,
+            textTransform: 'none',
+            '&.Mui-selected': {
+              color: currentColors.primary,
+            },
+          },
+        },
+        MuiTabs: {
+          indicator: {
+            backgroundColor: currentColors.primary,
+          },
+        },
+        MuiFormLabel: {
+          root: {
+            color: currentColors.text.secondary,
+            '&.Mui-focused': {
+              color: currentColors.primary,
+            },
+          },
+        },
+        MuiInputBase: {
+          root: {
+            color: currentColors.text.primary,
+          },
+        },
+        MuiSelect: {
+          root: {
+            color: currentColors.text.primary,
+          },
+          icon: {
+            color: currentColors.text.secondary,
+          },
+        },
+        MuiListItem: {
+          root: {
+            color: currentColors.text.primary,
+            '&:hover': {
+              backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+            },
+            '&.Mui-selected': {
+              backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+            },
+          },
+        },
+        MuiListItemText: {
+          primary: {
+            color: currentColors.text.primary,
+          },
+          secondary: {
+            color: currentColors.text.secondary,
+          },
+        },
+        MuiDivider: {
+          root: {
+            backgroundColor: currentColors.border,
+          },
+        },
+        MuiTypography: {
+          root: {
+            color: currentColors.text.primary,
           },
         },
         MuiSvgIcon: {
           root: {
             color: 'inherit',
+          },
+        },
+        MuiBackdrop: {
+          root: {
+            backgroundColor: darkMode ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)',
           },
         },
       },
@@ -299,240 +393,235 @@ export const ThemeProvider = ({ children }) => {
 
   const darkTheme = createTheme(
     {
-      typography: {
-        fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        h1: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h2: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h3: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h4: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h5: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        h6: {
-          fontWeight: 700,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        subtitle1: {
-          fontWeight: 600,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        subtitle2: {
-          fontWeight: 600,
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-        button: {
-          fontWeight: 600,
-          textTransform: 'none',
-          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-        },
-      },
-      scrollbarStyles: {
-        '&::-webkit-scrollbar': {
-          width: '8px',
-          height: '8px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          boxShadow: 'inset 0 0 6px rgba(0, 0, 0, 0.3)',
-          backgroundColor: '#555555',
-        },
-      },
-      palette: {
-        type: 'dark',
-        primary: { 
-          main: '#bb86fc',
-          contrastText: '#000000'
-        },
-        secondary: { 
-          main: '#03dac6',
-          contrastText: '#000000'
-        },
-        background: {
-          default: '#121212',
-          paper: '#1e1e1e',
-        },
-        text: {
-          primary: '#ffffff',
-          secondary: '#aaaaaa',
-        },
-        danger: { main: '#cf6679' },
-      },
+      ...baseTheme,
       overrides: {
-        MuiTab: {
-          root: {
-            fontWeight: 700,
-            textTransform: 'none',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-          },
-        },
         MuiCssBaseline: {
           '@global': {
             body: {
-              backgroundColor: '#121212',
-              color: '#ffffff',
-              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+              backgroundColor: currentColors.background.default,
+              color: currentColors.text.primary,
             },
           },
         },
         MuiAppBar: {
           root: {
-            backgroundColor: '#1e1e1e !important',
-            color: '#ffffff !important',
+            backgroundColor: `${currentColors.background.appBar} !important`,
+            color: `${currentColors.text.primary} !important`,
+            boxShadow: `0 2px 4px ${currentColors.shadow}`,
+            '& .MuiIconButton-root': {
+              color: `${currentColors.text.primary} !important`,
+            },
+            '& .MuiTypography-root': {
+              color: `${currentColors.text.primary} !important`,
+            },
           },
         },
         MuiDrawer: {
           paper: {
-            backgroundColor: '#1e1e1e !important',
-            color: '#ffffff !important',
+            backgroundColor: `${currentColors.background.drawer} !important`,
+            color: `${currentColors.text.primary} !important`,
+            '& .MuiListItem-root': {
+              color: `${currentColors.text.primary} !important`,
+              '&:hover': {
+                backgroundColor: 'rgba(102, 187, 106, 0.1) !important',
+              },
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(102, 187, 106, 0.2) !important',
+              },
+            },
+            '& .MuiListItemIcon-root': {
+              color: `${currentColors.text.primary} !important`,
+            },
+            '& .MuiListItemText-primary': {
+              color: `${currentColors.text.primary} !important`,
+            },
+            '& .MuiDivider-root': {
+              backgroundColor: `${currentColors.border} !important`,
+            },
+            '& .MuiListSubheader-root': {
+              backgroundColor: 'transparent !important',
+              color: `${currentColors.text.secondary} !important`,
+            },
+            '& .MuiIconButton-root': {
+              color: `${currentColors.text.primary} !important`,
+            },
           },
         },
         MuiPaper: {
           root: {
-            backgroundColor: '#1e1e1e !important',
-            color: '#ffffff !important',
+            backgroundColor: currentColors.background.paper,
+            color: currentColors.text.primary,
           },
           outlined: {
-            border: 'none !important',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3) !important',
-            borderRadius: '12px !important',
+            border: `1px solid ${currentColors.border}`,
+            boxShadow: `0 2px 8px ${currentColors.shadow}`,
+            borderRadius: '12px',
           },
         },
-        MuiListItem: {
+        MuiCard: {
           root: {
-            color: '#ffffff !important',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-            '&:hover': {
-              backgroundColor: 'rgba(187, 134, 252, 0.1) !important',
-            },
-            '&.Mui-selected': {
-              backgroundColor: 'rgba(187, 134, 252, 0.2) !important',
-            },
+            backgroundColor: currentColors.background.paper,
+            color: currentColors.text.primary,
+            boxShadow: `0 2px 8px ${currentColors.shadow}`,
           },
         },
-        MuiListItemIcon: {
+        MuiTableCell: {
           root: {
-            color: '#ffffff !important',
-            minWidth: '40px',
+            color: `${currentColors.text.primary} !important`,
+            borderBottom: `1px solid ${currentColors.border} !important`,
           },
-        },
-        MuiListItemText: {
-          primary: {
-            color: '#ffffff !important',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-            fontWeight: 500,
-          },
-        },
-        MuiDivider: {
-          root: {
-            backgroundColor: 'rgba(255, 255, 255, 0.2) !important',
-          },
-        },
-        MuiListSubheader: {
-          root: {
-            backgroundColor: '#1e1e1e !important',
-            color: '#ffffff !important',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-          },
-        },
-        MuiIconButton: {
-          root: {
-            color: '#ffffff !important',
+          head: {
+            backgroundColor: '#2a2a2a !important',
+            fontWeight: 600,
           },
         },
         MuiTextField: {
           root: {
             '& .MuiInputBase-root': {
-              color: '#ffffff',
-              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+              color: currentColors.text.primary,
+              backgroundColor: currentColors.background.paper,
             },
             '& .MuiInputLabel-root': {
-              color: '#aaaaaa',
-              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-              fontWeight: 500,
+              color: currentColors.text.secondary,
             },
             '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#555555',
+              borderColor: currentColors.border,
             },
-          },
-        },
-        MuiTableCell: {
-          root: {
-            color: '#ffffff !important',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.2) !important',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-          },
-          head: {
-            fontWeight: 600,
-          },
-        },
-        MuiTableHead: {
-          root: {
-            backgroundColor: '#2a2a2a !important',
+            '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: currentColors.primary,
+            },
           },
         },
         MuiButton: {
           root: {
-            color: '#ffffff',
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+            color: currentColors.text.primary,
             fontWeight: 600,
             textTransform: 'none',
           },
+          contained: {
+            boxShadow: `0 2px 4px ${currentColors.shadow}`,
+            '&:hover': {
+              boxShadow: `0 4px 8px ${currentColors.shadow}`,
+            },
+          },
         },
-        MuiTypography: {
+        MuiIconButton: {
           root: {
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
-          },
-          h1: {
-            fontWeight: 700,
-          },
-          h2: {
-            fontWeight: 700,
-          },
-          h3: {
-            fontWeight: 700,
-          },
-          h4: {
-            fontWeight: 700,
-          },
-          h5: {
-            fontWeight: 700,
-          },
-          h6: {
-            fontWeight: 700,
+            color: currentColors.text.primary,
           },
         },
         MuiMenuItem: {
           root: {
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+            color: currentColors.text.primary,
+            backgroundColor: currentColors.background.paper,
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            },
+          },
+        },
+        MuiPopover: {
+          paper: {
+            backgroundColor: currentColors.background.paper,
+            color: currentColors.text.primary,
+            boxShadow: `0 4px 16px ${currentColors.shadow}`,
+          },
+        },
+        MuiDialog: {
+          paper: {
+            backgroundColor: currentColors.background.paper,
+            color: currentColors.text.primary,
           },
         },
         MuiDialogTitle: {
           root: {
+            color: currentColors.text.primary,
             fontWeight: 700,
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
           },
         },
-        MuiCardHeader: {
-          title: {
-            fontWeight: 700,
-            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        MuiDialogContent: {
+          root: {
+            color: currentColors.text.primary,
+          },
+        },
+        MuiChip: {
+          root: {
+            backgroundColor: '#333333',
+            color: currentColors.text.primary,
+          },
+        },
+        MuiTab: {
+          root: {
+            color: currentColors.text.secondary,
+            fontWeight: 600,
+            textTransform: 'none',
+            '&.Mui-selected': {
+              color: currentColors.primary,
+            },
+          },
+        },
+        MuiTabs: {
+          indicator: {
+            backgroundColor: currentColors.primary,
+          },
+        },
+        MuiFormLabel: {
+          root: {
+            color: currentColors.text.secondary,
+            '&.Mui-focused': {
+              color: currentColors.primary,
+            },
+          },
+        },
+        MuiInputBase: {
+          root: {
+            color: currentColors.text.primary,
+          },
+        },
+        MuiSelect: {
+          root: {
+            color: currentColors.text.primary,
+          },
+          icon: {
+            color: currentColors.text.secondary,
+          },
+        },
+        MuiListItem: {
+          root: {
+            color: currentColors.text.primary,
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            },
+            '&.Mui-selected': {
+              backgroundColor: 'rgba(255, 255, 255, 0.12)',
+            },
+          },
+        },
+        MuiListItemText: {
+          primary: {
+            color: currentColors.text.primary,
+          },
+          secondary: {
+            color: currentColors.text.secondary,
+          },
+        },
+        MuiDivider: {
+          root: {
+            backgroundColor: currentColors.border,
+          },
+        },
+        MuiTypography: {
+          root: {
+            color: currentColors.text.primary,
           },
         },
         MuiSvgIcon: {
           root: {
             color: 'inherit',
+          },
+        },
+        MuiBackdrop: {
+          root: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
           },
         },
       },
@@ -548,7 +637,8 @@ export const ThemeProvider = ({ children }) => {
       toggleDarkMode, 
       theme, 
       drawerCollapsed, 
-      toggleDrawerCollapse 
+      toggleDrawerCollapse,
+      colors: currentColors
     }}>
       {children}
     </ThemeContext.Provider>

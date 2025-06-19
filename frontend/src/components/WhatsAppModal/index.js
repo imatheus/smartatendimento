@@ -108,7 +108,7 @@ const WhatsAppModal = ({ open, onClose, whatsAppId }) => {
       const newToken = generateToken();
       setWhatsApp(prev => ({ ...prev, token: newToken }));
     }
-  }, [open, whatsAppId]);
+  }, [open, whatsAppId, whatsApp.token]);
 
   useEffect(() => {
     const fetchSession = async () => {

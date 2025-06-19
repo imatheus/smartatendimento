@@ -9,6 +9,13 @@ import { ThemeProvider, useCustomTheme } from "./context/Theme/ThemeContext";
 // Import custom CSS after Material-UI components to ensure proper override
 import "./assets/css/custom-paper-styles.css";
 import "./assets/css/font-override.css";
+import "./assets/css/dark-theme-fixes.css";
+import "./assets/css/dark-mode-complete.css";
+import "./assets/css/dark-mode-overrides.css";
+import "./assets/css/message-input-dark.css";
+import "./assets/css/messages-list-dark.css";
+import "./assets/css/preserve-colors-dark.css";
+import "./assets/css/input-fixes-dark.css";
 
 const AppContent = () => {
 	const { theme } = useCustomTheme();

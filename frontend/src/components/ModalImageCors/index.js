@@ -135,7 +135,7 @@ const ModalImageCors = ({ imageUrl }) => {
 		
 		// Remover qualquer "undefined" do filename
 		if (filename.includes('undefined')) {
-			filename = filename.replace(/.*undefined[\/\\]?/, '');
+			filename = filename.replace(/.*undefined[/\\]?/, '');
 		}
 		
 		console.log('Nome do arquivo extraído:', filename);

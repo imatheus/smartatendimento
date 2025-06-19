@@ -50,7 +50,7 @@ export const receiveMessage = async (req: Request, res: Response): Promise<Respo
           tokenMeta: JSON.stringify({
             primaryColor: "#1976d2",
             position: "bottom-right",
-            companyName: "Smart Atendimento",
+            companyName: "PepChat",
             welcomeMessage: "Olá! Como posso ajudá-lo?"
           })
         });

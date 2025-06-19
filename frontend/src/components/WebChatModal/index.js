@@ -121,7 +121,7 @@ const WebChatModal = ({ open, onClose }) => {
     const chatId = `webchat_${Date.now()}`;
     const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:8080";
     
-    return `<!-- Smart Atendimento - Chat Web -->
+    return `<!-- PepChat - Chat Web -->
 <div id="${chatId}"></div>
 <script>
 (function() {
@@ -138,7 +138,7 @@ const WebChatModal = ({ open, onClose }) => {
 
   // Criar estrutura do chat
   var chatContainer = document.createElement('div');
-  chatContainer.id = 'smart-chat-container';
+  chatContainer.id = 'PepChat-chat-container';
   chatContainer.style.cssText = \`
     position: fixed;
     ${config.position.includes('bottom') ? 'bottom: 20px;' : 'top: 20px;'}
@@ -156,7 +156,7 @@ const WebChatModal = ({ open, onClose }) => {
 
   // Botão flutuante
   var chatButton = document.createElement('div');
-  chatButton.id = 'smart-chat-button';
+  chatButton.id = 'PepChat-chat-button';
   chatButton.innerHTML = '💬';
   chatButton.style.cssText = \`
     position: fixed;
@@ -189,12 +189,12 @@ const WebChatModal = ({ open, onClose }) => {
   \`;
   chatHeader.innerHTML = \`
     <span>${config.companyName}</span>
-    <span id="smart-chat-close" style="cursor: pointer; font-size: 18px;">&times;</span>
+    <span id="PepChat-chat-close" style="cursor: pointer; font-size: 18px;">&times;</span>
   \`;
 
   // Área de mensagens
   var chatMessages = document.createElement('div');
-  chatMessages.id = 'smart-chat-messages';
+  chatMessages.id = 'PepChat-chat-messages';
   chatMessages.style.cssText = \`
     height: 350px;
     overflow-y: auto;
@@ -268,7 +268,7 @@ const WebChatModal = ({ open, onClose }) => {
     chatButton.style.display = 'none';
   };
 
-  document.getElementById('smart-chat-close').onclick = function() {
+  document.getElementById('PepChat-chat-close').onclick = function() {
     chatContainer.style.display = 'none';
     chatButton.style.display = 'flex';
   };
@@ -339,7 +339,7 @@ const WebChatModal = ({ open, onClose }) => {
   };
 })();
 </script>
-<!-- Fim Smart Atendimento - Chat Web -->`;
+<!-- Fim PepChat - Chat Web -->`;
   };
 
   const handleCopyCode = () => {

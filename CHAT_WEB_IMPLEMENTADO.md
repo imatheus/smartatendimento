@@ -97,7 +97,7 @@ POST /webchat/message - Receber mensagens
 ## 🎨 **Exemplo de Código Gerado**
 
 ```html
-<!-- Smart Atendimento - Chat Web -->
+<!-- PepChat - Chat Web -->
 <div id="webchat_1234567890"></div>
 <script>
 (function() {

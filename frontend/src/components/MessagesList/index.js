@@ -371,7 +371,7 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   
   // Typing indicator state
   const [isTyping, setIsTyping] = useState(false);
-  const [typingTimeout, setTypingTimeout] = useState(null);
+  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
@@ -432,9 +432,9 @@ useEffect(() => {
     if (data.action === "create" && messageTicketId === currentTicketId) {
       // Hide typing indicator when message is received
       setIsTyping(false);
-      if (typingTimeout) {
-        clearTimeout(typingTimeout);
-        setTypingTimeout(null);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
       }
       
       dispatch({ type: "ADD_MESSAGE", payload: data.message });
@@ -451,20 +451,18 @@ useEffect(() => {
     if (parseInt(data.ticketId) === currentTicketId && !data.fromMe) {
       if (data.typing) {
         setIsTyping(true);
-        // Clear existing timeout
-        if (typingTimeout) {
-          clearTimeout(typingTimeout);
+        // Clear existing timeout and set new one
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
         }
-        // Set new timeout to hide typing indicator after 3 seconds
-        const timeout = setTimeout(() => {
+        typingTimeoutRef.current = setTimeout(() => {
           setIsTyping(false);
         }, 3000);
-        setTypingTimeout(timeout);
       } else {
         setIsTyping(false);
-        if (typingTimeout) {
-          clearTimeout(typingTimeout);
-          setTypingTimeout(null);
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = null;
         }
       }
     }
@@ -553,7 +551,9 @@ useEffect(() => {
         return (
           <div className={classes.documentPreview}>
             <div className={classes.documentHeader}>
-              <div className={classes.documentIcon}>📄</div>
+              <div className={classes.documentIcon}>
+                <span role="img" aria-label="PDF document">📄</span>
+              </div>
               <div className={classes.documentInfo}>
                 <Typography variant="body2" className={classes.documentName}>
                   {fileName}
@@ -945,29 +945,7 @@ useEffect(() => {
           <TypingIndicator contactName={ticket?.contact?.name || "Contato"} />
         )}
       </div>
-      {ticket?.channel !== "whatsapp" && (
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            padding: "10px",
-            alignItems: "center",
-            backgroundColor: "#E1F3FB",
-          }}
-        >
-          {ticket?.channel === "facebook" ? (
-            <Facebook small />
-          ) : (
-            <Instagram small />
-          )}
-
-          <span>
-            Você tem 24h para responder após receber uma mensagem, de acordo
-            com as políticas do Facebook.
-          </span>
-        </div>
-      )}
-      {loading && (
+            {loading && (
         <div>
           <CircularProgress className={classes.circleLoading} />
         </div>

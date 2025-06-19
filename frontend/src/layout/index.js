@@ -52,14 +52,15 @@ const useStyles = makeStyles((theme) => ({
   },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
-    backgroundColor: "#ffffff !important",
-    color: "#000000 !important",
+    backgroundColor: theme.palette.background.paper + " !important",
+    color: theme.palette.text.primary + " !important",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    transition: "background-color 0.3s ease, color 0.3s ease",
     "& .MuiIconButton-root": {
-      color: "#000000 !important",
+      color: theme.palette.text.primary + " !important",
     },
     "& .MuiTypography-root": {
-      color: "#000000 !important",
+      color: theme.palette.text.primary + " !important",
     },
   },
   menuButton: {
@@ -73,12 +74,13 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 500,
   },
   userNameTag: {
-    backgroundColor: '#eeeeee',
-    color: '#4caf50',
+    backgroundColor: theme.palette.type === 'dark' ? '#333333' : '#eeeeee',
+    color: theme.palette.type === 'dark' ? '#66bb6a' : '#4caf50',
     padding: '1px 15px',
     borderRadius: '50px',
     display: 'inline-block',
     fontWeight: 'normal',
+    transition: 'background-color 0.3s ease, color 0.3s ease',
   },
   logoContainer: {
     display: "flex",
@@ -274,6 +276,9 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     padding: theme.spacing(3),
     overflow: "auto",
+    backgroundColor: theme.palette.background.default,
+    color: theme.palette.text.primary,
+    transition: 'background-color 0.3s ease, color 0.3s ease',
     ...theme.scrollbarStyles,
   },
   container: {

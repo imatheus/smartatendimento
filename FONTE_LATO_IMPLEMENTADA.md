@@ -2,7 +2,7 @@
 
 ## Alteração Realizada
 
-Substituí a fonte padrão do sistema **Roboto** pela fonte **Lato** em todo o sistema Smart Atendimento.
+Substituí a fonte padrão do sistema **Roboto** pela fonte **Lato** em todo o sistema PepChat.
 
 ## 🔧 **Arquivos Modificados:**
 

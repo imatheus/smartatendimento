@@ -44,7 +44,7 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: "100%",
     boxSizing: "border-box",
     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: theme.palette.type === 'dark' ? '#333333' : theme.palette.background.paper,
     border: "1px solid rgba(0, 0, 0, 0.05)",
     transition: "all 0.2s ease-in-out",
     "&:hover": {
