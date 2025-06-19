@@ -3,6 +3,7 @@ import { promisify } from "util";
 import { writeFile } from "fs";
 import * as Sentry from "@sentry/node";
 import { isNil, head, isNull } from "lodash";
+import UploadHelper from "../../helpers/UploadHelper";
 
 import {
   AnyWASocket,
@@ -332,10 +333,27 @@ const verifyMediaMessage = async (msg: proto.IWebMessageInfo, ticket: Ticket, co
     throw new Error("ERR_WAPP_DOWNLOAD_MEDIA");
   }
 
+  // Organizar arquivo por empresa e categoria
+  const fileName = UploadHelper.generateFileName(media.filename);
+  const uploadConfig = {
+    companyId: ticket.companyId,
+    category: 'chat' as const,
+    ticketId: ticket.id
+  };
+
+  let mediaPath: string;
   try {
-    await writeFileAsync(join(__dirname, "..", "..", "..", "public", media.filename), media.data, "base64");
+    mediaPath = await UploadHelper.saveBuffer(media.data, uploadConfig, fileName);
   } catch (err) {
-    logger.error(err, "Error writing media file");
+    logger.error(err, "Error organizing media file");
+    // Fallback para método antigo se falhar
+    try {
+      await writeFileAsync(join(__dirname, "..", "..", "..", "public", media.filename), media.data);
+      mediaPath = media.filename;
+    } catch (fallbackErr) {
+      logger.error(fallbackErr, "Error writing media file");
+      throw new Error("ERR_SAVING_MEDIA");
+    }
   }
 
   const body = getBodyMessage(msg) || media.filename;
@@ -346,7 +364,7 @@ const verifyMediaMessage = async (msg: proto.IWebMessageInfo, ticket: Ticket, co
     body,
     fromMe: msg.key.fromMe,
     read: msg.key.fromMe,
-    mediaUrl: media.filename,
+    mediaUrl: mediaPath, // Usar caminho organizado
     mediaType: media.mimetype.split("/")[0],
     quotedMsgId: quotedMsg?.id,
     ack: msg.status,

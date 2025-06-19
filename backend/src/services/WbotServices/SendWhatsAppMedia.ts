@@ -5,11 +5,7 @@ import GetTicketWbot from "../../helpers/GetTicketWbot";
 import Ticket from "../../models/Ticket";
 import Message from "../../models/Message";
 import CreateMessageService from "../MessageServices/CreateMessageService";
-import { writeFile } from "fs";
-import { promisify } from "util";
-import { join } from "path";
-
-const writeFileAsync = promisify(writeFile);
+import UploadHelper from "../../helpers/UploadHelper";
 
 interface Request {
   media: Express.Multer.File;
@@ -59,14 +55,25 @@ const SendWhatsAppMedia = async ({
       messageContent
     );
 
-    // Copy media file to public directory
+    // Organizar arquivo por empresa e categoria
+    const fileName = UploadHelper.generateFileName(media.originalname);
+    const uploadConfig = {
+      companyId: ticket.companyId,
+      category: 'chat' as const,
+      ticketId: ticket.id
+    };
+
+    let mediaPath: string;
     try {
-      await writeFileAsync(
-        join(__dirname, "..", "..", "..", "public", media.filename),
-        media.buffer || require("fs").readFileSync(media.path)
-      );
+      // Salvar arquivo no diretório organizado
+      if (media.buffer) {
+        mediaPath = await UploadHelper.saveBuffer(media.buffer, uploadConfig, fileName);
+      } else {
+        mediaPath = await UploadHelper.moveFile(media.path, uploadConfig, fileName);
+      }
     } catch (err) {
-      console.log("Error copying media file:", err);
+      console.log("Error organizing media file:", err);
+      throw new AppError("ERR_SAVING_MEDIA");
     }
 
     // Create message record in database
@@ -78,7 +85,7 @@ const SendWhatsAppMedia = async ({
       fromMe: true,
       read: true,
       mediaType: mediaType,
-      mediaUrl: media.filename,
+      mediaUrl: mediaPath, // Usar caminho organizado
       ack: 1, // sent
       dataJson: JSON.stringify(sentMessage)
     };

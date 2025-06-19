@@ -51,9 +51,16 @@ class Message extends Model<Message> {
   @Column(DataType.STRING)
   get mediaUrl(): string | null {
     if (this.getDataValue("mediaUrl")) {
-      return `${process.env.BACKEND_URL}/public/${this.getDataValue(
-        "mediaUrl"
-      )}`;
+      const backendUrl = process.env.BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+      const mediaPath = this.getDataValue("mediaUrl");
+      
+      // Se o caminho já contém uma estrutura organizada (empresa/categoria), usar uploads
+      if (mediaPath.includes('/')) {
+        return `${backendUrl}/uploads/${mediaPath}`;
+      }
+      
+      // Compatibilidade com arquivos antigos na pasta public
+      return `${backendUrl}/public/${mediaPath}`;
     }
     return null;
   }

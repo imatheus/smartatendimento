@@ -596,64 +596,60 @@ const MessageInputCustom = (props) => {
     const formData = new FormData();
     formData.append("fromMe", true);
 
-    medias.forEach(async (media, idx) => {
-
-      const file = media;
-
-      if (!file) { return; }
+    // Process all medias
+    const processedMedias = [];
+    
+    for (const media of medias) {
+      if (!media) continue;
 
       if (media?.type.split('/')[0] === 'image') {
-        new Compressor(file, {
-          quality: 0.7,
-
-          async success(media) {
-            formData.append("medias", media);
-            formData.append("body", media.name);
-          },
-          error(err) {
-            alert('erro')
-            console.log(err.message);
-          },
-
-        });
-      } else {
-        formData.append("medias", media);
-        formData.append("body", media.name);
-      }
-    },);
-
-    setTimeout(async()=> {
-      try {
-        await api.post(`/messages/${ticketId}`, formData, {
-          onUploadProgress: (event) => {
-            let progress = Math.round(
-              (event.loaded * 100) / event.total
-            );
-            setPercentLoading(progress);
-            console.log(
-              `A imagem  está ${progress}% carregada... `
-            );
-          },
-        })
-          .then((response) => {
-            setLoading(false)
-            setMedias([])
-            setPercentLoading(0);
-            console.log(
-              `A imagem á foi enviada para o servidor!`
-            );
-          })
-          .catch((err) => {
-            console.error(
-              `Houve um problema ao realizar o upload da imagem.`
-            );
-            console.log(err);
+        // Compress image
+        try {
+          const compressedMedia = await new Promise((resolve, reject) => {
+            new Compressor(media, {
+              quality: 0.7,
+              success: resolve,
+              error: reject,
+            });
           });
-      } catch (err) {
-        toastError(err);
+          processedMedias.push(compressedMedia);
+        } catch (err) {
+          console.error('Erro ao comprimir imagem:', err);
+          processedMedias.push(media); // Use original if compression fails
+        }
+      } else {
+        processedMedias.push(media);
       }
-    },2000)
-  }
+    }
+
+    // Add all processed medias to FormData
+    processedMedias.forEach(media => {
+      formData.append("medias", media);
+      formData.append("body", media.name || 'file');
+    });
+
+    try {
+      await api.post(`/messages/${ticketId}`, formData, {
+        onUploadProgress: (event) => {
+          let progress = Math.round(
+            (event.loaded * 100) / event.total
+          );
+          setPercentLoading(progress);
+          console.log(`Upload está ${progress}% completo...`);
+        },
+      });
+      
+      console.log('Upload concluído com sucesso!');
+      setLoading(false);
+      setMedias([]);
+      setPercentLoading(0);
+    } catch (err) {
+      console.error('Erro no upload:', err);
+      toastError(err);
+      setLoading(false);
+      setPercentLoading(0);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (inputMessage.trim() === "") return;

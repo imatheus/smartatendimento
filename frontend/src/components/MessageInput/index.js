@@ -22,6 +22,7 @@ import api from "../../services/api";
 import { ReplyMessageContext } from "../../context/ReplyingMessage/ReplyingMessageContext";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { socketConnection } from "../../services/socket";
 import toastError from "../../errors/toastError";
 
 
@@ -147,13 +148,17 @@ const MessageInput = ({ ticketStatus }) => {
 	const [inputMessage, setInputMessage] = useState("");
 	const [showEmoji, setShowEmoji] = useState(false);
 	const [loading, setLoading] = useState(false);
-		const inputRef = useRef();
+	const inputRef = useRef();
 	const { setReplyingMessage, replyingMessage } = useContext(
 		ReplyMessageContext
 	);
 	const { user } = useContext(AuthContext);
 
 	const [signMessage, setSignMessage] = useLocalStorage("signOption", true);
+	
+	// Typing indicator state
+	const [isTyping, setIsTyping] = useState(false);
+	const typingTimeoutRef = useRef(null);
 
 	useEffect(() => {
 		inputRef.current.focus();
@@ -171,6 +176,42 @@ const MessageInput = ({ ticketStatus }) => {
 
 	const handleChangeInput = e => {
 		setInputMessage(e.target.value);
+		
+		// Emit typing indicator only if ticketId exists
+		if (ticketId && ticketId !== "undefined") {
+			try {
+				const companyId = localStorage.getItem("companyId");
+				if (companyId) {
+					const socket = socketConnection({ companyId });
+					
+					if (e.target.value.length > 0 && !isTyping) {
+						setIsTyping(true);
+						socket.emit("typing", {
+							ticketId: ticketId,
+							fromMe: true,
+							typing: true
+						});
+					}
+					
+					// Clear existing timeout
+					if (typingTimeoutRef.current) {
+						clearTimeout(typingTimeoutRef.current);
+					}
+					
+					// Set timeout to stop typing indicator
+					typingTimeoutRef.current = setTimeout(() => {
+						setIsTyping(false);
+						socket.emit("typing", {
+							ticketId: ticketId,
+							fromMe: true,
+							typing: false
+						});
+					}, 1000);
+				}
+			} catch (error) {
+				console.warn("Error emitting typing event:", error);
+			}
+		}
 	};
 
 	const handleAddEmoji = e => {

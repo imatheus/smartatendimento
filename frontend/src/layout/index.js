@@ -73,8 +73,8 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 500,
   },
   userNameTag: {
-    backgroundColor: '#44b774',
-    color: '#f5fff5',
+    backgroundColor: '#eeeeee',
+    color: '#4caf50',
     padding: '1px 15px',
     borderRadius: '50px',
     display: 'inline-block',
@@ -126,7 +126,7 @@ const useStyles = makeStyles((theme) => ({
     position: "relative",
     whiteSpace: "nowrap",
     width: drawerWidth,
-    backgroundColor: "#ffffff !important",
+    backgroundColor: "#44b774 !important",
     borderRadius: "35px !important",
     boxShadow: "0 4px 12px rgba(0,0,0,0.08) !important",
     border: "none !important",
@@ -138,44 +138,45 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.enteringScreen,
     }),
     "& .MuiListItem-root": {
-      color: "#666666 !important",
+      color: "#fff !important",
       margin: "4px 16px",
       borderRadius: "25px !important",
       "&:hover": {
-        backgroundColor: "rgba(0,0,0,0.04) !important",
+        backgroundColor: "rgba(255,255,255,0.1) !important",
       },
       "&.Mui-selected": {
-        backgroundColor: "rgba(0,0,0,0.08) !important",
+        backgroundColor: "rgba(255,255,255,0.2) !important",
       },
     },
     "& .MuiListItemIcon-root": {
-      color: "#666666 !important",
+      color: "#fff !important",
       minWidth: "40px",
     },
     "& .MuiListItemText-primary": {
-      color: "#666666 !important",
+      color: "#fff !important",
     },
     "& .MuiDivider-root": {
-      backgroundColor: "rgba(0,0,0,0.08) !important",
+      backgroundColor: "rgba(255,255,255,0.2) !important",
       margin: "8px 16px",
     },
     "& .MuiListSubheader-root": {
       backgroundColor: "transparent !important",
-      color: "#999999 !important",
+      color: "#fff !important",
       fontSize: "12px",
       fontWeight: 600,
       textTransform: "uppercase",
       letterSpacing: "0.5px",
+      opacity: 0.8,
     },
     "& .MuiIconButton-root": {
-      color: "#666666 !important",
+      color: "#fff !important",
     },
   },
   drawerPaperClose: {
     position: "relative",
     whiteSpace: "nowrap",
     width: drawerCollapsedWidth,
-    backgroundColor: "#ffffff !important",
+    backgroundColor: "#44b774 !important",
     borderRadius: "30px !important",
     boxShadow: "0 4px 12px rgba(0,0,0,0.08) !important",
     border: "none !important",
@@ -188,7 +189,7 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.leavingScreen,
     }),
     "& .MuiListItem-root": {
-      color: "#666666 !important",
+      color: "#fff !important",
       margin: "4px 0",
       borderRadius: "25px !important",
       display: "flex !important",
@@ -196,14 +197,14 @@ const useStyles = makeStyles((theme) => ({
       alignItems: "center !important",
       minHeight: "48px",
       "&:hover": {
-        backgroundColor: "rgba(0,0,0,0.04) !important",
+        backgroundColor: "rgba(255,255,255,0.1) !important",
       },
       "&.Mui-selected": {
-        backgroundColor: "rgba(0,0,0,0.08) !important",
+        backgroundColor: "rgba(255,255,255,0.2) !important",
       },
     },
     "& .MuiListItemIcon-root": {
-      color: "#666666 !important",
+      color: "#fff !important",
       minWidth: "auto !important",
       margin: "0 !important",
       justifyContent: "center",
@@ -211,18 +212,18 @@ const useStyles = makeStyles((theme) => ({
       display: "flex",
     },
     "& .MuiDivider-root": {
-      backgroundColor: "rgba(0,0,0,0.08) !important",
+      backgroundColor: "rgba(255,255,255,0.2) !important",
       margin: "8px 16px",
     },
     "& .MuiIconButton-root": {
-      color: "#666666 !important",
+      color: "#fff !important",
     },
   },
   drawerPaperCollapsed: {
     position: "relative",
     whiteSpace: "nowrap",
     width: 72,
-    backgroundColor: "#ffffff !important",
+    backgroundColor: "#44b774 !important",
     borderRadius: "30px !important",
     boxShadow: "0 4px 12px rgba(0,0,0,0.08) !important",
     border: "none !important",
@@ -236,7 +237,7 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.enteringScreen,
     }),
     "& .MuiListItem-root": {
-      color: "#666666 !important",
+      color: "#fff !important",
       margin: "4px 0",
       borderRadius: "25px !important",
       display: "flex !important",
@@ -244,14 +245,14 @@ const useStyles = makeStyles((theme) => ({
       alignItems: "center !important",
       minHeight: "48px",
       "&:hover": {
-        backgroundColor: "rgba(0,0,0,0.04) !important",
+        backgroundColor: "rgba(255,255,255,0.1) !important",
       },
       "&.Mui-selected": {
-        backgroundColor: "rgba(0,0,0,0.08) !important",
+        backgroundColor: "rgba(255,255,255,0.2) !important",
       },
     },
     "& .MuiListItemIcon-root": {
-      color: "#666666 !important",
+      color: "#fff !important",
       minWidth: "auto !important",
       margin: "0 !important",
       justifyContent: "center",
@@ -259,11 +260,11 @@ const useStyles = makeStyles((theme) => ({
       display: "flex",
     },
     "& .MuiDivider-root": {
-      backgroundColor: "rgba(0,0,0,0.08) !important",
+      backgroundColor: "rgba(255,255,255,0.2) !important",
       margin: "8px 16px",
     },
     "& .MuiIconButton-root": {
-      color: "#666666 !important",
+      color: "#fff !important",
     },
   },
   appBarSpacer: {
@@ -314,7 +315,7 @@ const useStyles = makeStyles((theme) => ({
     minHeight: "48px !important",
   },
   expandButton: {
-    color: "#666666 !important",
+    color: "#fff !important",
     margin: "8px",
   },
 }));

@@ -192,6 +192,7 @@ const messages = {
 			},
 			chat: {
 				noTicketMessage: "Selecciona un ticket para empezar a chatear.",
+				typing: "escribiendo...",
 			},
 			ticketsManager: {
 				buttons: {

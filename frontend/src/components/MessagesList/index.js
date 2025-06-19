@@ -28,6 +28,7 @@ import {
 import MarkdownWrapper from "../MarkdownWrapper";
 import ModalImageCors from "../ModalImageCors";
 import MessageOptionsMenu from "../MessageOptionsMenu";
+import TypingIndicator from "../TypingIndicator";
 import whatsBackground from "../../assets/wa-background.png";
 
 import api from "../../services/api";
@@ -267,7 +268,40 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     height: 80,
     borderRadius: 5
-  }
+  },
+
+  documentPreview: {
+    width: 250,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    padding: 12,
+    margin: "4px 0",
+  },
+
+  documentHeader: {
+    display: "flex",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
+  documentIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+
+  documentInfo: {
+    flex: 1,
+  },
+
+  documentName: {
+    fontWeight: 500,
+    marginBottom: 2,
+  },
+
+  documentActions: {
+    display: "flex",
+    justifyContent: "flex-end",
+  },
 }));
 
 const reducer = (state, action) => {
@@ -334,6 +368,10 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const messageOptionsMenuOpen = Boolean(anchorEl);
   const currentTicketId = useRef(ticketId);
+  
+  // Typing indicator state
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState(null);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
@@ -392,6 +430,13 @@ useEffect(() => {
     const messageTicketId = parseInt(data.ticket?.id || data.message?.ticketId);
     
     if (data.action === "create" && messageTicketId === currentTicketId) {
+      // Hide typing indicator when message is received
+      setIsTyping(false);
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+        setTypingTimeout(null);
+      }
+      
       dispatch({ type: "ADD_MESSAGE", payload: data.message });
       setTimeout(() => scrollToBottom(), 100); // Pequeno delay para garantir que a mensagem foi renderizada
     }
@@ -400,10 +445,37 @@ useEffect(() => {
     }
   };
 
+  // Typing indicator listener
+  const typingListener = (data) => {
+    const currentTicketId = parseInt(ticketId);
+    if (parseInt(data.ticketId) === currentTicketId && !data.fromMe) {
+      if (data.typing) {
+        setIsTyping(true);
+        // Clear existing timeout
+        if (typingTimeout) {
+          clearTimeout(typingTimeout);
+        }
+        // Set new timeout to hide typing indicator after 3 seconds
+        const timeout = setTimeout(() => {
+          setIsTyping(false);
+        }, 3000);
+        setTypingTimeout(timeout);
+      } else {
+        setIsTyping(false);
+        if (typingTimeout) {
+          clearTimeout(typingTimeout);
+          setTypingTimeout(null);
+        }
+      }
+    }
+  };
+
   socket.on(`company-${companyId}-appMessage`, messageListener);
+  socket.on(`company-${companyId}-typing`, typingListener);
 
   return () => {
     socket.off(`company-${companyId}-appMessage`, messageListener);
+    socket.off(`company-${companyId}-typing`, typingListener);
     socket.disconnect();
   };
 }, [ticketId]);
@@ -458,24 +530,122 @@ useEffect(() => {
           controls
         />
       );
-    } else {
+    }
+    
+    if (message.mediaType === "audio") {
       return (
-        <>
-          <div className={classes.downloadMedia}>
+        <audio
+          className={classes.messageMedia}
+          src={message.mediaUrl}
+          controls
+          style={{ width: "250px", height: "40px" }}
+        />
+      );
+    }
+    
+    // Handle document previews (PDF, DOC, etc.)
+    if (message.mediaType === "application") {
+      const fileName = message.body || "Document";
+      const fileExtension = fileName.split('.').pop()?.toLowerCase();
+      
+      // PDF preview
+      if (fileExtension === 'pdf') {
+        return (
+          <div className={classes.documentPreview}>
+            <div className={classes.documentHeader}>
+              <div className={classes.documentIcon}>📄</div>
+              <div className={classes.documentInfo}>
+                <Typography variant="body2" className={classes.documentName}>
+                  {fileName}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  PDF Document
+                </Typography>
+              </div>
+            </div>
+            <div className={classes.documentActions}>
+              <Button
+                startIcon={<GetApp />}
+                color="primary"
+                variant="outlined"
+                size="small"
+                target="_blank"
+                href={message.mediaUrl}
+                style={{ marginRight: 8 }}
+              >
+                Download
+              </Button>
+              <Button
+                color="primary"
+                variant="contained"
+                size="small"
+                target="_blank"
+                href={message.mediaUrl}
+              >
+                View
+              </Button>
+            </div>
+          </div>
+        );
+      }
+      
+      // Other document types
+      const documentIcons = {
+        doc: '📝', docx: '📝',
+        xls: '📊', xlsx: '📊',
+        ppt: '📊', pptx: '📊',
+        txt: '📄',
+        zip: '🗜️', rar: '🗜️',
+      };
+      
+      return (
+        <div className={classes.documentPreview}>
+          <div className={classes.documentHeader}>
+            <div className={classes.documentIcon}>
+              {documentIcons[fileExtension] || '📎'}
+            </div>
+            <div className={classes.documentInfo}>
+              <Typography variant="body2" className={classes.documentName}>
+                {fileName}
+              </Typography>
+              <Typography variant="caption" color="textSecondary">
+                {fileExtension?.toUpperCase()} Document
+              </Typography>
+            </div>
+          </div>
+          <div className={classes.documentActions}>
             <Button
               startIcon={<GetApp />}
               color="primary"
               variant="outlined"
+              size="small"
               target="_blank"
               href={message.mediaUrl}
             >
               Download
             </Button>
           </div>
-          <Divider />
-        </>
+        </div>
       );
     }
+    
+    // Fallback for other media types
+    return (
+      <>
+        <div className={classes.downloadMedia}>
+          <Button
+            startIcon={<GetApp />}
+            color="primary"
+            variant="outlined"
+            target="_blank"
+            href={message.mediaUrl}
+          >
+            Download
+          </Button>
+        </div>
+        <Divider />
+      </>
+    );
   };
 
   const renderMessageAck = (message) => {
@@ -771,6 +941,9 @@ useEffect(() => {
         onScroll={handleScroll}
       >
         {messagesList.length > 0 ? renderMessages() : []}
+        {isTyping && (
+          <TypingIndicator contactName={ticket?.contact?.name || "Contato"} />
+        )}
       </div>
       {ticket?.channel !== "whatsapp" && (
         <div

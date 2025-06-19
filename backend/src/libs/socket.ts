@@ -52,6 +52,19 @@ export const initIO = (httpServer: Server): SocketIOServer => {
       logger.info(`Client connected to ${status} tickets`);
     });
 
+    socket.on("typing", (data: { ticketId: string; fromMe: boolean; typing: boolean }) => {
+      const { ticketId, fromMe, typing } = data;
+      
+      // Broadcast typing status to other clients in the same ticket room
+      socket.to(`ticket:${ticketId}`).emit(`company-${companyId}-typing`, {
+        ticketId,
+        fromMe,
+        typing
+      });
+      
+      logger.info(`Typing event: Ticket ${ticketId}, fromMe: ${fromMe}, typing: ${typing}`);
+    });
+
     socket.on("disconnect", async () => {
       if (userId && userId !== "undefined" && userId !== "null") {
         try {

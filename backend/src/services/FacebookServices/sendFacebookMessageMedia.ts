@@ -4,6 +4,7 @@ import Ticket from "../../models/Ticket";
 import Message from "../../models/Message";
 import { sendAttachmentFromUrl } from "./graphAPI";
 import CreateMessageService from "../MessageServices/CreateMessageService";
+import UploadHelper from "../../helpers/UploadHelper";
 import { v4 as uuidv4 } from "uuid";
 // import { verifyMessage } from "./facebookMessageListener";
 
@@ -33,7 +34,28 @@ export const sendFacebookMessageMedia = async ({
   try {
     const type = typeAttachment(media);
 
-    const domain = `${process.env.BACKEND_URL}/public/${media.filename}`
+    // Organizar arquivo por empresa e categoria
+    const fileName = UploadHelper.generateFileName(media.originalname);
+    const uploadConfig = {
+      companyId: ticket.companyId,
+      category: 'chat' as const,
+      ticketId: ticket.id
+    };
+
+    let mediaPath: string;
+    try {
+      // Salvar arquivo no diretório organizado
+      if (media.buffer) {
+        mediaPath = await UploadHelper.saveBuffer(media.buffer, uploadConfig, fileName);
+      } else {
+        mediaPath = await UploadHelper.moveFile(media.path, uploadConfig, fileName);
+      }
+    } catch (err) {
+      console.log("Error organizing media file:", err);
+      throw new AppError("ERR_SAVING_MEDIA");
+    }
+
+    const domain = UploadHelper.getFileUrl(mediaPath);
 
     const sendMessage = await sendAttachmentFromUrl(
       ticket.contact.number,
@@ -51,7 +73,7 @@ export const sendFacebookMessageMedia = async ({
       fromMe: true,
       read: true,
       mediaType: type,
-      mediaUrl: media.filename,
+      mediaUrl: mediaPath, // Usar caminho organizado
       ack: 1, // sent
       dataJson: JSON.stringify(sendMessage)
     };
@@ -65,7 +87,10 @@ export const sendFacebookMessageMedia = async ({
       companyId: ticket.companyId 
     });
 
-    fs.unlinkSync(media.path);
+    // Remover arquivo temporário se existir
+    if (media.path && fs.existsSync(media.path)) {
+      fs.unlinkSync(media.path);
+    }
 
     return newMessage;
   } catch (err) {

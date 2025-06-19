@@ -221,6 +221,7 @@ const messages = {
       },
       chat: {
         noTicketMessage: "Selecione um atendimento para começar a conversar.",
+        typing: "digitando...",
       },
       uploads: {
         titles: {
