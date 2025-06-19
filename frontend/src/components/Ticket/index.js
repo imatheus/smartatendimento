@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
     height: "100%",
     display: "flex",
     flexDirection: "column",
-    overflow: "hidden",
+    overflow: "visible",
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
     borderLeft: "0",
@@ -176,7 +176,7 @@ const Ticket = () => {
           {renderTicketInfo()}
           <TicketActionButtons ticket={ticket} />
         </TicketHeader>
-        <Paper>
+        <Paper style={{ position: 'relative', zIndex: 2, overflow: 'visible' }}>
           <TagsContainer ticket={ticket} />
         </Paper>
         <ReplyMessageProvider>{renderMessagesList()}</ReplyMessageProvider>

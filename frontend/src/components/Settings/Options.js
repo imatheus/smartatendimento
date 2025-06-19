@@ -6,14 +6,12 @@ import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import Select from "@material-ui/core/Select";
 import FormHelperText from "@material-ui/core/FormHelperText";
-import TextField from "@material-ui/core/TextField";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
 import useSettings from "../../hooks/useSettings";
 import { toast } from 'react-toastify';
 import { makeStyles } from "@material-ui/core/styles";
 import { grey, blue } from "@material-ui/core/colors";
-import { Tabs, Tab } from "@material-ui/core";
 import { useCustomTheme } from "../../context/Theme/ThemeContext";
 
 //import 'react-toastify/dist/ReactToastify.css';
@@ -91,9 +89,7 @@ export default function Options(props) {
   const [loadingChatbotType, setLoadingChatbotType] = useState(false);
   const [, setCheckMsgIsGroup] = useState(false);
 
-  const [asaasType, setAsaasType] = useState("");
-  const [loadingAsaasType, setLoadingAsaasType] = useState(false);
-
+  
   const { update } = useSettings();
 
   useEffect(() => {
@@ -115,11 +111,7 @@ export default function Options(props) {
         setChatbotType(chatbotType.value);
       }
 
-      const asaasType = settings.find((s) => s.key === "asaas");
-      if (asaasType) {
-        setAsaasType(asaasType.value);
-      }
-    }
+          }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
 
@@ -167,17 +159,7 @@ export default function Options(props) {
     setCheckMsgIsGroup(false);
   }
 
-  async function handleChangeAsaas(value) {
-    setAsaasType(value);
-    setLoadingAsaasType(true);
-    await update({
-      key: "asaas",
-      value,
-    });
-    toast.success("Operação atualizada com sucesso.");
-    setLoadingAsaasType(false);
-  }
-  return (
+    return (
     <>
       <Grid spacing={3} container>
         {/* <Grid xs={12} item>
@@ -299,58 +281,6 @@ export default function Options(props) {
           </FormControl>
         </Grid>
       </Grid>
-      <Grid spacing={3} container>
-        <Tabs
-          indicatorColor="primary"
-          textColor="primary"
-          scrollButtons="on"
-          variant="scrollable"
-          className={classes.tab}
-          style={{
-            marginBottom: 20,
-            marginTop: 20
-          }}
-        >
-          <Tab
-
-            label="INTEGRAÇÕES" />
-
-        </Tabs>
-
-      </Grid>
-                  {/*-----------------ASAAS-----------------*/}
-      <Grid spacing={3} container
-        style={{ marginBottom: 10 }}>
-        <Tabs
-          indicatorColor="primary"
-          textColor="primary"
-          scrollButtons="on"
-          variant="scrollable"
-          className={classes.tab}
-        >
-          <Tab label="ASAAS" />
-
-        </Tabs>
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <TextField
-              id="asaas"
-              name="asaas"
-              margin="dense"
-              label="Token Asaas"
-              variant="outlined"
-              value={asaasType}
-              onChange={async (e) => {
-                handleChangeAsaas(e.target.value);
-              }}
-            >
-            </TextField>
-            <FormHelperText>
-              {loadingAsaasType && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-      </Grid>
-    </>
+          </>
   );
 }

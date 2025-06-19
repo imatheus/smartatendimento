@@ -13,7 +13,6 @@ import Options from "../../components/Settings/Options";
 import { i18n } from "../../translate/i18n.js";
 import { toast } from "react-toastify";
 
-import useCompanies from "../../hooks/useCompanies";
 import useAuth from "../../hooks/useAuth.js";
 import useSettings from "../../hooks/useSettings";
 
@@ -56,23 +55,16 @@ const useStyles = makeStyles((theme) => ({
 const SettingsCustom = () => {
   const classes = useStyles();
   const [tab, setTab] = useState("options");
-  const [company, setCompany] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState({});
+    const [currentUser, setCurrentUser] = useState({});
   const [settings, setSettings] = useState({});
 
   const { getCurrentUserInfo } = useAuth();
-  const { find } = useCompanies();
   const { getAll: getAllSettings } = useSettings();
 
   useEffect(() => {
     async function findData() {
-      setLoading(true);
       try {
-        const companyId = localStorage.getItem("companyId");
-        const company = await find(companyId);
         const settingList = await getAllSettings();
-        setCompany(company);
         setSettings(settingList);
 
         const user = await getCurrentUserInfo();
@@ -80,7 +72,6 @@ const SettingsCustom = () => {
       } catch (e) {
         toast.error(e);
       }
-      setLoading(false);
     }
     findData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,12 +79,8 @@ const SettingsCustom = () => {
 
   const handleTabChange = (event, newValue) => {
       async function findData() {
-        setLoading(true);
         try {
-          const companyId = localStorage.getItem("companyId");
-          const company = await find(companyId);
           const settingList = await getAllSettings();
-          setCompany(company);
           setSettings(settingList);
   
           const user = await getCurrentUserInfo();
@@ -101,7 +88,6 @@ const SettingsCustom = () => {
         } catch (e) {
           toast.error(e);
         }
-        setLoading(false);
       }
       findData();
       // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -16,7 +16,6 @@ import {
   useMediaQuery,
 } from "@material-ui/core";
 
-import MenuIcon from "@material-ui/icons/Menu";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import AccountCircle from "@material-ui/icons/AccountCircle";
@@ -33,7 +32,7 @@ import logo from "../assets/logo.png";
 import { socketConnection } from "../services/socket";
 
 const drawerWidth = 300;
-const drawerCollapsedWidth = 72;
+const drawerCollapsedWidth = 100;
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -45,84 +44,212 @@ const useStyles = makeStyles((theme) => ({
   },
 
   toolbar: {
-    paddingRight: 24, // keep right padding when drawer closed
-  },
-  toolbarIcon: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    padding: "0 8px",
-    minHeight: "48px",
+    paddingRight: 24,
+    paddingLeft: 16,
   },
   appBar: {
-    zIndex: theme.zIndex.drawer - 1,
-    transition: theme.transitions.create(["width", "margin"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
-  },
-  appBarShift: {
-    marginLeft: drawerWidth,
-    width: `calc(100% - ${drawerWidth}px)`,
-    transition: theme.transitions.create(["width", "margin"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  },
-  appBarShiftCollapsed: {
-    marginLeft: drawerCollapsedWidth,
-    width: `calc(100% - ${drawerCollapsedWidth}px)`,
-    transition: theme.transitions.create(["width", "margin"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
+    zIndex: theme.zIndex.drawer + 1,
+    backgroundColor: "#ffffff !important",
+    color: "#000000 !important",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    "& .MuiIconButton-root": {
+      color: "#000000 !important",
+    },
+    "& .MuiTypography-root": {
+      color: "#000000 !important",
+    },
   },
   menuButton: {
-    marginRight: 36,
-  },
-  menuButtonHidden: {
-    display: "none",
+    marginRight: 16,
+    display: "none", // Esconder o botão do header
   },
   title: {
     flexGrow: 1,
     fontSize: 14,
+    marginLeft: 16,
   },
-  drawerPaper: {
-    position: "relative",
+  logoContainer: {
+    display: "flex",
+    alignItems: "center",
+  },
+  drawer: {
+    width: drawerWidth,
+    flexShrink: 0,
     whiteSpace: "nowrap",
+  },
+  drawerOpen: {
     width: drawerWidth,
     transition: theme.transitions.create("width", {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
     }),
   },
-  drawerPaperClose: {
-    overflowX: "hidden",
+  drawerClose: {
     transition: theme.transitions.create("width", {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
-    width: theme.spacing(7),
-    [theme.breakpoints.up("sm")]: {
-      width: theme.spacing(9),
-    },
+    overflowX: "hidden",
+    width: drawerCollapsedWidth,
   },
-  drawerPaperCollapsed: {
-    position: "relative",
-    whiteSpace: "nowrap",
+  drawerCollapsed: {
     width: drawerCollapsedWidth,
     transition: theme.transitions.create("width", {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
     }),
     overflowX: "hidden",
+  },
+  drawerPaper: {
+    position: "relative",
+    whiteSpace: "nowrap",
+    width: drawerWidth,
+    backgroundColor: "#ffffff !important",
+    borderRadius: "50px !important",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08) !important",
+    border: "none !important",
+    margin: "16px",
+    height: "calc(100vh - 96px)",
+    marginTop: "80px",
+    transition: theme.transitions.create("width", {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+    "& .MuiListItem-root": {
+      color: "#666666 !important",
+      margin: "4px 16px",
+      borderRadius: "25px !important",
+      "&:hover": {
+        backgroundColor: "rgba(0,0,0,0.04) !important",
+      },
+      "&.Mui-selected": {
+        backgroundColor: "rgba(0,0,0,0.08) !important",
+      },
+    },
+    "& .MuiListItemIcon-root": {
+      color: "#666666 !important",
+      minWidth: "40px",
+    },
+    "& .MuiListItemText-primary": {
+      color: "#666666 !important",
+    },
+    "& .MuiDivider-root": {
+      backgroundColor: "rgba(0,0,0,0.08) !important",
+      margin: "8px 16px",
+    },
+    "& .MuiListSubheader-root": {
+      backgroundColor: "transparent !important",
+      color: "#999999 !important",
+      fontSize: "12px",
+      fontWeight: 600,
+      textTransform: "uppercase",
+      letterSpacing: "0.5px",
+    },
+    "& .MuiIconButton-root": {
+      color: "#666666 !important",
+    },
+  },
+  drawerPaperClose: {
+    position: "relative",
+    whiteSpace: "nowrap",
+    width: drawerCollapsedWidth,
+    backgroundColor: "#ffffff !important",
+    borderRadius: "50px !important",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08) !important",
+    border: "none !important",
+    margin: "16px",
+    height: "calc(100vh - 96px)",
+    marginTop: "80px",
+    overflowX: "hidden",
+    transition: theme.transitions.create("width", {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    "& .MuiListItem-root": {
+      color: "#666666 !important",
+      margin: "4px 0",
+      borderRadius: "25px !important",
+      display: "flex !important",
+      justifyContent: "center !important",
+      alignItems: "center !important",
+      minHeight: "48px",
+      "&:hover": {
+        backgroundColor: "rgba(0,0,0,0.04) !important",
+      },
+      "&.Mui-selected": {
+        backgroundColor: "rgba(0,0,0,0.08) !important",
+      },
+    },
+    "& .MuiListItemIcon-root": {
+      color: "#666666 !important",
+      minWidth: "auto !important",
+      margin: "0 !important",
+      justifyContent: "center",
+      alignItems: "center",
+      display: "flex",
+    },
+    "& .MuiDivider-root": {
+      backgroundColor: "rgba(0,0,0,0.08) !important",
+      margin: "8px 16px",
+    },
+    "& .MuiIconButton-root": {
+      color: "#666666 !important",
+    },
+  },
+  drawerPaperCollapsed: {
+    position: "relative",
+    whiteSpace: "nowrap",
+    width: 72,
+    backgroundColor: "#ffffff !important",
+    borderRadius: "50px !important",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08) !important",
+    border: "none !important",
+    margin: "16px",
+    height: "calc(100vh - 96px)",
+    marginTop: "80px",
+    overflowX: "hidden",
     overflowY: "auto",
+    transition: theme.transitions.create("width", {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+    "& .MuiListItem-root": {
+      color: "#666666 !important",
+      margin: "4px 0",
+      borderRadius: "25px !important",
+      display: "flex !important",
+      justifyContent: "center !important",
+      alignItems: "center !important",
+      minHeight: "48px",
+      "&:hover": {
+        backgroundColor: "rgba(0,0,0,0.04) !important",
+      },
+      "&.Mui-selected": {
+        backgroundColor: "rgba(0,0,0,0.08) !important",
+      },
+    },
+    "& .MuiListItemIcon-root": {
+      color: "#666666 !important",
+      minWidth: "auto !important",
+      margin: "0 !important",
+      justifyContent: "center",
+      alignItems: "center",
+      display: "flex",
+    },
+    "& .MuiDivider-root": {
+      backgroundColor: "rgba(0,0,0,0.08) !important",
+      margin: "8px 16px",
+    },
+    "& .MuiIconButton-root": {
+      color: "#666666 !important",
+    },
   },
   appBarSpacer: {
-    minHeight: "48px",
+    minHeight: "64px",
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
+    padding: theme.spacing(3),
     overflow: "auto",
     ...theme.scrollbarStyles,
   },
@@ -139,9 +266,34 @@ const useStyles = makeStyles((theme) => ({
   containerWithScroll: {
     flex: 1,
     padding: theme.spacing(1),
-    overflowY: "scroll",
+    overflowY: "auto",
     overflowX: "hidden",
-    ...theme.scrollbarStyles,
+    // Esconder scrollbar completamente
+    "&::-webkit-scrollbar": {
+      display: "none",
+    },
+    "&::-webkit-scrollbar-track": {
+      display: "none",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      display: "none",
+    },
+    // Para Firefox
+    scrollbarWidth: "none",
+    // Para IE e Edge
+    msOverflowStyle: "none",
+  },
+  drawerHeader: {
+    display: "flex",
+    alignItems: "center",
+    padding: theme.spacing(0, 1),
+    ...theme.mixins.toolbar,
+    justifyContent: "flex-end",
+    minHeight: "48px !important",
+  },
+  expandButton: {
+    color: "#666666 !important",
+    margin: "8px",
   },
 }));
 
@@ -151,7 +303,7 @@ const LoggedInLayout = ({ children }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const { handleLogout, loading } = useContext(AuthContext);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(true);
   const [drawerVariant, setDrawerVariant] = useState("permanent");
   const { user } = useContext(AuthContext);
   const { drawerCollapsed, toggleDrawerCollapse } = useCustomTheme();
@@ -233,81 +385,22 @@ const LoggedInLayout = ({ children }) => {
 
   return (
     <div className={classes.root}>
-      <Drawer
-        variant={drawerVariant}
-        className={
-          drawerCollapsed 
-            ? classes.drawerPaperCollapsed 
-            : drawerOpen 
-              ? classes.drawerPaper 
-              : classes.drawerPaperClose
-        }
-        classes={{
-          paper: clsx(
-            drawerCollapsed 
-              ? classes.drawerPaperCollapsed
-              : classes.drawerPaper,
-            !drawerOpen && !drawerCollapsed && classes.drawerPaperClose
-          ),
-        }}
-        open={drawerOpen}
-      >
-        <div className={classes.toolbarIcon}>
-          <img 
-            src={logo} 
-            style={{ 
-              margin: drawerCollapsed ? "0 auto" : "0", 
-              height: drawerCollapsed ? '50px' : '60px', 
-              width: drawerCollapsed ? '50px' : '60px',
-              alignSelf: 'center',
-              transition: 'all 0.3s ease'
-            }} 
-            alt="logo"
-          />
-        </div>
-        <Divider />
-        <List className={classes.containerWithScroll}>
-          <MainListItems drawerClose={drawerClose} drawerCollapsed={drawerCollapsed} />
-        </List>
-        <Divider />
-      </Drawer>
-      <UserModal
-        open={userModalOpen}
-        onClose={() => setUserModalOpen(false)}
-        userId={user?.id}
-      />
       <AppBar
-        position="absolute"
-        className={clsx(
-          classes.appBar, 
-          drawerCollapsed && classes.appBarShiftCollapsed,
-          drawerOpen && !drawerCollapsed && classes.appBarShift
-        )}
-        color="primary"
+        position="fixed"
+        className={classes.appBar}
       >
         <Toolbar variant="dense" className={classes.toolbar}>
-          <IconButton
-            edge="start"
-            variant="contained"
-            aria-label="open drawer"
-            onClick={() => setDrawerOpen(!drawerOpen)}
-            className={clsx(
-              classes.menuButton,
-              drawerOpen && classes.menuButtonHidden
-            )}
-          >
-            <MenuIcon />
-          </IconButton>
-          {drawerOpen && (
-            <IconButton
-              variant="contained"
-              aria-label="collapse drawer"
-              onClick={toggleDrawerCollapse}
-              style={{ marginRight: 16 }}
-            >
-              {drawerCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-            </IconButton>
-          )}
+          <div className={classes.logoContainer}>
+            <img 
+              src={logo} 
+              style={{ 
+                height: '50px', 
+                width: '50px',
+                marginRight: '16px'
+              }} 
+              alt="logo"
+            />
+          </div>
           <Typography
             component="h1"
             variant="h6"
@@ -343,7 +436,6 @@ const LoggedInLayout = ({ children }) => {
               aria-haspopup="true"
               onClick={handleMenu}
               variant="contained"
-
             >
               <AccountCircle />
             </IconButton>
@@ -372,9 +464,46 @@ const LoggedInLayout = ({ children }) => {
           </div>
         </Toolbar>
       </AppBar>
+      
+      <Drawer
+        variant={drawerVariant}
+        className={clsx(classes.drawer, {
+          [classes.drawerOpen]: !drawerCollapsed,
+          [classes.drawerClose]: drawerCollapsed,
+        })}
+        classes={{
+          paper: clsx({
+            [classes.drawerPaper]: !drawerCollapsed,
+            [classes.drawerPaperCollapsed]: drawerCollapsed,
+          }),
+        }}
+        open={drawerOpen}
+        ModalProps={{
+          keepMounted: true,
+        }}
+      >
+        <div className={classes.drawerHeader}>
+          <IconButton 
+            onClick={toggleDrawerCollapse}
+            className={classes.expandButton}
+          >
+            {drawerCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </IconButton>
+        </div>
+        <Divider />
+        <List className={classes.containerWithScroll}>
+          <MainListItems drawerClose={drawerClose} drawerCollapsed={drawerCollapsed} />
+        </List>
+      </Drawer>
+      
+      <UserModal
+        open={userModalOpen}
+        onClose={() => setUserModalOpen(false)}
+        userId={user?.id}
+      />
+      
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
-
         {children ? children : null}
       </main>
     </div>

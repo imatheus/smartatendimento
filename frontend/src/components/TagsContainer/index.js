@@ -78,7 +78,7 @@ export function TagsContainer ({ ticket }) {
     }
 
     return (
-        <Paper style={{padding: 12}}>
+        <Paper style={{padding: 12, position: 'relative', zIndex: 1}}>
             <Autocomplete
                 multiple
                 size="small"
@@ -102,10 +102,22 @@ export function TagsContainer ({ ticket }) {
                     <TextField {...params} variant="outlined" placeholder="Tags" />
                 )}
                 PaperComponent={({ children }) => (
-                    <Paper style={{width: 400, marginLeft: 12}}>
+                    <Paper style={{width: 400, marginLeft: 12, zIndex: 9999, position: 'relative'}}>
                         {children}
                     </Paper>
                 )}
+                ListboxProps={{
+                    style: {
+                        zIndex: 9999,
+                        position: 'relative'
+                    }
+                }}
+                PopperProps={{
+                    style: {
+                        zIndex: 9999
+                    },
+                    placement: 'bottom-start'
+                }}
             />
         </Paper>
     )

@@ -302,6 +302,7 @@ const messages = {
           users: "Usuários",
           settings: "Configurações",
           messagesAPI: "API",
+          integrations: "Integrações",
           campaigns: "Campanhas",
           financeiro: "Financeiro",
         },

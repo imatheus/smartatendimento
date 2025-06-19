@@ -431,9 +431,7 @@ const CustomInput = (props) => {
   };
 
   const setInputRef = (input) => {
-    if (input) {
-      input.focus();
-      inputRef.current = input;
+    if (input) {      inputRef.current = input;
       setAnchorEl(input);
     }
   };
@@ -524,11 +522,15 @@ const MessageInputCustom = (props) => {
   const { list: listQuickMessages } = useQuickMessages();
 
   useEffect(() => {
-    inputRef.current.focus();
+    if (replyingMessage && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current.focus();
+      }, 100);
+    }
   }, [replyingMessage]);
 
   useEffect(() => {
-    inputRef.current.focus();
+    // Apenas limpar estado quando mudar de ticket
     return () => {
       setInputMessage("");
       setShowEmoji(false);
@@ -558,14 +560,6 @@ const MessageInputCustom = (props) => {
     }
   }, [user.id, listQuickMessages]);
 
-  // const handleChangeInput = e => {
-  // 	if (isObject(e) && has(e, 'value')) {
-  // 		setInputMessage(e.value);
-  // 	} else {
-  // 		setInputMessage(e.target.value)
-  // 	}
-  // };
-
   const handleAddEmoji = (e) => {
     let emoji = e.native;
     setInputMessage((prevState) => prevState + emoji);
@@ -574,7 +568,9 @@ const MessageInputCustom = (props) => {
   const handleSelectQuickMessage = (message) => {
     setInputMessage(message);
     if (inputRef.current) {
-      inputRef.current.focus();
+      setTimeout(() => {
+        inputRef.current.focus();
+      }, 100);
     }
   };
 
@@ -611,13 +607,8 @@ const MessageInputCustom = (props) => {
           quality: 0.7,
 
           async success(media) {
-            //const formData = new FormData();
-            // The third parameter is required for server
-            //formData.append('file', result, result.name);
-
             formData.append("medias", media);
             formData.append("body", media.name);
-
           },
           error(err) {
             alert('erro')
@@ -628,14 +619,10 @@ const MessageInputCustom = (props) => {
       } else {
         formData.append("medias", media);
         formData.append("body", media.name);
-
       }
-
-
     },);
 
     setTimeout(async()=> {
-
       try {
         await api.post(`/messages/${ticketId}`, formData, {
           onUploadProgress: (event) => {
@@ -654,7 +641,6 @@ const MessageInputCustom = (props) => {
             setPercentLoading(0);
             console.log(
               `A imagem á foi enviada para o servidor!`
-
             );
           })
           .catch((err) => {
@@ -666,10 +652,7 @@ const MessageInputCustom = (props) => {
       } catch (err) {
         toastError(err);
       }
-
-
     },2000)
-
   }
 
   const handleSendMessage = async () => {
@@ -745,13 +728,11 @@ const MessageInputCustom = (props) => {
 
         {loading ? (
           <div>
-            {/*<CircularProgress className={classes.circleLoading} />*/}
             <LinearWithValueLabel progress={percentLoading} />
           </div>
         ) : (
           <span>
             {medias[0]?.name}
-            {/* <img src={media.preview} alt=""></img> */}
           </span>
         )}
         <IconButton
@@ -799,7 +780,6 @@ const MessageInputCustom = (props) => {
             ticketStatus={ticketStatus}
             inputMessage={inputMessage}
             setInputMessage={setInputMessage}
-            // handleChangeInput={handleChangeInput}
             handleSendMessage={handleSendMessage}
             handleInputPaste={handleInputPaste}
             disableOption={disableOption}

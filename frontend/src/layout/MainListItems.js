@@ -301,8 +301,8 @@ const MainListItems = (props) => {
               drawerCollapsed={drawerCollapsed}
             />
             <ListItemLink
-              to="/messages-api"
-              primary={i18n.t("mainDrawer.listItems.messagesAPI")}
+              to="/integrations"
+              primary={i18n.t("mainDrawer.listItems.integrations")}
               icon={<CodeRoundedIcon />}
               drawerCollapsed={drawerCollapsed}
             />
