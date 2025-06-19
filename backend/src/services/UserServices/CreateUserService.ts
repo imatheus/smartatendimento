@@ -13,6 +13,7 @@ interface Request {
   queueIds?: number[];
   companyId?: number;
   profile?: string;
+  profileImage?: string;
 }
 
 interface Response {
@@ -20,6 +21,7 @@ interface Response {
   name: string;
   id: number;
   profile: string;
+  profileImage?: string;
 }
 
 const CreateUserService = async ({
@@ -28,7 +30,8 @@ const CreateUserService = async ({
   name,
   queueIds = [],
   companyId,
-  profile = "admin"
+  profile = "admin",
+  profileImage
 }: Request): Promise<Response> => {
   if (companyId !== undefined) {
     const company = await Company.findOne({
@@ -69,11 +72,12 @@ const CreateUserService = async ({
           return !emailExists;
         }
       ),
-    password: Yup.string().required().min(5)
+    password: Yup.string().required().min(5),
+    profileImage: Yup.string()
   });
 
   try {
-    await schema.validate({ email, password, name });
+    await schema.validate({ email, password, name, profileImage });
   } catch (err) {
     throw new AppError(err.message);
   }
@@ -84,7 +88,8 @@ const CreateUserService = async ({
       password,
       name,
       companyId,
-      profile
+      profile,
+      profileImage
     },
     { include: ["queues", "company"] }
   );

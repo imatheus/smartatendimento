@@ -12,6 +12,7 @@ interface UserData {
   profile?: string;
   companyId?: number;
   queueIds?: number[];
+  profileImage?: string;
 }
 
 interface Request {
@@ -26,6 +27,7 @@ interface Response {
   name: string;
   email: string;
   profile: string;
+  profileImage?: string;
 }
 
 const UpdateUserService = async ({
@@ -46,13 +48,14 @@ const UpdateUserService = async ({
     name: Yup.string().min(2),
     email: Yup.string().email(),
     profile: Yup.string(),
-    password: Yup.string()
+    password: Yup.string(),
+    profileImage: Yup.string()
   });
 
-  const { email, password, profile, name, queueIds = [] } = userData;
+  const { email, password, profile, name, queueIds = [], profileImage } = userData;
 
   try {
-    await schema.validate({ email, password, profile, name });
+    await schema.validate({ email, password, profile, name, profileImage });
   } catch (err: any) {
     throw new AppError(err.message);
   }
@@ -61,7 +64,8 @@ const UpdateUserService = async ({
     email,
     password,
     profile,
-    name
+    name,
+    profileImage
   });
 
   await user.$set("queues", queueIds);
@@ -77,7 +81,8 @@ const UpdateUserService = async ({
     profile: user.profile,
     companyId: user.companyId,
     company,
-    queues: user.queues
+    queues: user.queues,
+    profileImage: user.profileImage
   };
 
   return serializedUser;

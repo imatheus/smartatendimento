@@ -17,6 +17,11 @@ import Select from "@material-ui/core/Select";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import FormControl from "@material-ui/core/FormControl";
+import Avatar from "@material-ui/core/Avatar";
+import Box from "@material-ui/core/Box";
+import Typography from "@material-ui/core/Typography";
+import IconButton from "@material-ui/core/IconButton";
+import PhotoCameraIcon from "@material-ui/icons/PhotoCamera";
 
 import { i18n } from "../../translate/i18n";
 
@@ -54,6 +59,23 @@ const useStyles = makeStyles(theme => ({
 		margin: theme.spacing(1),
 		minWidth: 120,
 	},
+	profileImageSection: {
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		marginBottom: theme.spacing(2),
+	},
+	profileAvatar: {
+		width: theme.spacing(12),
+		height: theme.spacing(12),
+		marginBottom: theme.spacing(1),
+	},
+	imageInput: {
+		display: "none",
+	},
+	uploadButton: {
+		marginTop: theme.spacing(1),
+	},
 }));
 
 const UserSchema = Yup.object().shape({
@@ -73,12 +95,14 @@ const UserModal = ({ open, onClose, userId }) => {
 		email: "",
 		password: "",
 		profile: "user",
+		profileImage: "",
 	};
 
-	const { user: loggedInUser } = useContext(AuthContext);
+	const { user: loggedInUser, refreshUserData } = useContext(AuthContext);
 
 	const [user, setUser] = useState(initialState);
 	const [selectedQueueIds, setSelectedQueueIds] = useState([]);
+	const [profileImagePreview, setProfileImagePreview] = useState("");
 
 	useEffect(() => {
 		const fetchUser = async () => {
@@ -90,6 +114,7 @@ const UserModal = ({ open, onClose, userId }) => {
 				});
 				const userQueueIds = data.queues?.map(queue => queue.id);
 				setSelectedQueueIds(userQueueIds);
+				setProfileImagePreview(data.profileImage || "");
 			} catch (err) {
 				toastError(err);
 			}
@@ -101,6 +126,20 @@ const UserModal = ({ open, onClose, userId }) => {
 	const handleClose = () => {
 		onClose();
 		setUser(initialState);
+		setProfileImagePreview("");
+	};
+
+	const handleImageChange = (event, setFieldValue) => {
+		const file = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				const base64String = reader.result;
+				setProfileImagePreview(base64String);
+				setFieldValue("profileImage", base64String);
+			};
+			reader.readAsDataURL(file);
+		}
 	};
 
 	const handleSaveUser = async values => {
@@ -108,6 +147,10 @@ const UserModal = ({ open, onClose, userId }) => {
 		try {
 			if (userId) {
 				await api.put(`/users/${userId}`, userData);
+				// Se o usuário está editando seu próprio perfil, atualiza o contexto
+				if (userId === loggedInUser.id && refreshUserData) {
+					await refreshUserData();
+				}
 			} else {
 				await api.post("/users", userData);
 			}
@@ -116,6 +159,15 @@ const UserModal = ({ open, onClose, userId }) => {
 			toastError(err);
 		}
 		handleClose();
+	};
+
+	const getInitials = (name) => {
+		return name
+			.split(' ')
+			.map(word => word.charAt(0))
+			.join('')
+			.toUpperCase()
+			.substring(0, 2);
 	};
 
 	return (
@@ -143,9 +195,39 @@ const UserModal = ({ open, onClose, userId }) => {
 						}, 400);
 					}}
 				>
-					{({ touched, errors, isSubmitting }) => (
+					{({ touched, errors, isSubmitting, setFieldValue, values }) => (
 						<Form>
 							<DialogContent dividers>
+								{/* Profile Image Section */}
+								<Box className={classes.profileImageSection}>
+									<Avatar 
+										className={classes.profileAvatar}
+										src={profileImagePreview || values.profileImage}
+									>
+										{!profileImagePreview && !values.profileImage && values.name && getInitials(values.name)}
+									</Avatar>
+									<input
+										accept="image/*"
+										className={classes.imageInput}
+										id="profile-image-upload"
+										type="file"
+										onChange={(e) => handleImageChange(e, setFieldValue)}
+									/>
+									<label htmlFor="profile-image-upload">
+										<IconButton
+											color="primary"
+											aria-label="upload picture"
+											component="span"
+											className={classes.uploadButton}
+										>
+											<PhotoCameraIcon />
+										</IconButton>
+									</label>
+									<Typography variant="caption" color="textSecondary">
+										Clique no ícone para alterar a foto
+									</Typography>
+								</Box>
+
 								<div className={classes.multFieldLine}>
 									<Field
 										as={TextField}

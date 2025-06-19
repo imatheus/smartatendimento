@@ -14,11 +14,11 @@ import {
   Menu,
   useTheme,
   useMediaQuery,
+  Avatar,
 } from "@material-ui/core";
 
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
-import AccountCircle from "@material-ui/icons/AccountCircle";
 
 import MainListItems from "./MainListItems";
 import NotificationsPopOver from "../components/NotificationsPopOver";
@@ -68,7 +68,7 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     flexGrow: 1,
-    fontSize: 15,
+    fontSize: 16,
     textAlign: 'center',
     fontWeight: 500,
   },
@@ -88,6 +88,11 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(1),
+  },
+  profileAvatar: {
+    width: theme.spacing(4),
+    height: theme.spacing(4),
+    cursor: 'pointer',
   },
   drawer: {
     width: drawerWidth,
@@ -409,6 +414,15 @@ const LoggedInLayout = ({ children }) => {
     }
   };
 
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   if (loading) {
     return <BackdropLoading />;
   }
@@ -440,7 +454,7 @@ const LoggedInLayout = ({ children }) => {
           >
             {greaterThenSm ? (
               <>
-                {getGreeting()}, <span className={classes.userNameTag}>{user.name}</span>
+                {getGreeting()}, <span className={classes.userNameTag}>{user.name}</span>!
               </>
             ) : (
               <span className={classes.userNameTag}>{user.name}</span>
@@ -449,15 +463,28 @@ const LoggedInLayout = ({ children }) => {
 
           <div className={classes.rightSection}>
             {user.id && <NotificationsPopOver />}
-            <IconButton
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleMenu}
-              variant="contained"
-            >
-              <AccountCircle />
-            </IconButton>
+            
+            {user.profileImage ? (
+              <Avatar
+                className={classes.profileAvatar}
+                src={user.profileImage}
+                onClick={handleMenu}
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+              />
+            ) : (
+              <Avatar
+                className={classes.profileAvatar}
+                onClick={handleMenu}
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+              >
+                {user.name && getInitials(user.name)}
+              </Avatar>
+            )}
+            
             <Menu
               id="menu-appbar"
               anchorEl={anchorEl}
