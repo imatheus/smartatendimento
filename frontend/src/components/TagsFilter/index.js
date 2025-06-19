@@ -3,6 +3,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import React, { useEffect, useState } from "react";
 import toastError from "../../errors/toastError";
 import api from "../../services/api";
+import { darkenColor, getContrastColor } from "../../utils/colorGenerator";
 
 export function TagsFilter({ onFiltered }) {
   const [tags, setTags] = useState([]);
@@ -38,21 +39,25 @@ export function TagsFilter({ onFiltered }) {
         value={selecteds}
         onChange={(e, v, r) => onChange(v)}
         getOptionLabel={(option) => option.name}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              style={{
-                backgroundColor: option.color || "#eee",
-                textShadow: "1px 1px 1px #000",
-                color: "white",
-              }}
-              label={option.name}
-              {...getTagProps({ index })}
-              size="small"
-            />
-          ))
-        }
+        renderTags={(value, getTagProps) => {
+          return value.map((option, index) => {
+            const backgroundColor = darkenColor(option.color || '#eee', 0.2);
+            const textColor = getContrastColor(backgroundColor);
+            return (
+              <Chip
+                variant="outlined"
+                style={{
+                  backgroundColor: backgroundColor,
+                  color: textColor,
+                  border: `1px solid ${darkenColor(backgroundColor, 0.1)}`
+                }}
+                label={option.name}
+                {...getTagProps({ index })}
+                size="small"
+              />
+            );
+          });
+        }}
         renderInput={(params) => (
           <TextField
             {...params}

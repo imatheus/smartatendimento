@@ -21,6 +21,7 @@ import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { getNextTagColor } from "../../utils/colorGenerator";
 import { IconButton, InputAdornment } from "@material-ui/core";
 
 const useStyles = makeStyles(theme => ({
@@ -70,7 +71,7 @@ const TagModal = ({ open, onClose, tagId, reload }) => {
 
 	const initialState = {
 		name: "",
-		color: ""
+		color: tagId ? "" : getNextTagColor() // Auto-assign next color in sequence for new tags
 	};
 
 	const [tag, setTag] = useState(initialState);
@@ -78,7 +79,14 @@ const TagModal = ({ open, onClose, tagId, reload }) => {
 	useEffect(() => {
 		try {
 			(async () => {
-				if (!tagId) return;
+				if (!tagId) {
+					// For new tags, set next color in sequence
+					setTag({
+						name: "",
+						color: getNextTagColor()
+					});
+					return;
+				}
 
 				const { data } = await api.get(`/tags/${tagId}`);
 				setTag(prevState => {
@@ -91,7 +99,12 @@ const TagModal = ({ open, onClose, tagId, reload }) => {
 	}, [tagId, open]);
 
 	const handleClose = () => {
-		setTag(initialState);
+		// Set next color in sequence for next new tag
+		const newInitialState = {
+			name: "",
+			color: getNextTagColor()
+		};
+		setTag(newInitialState);
 		setColorPickerModalOpen(false);
 		onClose();
 	};

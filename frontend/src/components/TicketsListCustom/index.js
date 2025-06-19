@@ -22,6 +22,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "hidden",
     borderTopRightRadius: 0,
     borderBottomRightRadius: 0,
+    padding: "5px",
   },
 
   ticketsList: {

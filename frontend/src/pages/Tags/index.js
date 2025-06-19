@@ -37,6 +37,7 @@ import toastError from "../../errors/toastError";
 import { Chip } from "@material-ui/core";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { darkenColor, getContrastColor } from "../../utils/colorGenerator";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_TAGS") {
@@ -261,16 +262,22 @@ const Tags = () => {
               {tags.map((tag) => (
                 <TableRow key={tag.id}>
                   <TableCell align="center">
-                    <Chip
-                      variant="outlined"
-                      style={{
-                        backgroundColor: tag.color,
-                        textShadow: "1px 1px 1px #000",
-                        color: "white",
-                      }}
-                      label={tag.name}
-                      size="small"
-                    />
+                    {(() => {
+                      const backgroundColor = darkenColor(tag.color || '#eee', 0.2);
+                      const textColor = getContrastColor(backgroundColor);
+                      return (
+                        <Chip
+                          variant="outlined"
+                          style={{
+                            backgroundColor: backgroundColor,
+                            color: textColor,
+                            border: `1px solid ${darkenColor(backgroundColor, 0.1)}`
+                          }}
+                          label={tag.name}
+                          size="small"
+                        />
+                      );
+                    })()}
                   </TableCell>
                   <TableCell align="center">{tag.ticketsCount}</TableCell>
                   <TableCell align="center">

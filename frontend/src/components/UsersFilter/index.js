@@ -3,6 +3,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import React, { useEffect, useState } from "react";
 import toastError from "../../errors/toastError";
 import api from "../../services/api";
+import { darkenColor, getContrastColor } from "../../utils/colorGenerator";
 
 export function UsersFilter({ onFiltered, initialUsers }) {
   const [users, setUsers] = useState([]);
@@ -57,21 +58,25 @@ export function UsersFilter({ onFiltered, initialUsers }) {
             option?.name.toLowerCase() === value?.name.toLowerCase()
           );
         }}
-        renderTags={(value, getUserProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              style={{
-                backgroundColor: "#bfbfbf",
-                textShadow: "1px 1px 1px #000",
-                color: "white",
-              }}
-              label={option.name}
-              {...getUserProps({ index })}
-              size="small"
-            />
-          ))
-        }
+        renderTags={(value, getUserProps) => {
+          return value.map((option, index) => {
+            const backgroundColor = darkenColor('#bfbfbf', 0.2);
+            const textColor = getContrastColor(backgroundColor);
+            return (
+              <Chip
+                variant="outlined"
+                style={{
+                  backgroundColor: backgroundColor,
+                  color: textColor,
+                  border: `1px solid ${darkenColor(backgroundColor, 0.1)}`
+                }}
+                label={option.name}
+                {...getUserProps({ index })}
+                size="small"
+              />
+            );
+          });
+        }}
         renderInput={(params) => (
           <TextField
             {...params}

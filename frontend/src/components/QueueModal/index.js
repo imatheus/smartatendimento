@@ -19,6 +19,7 @@ import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import ColorPicker from "../ColorPicker";
+import { generateRandomColor } from "../../utils/colorGenerator";
 import {
   IconButton,
   InputAdornment,
@@ -73,7 +74,7 @@ const QueueModal = ({ open, onClose, queueId }) => {
 
   const initialState = {
     name: "",
-    color: "",
+    color: queueId ? "" : generateRandomColor(), // Auto-generate color for new queues
     greetingMessage: "",
     outOfHoursMessage: "",
   };
@@ -84,7 +85,16 @@ const QueueModal = ({ open, onClose, queueId }) => {
 
   useEffect(() => {
     (async () => {
-      if (!queueId) return;
+      if (!queueId) {
+        // For new queues, set a random color
+        setQueue({
+          name: "",
+          color: generateRandomColor(),
+          greetingMessage: "",
+          outOfHoursMessage: "",
+        });
+        return;
+      }
       try {
         const { data } = await api.get(`/queue/${queueId}`);
         setQueue((prevState) => {
@@ -100,13 +110,21 @@ const QueueModal = ({ open, onClose, queueId }) => {
         name: "",
         color: "",
         greetingMessage: "",
+        outOfHoursMessage: "",
       });
     };
   }, [queueId, open]);
 
   const handleClose = () => {
     onClose();
-    setQueue(initialState);
+    // Generate new color for next new queue
+    const newInitialState = {
+      name: "",
+      color: generateRandomColor(),
+      greetingMessage: "",
+      outOfHoursMessage: "",
+    };
+    setQueue(newInitialState);
   };
 
   const handleSaveQueue = async (values) => {
