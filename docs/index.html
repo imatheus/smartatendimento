@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação do Projeto Smart Atendimento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .doc-category {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .doc-category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-title {
+            color: #667eea;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .doc-list {
+            list-style: none;
+        }
+
+        .doc-item {
+            margin-bottom: 0.8rem;
+        }
+
+        .doc-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .doc-link:hover {
+            background: #e9ecef;
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .doc-icon {
+            margin-right: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .doc-title {
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .doc-description {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .search-container {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 500px;
+            padding: 1rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: #667eea;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: #666;
+            border-top: 1px solid #ddd;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .docs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Documentação Smart Atendimento</h1>
+            <p class="subtitle">Central de documentação e guias do projeto</p>
+        </header>
+
+        <div class="search-container">
+            <input type="text" class="search-box" placeholder="🔍 Buscar documentação..." id="searchBox">
+        </div>
+
+        <div class="docs-grid">
+            <div class="doc-category">
+                <h2 class="category-title">🔧 Implementações e Melhorias</h2>
+                <ul class="doc-list">
+                    <li class="doc-item">
+                        <a href="IMPLEMENTACAO_FINAL.md" class="doc-link">
+                            <span class="doc-icon">🚀</span>
+                            <div>
+                                <div class="doc-title">Implementação Final</div>
+                                <div class="doc-description">Documentação da implementação final do sistema</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="IMPLEMENTACAO_CHAT_MELHORIAS.md" class="doc-link">
+                            <span class="doc-icon">💬</span>
+                            <div>
+                                <div class="doc-title">Melhorias do Chat</div>
+                                <div class="doc-description">Implementações e melhorias no sistema de chat</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="CHAT_WEB_IMPLEMENTADO.md" class="doc-link">
+                            <span class="doc-icon">🌐</span>
+                            <div>
+                                <div class="doc-title">Chat Web Implementado</div>
+                                <div class="doc-description">Documentação da implementação do chat web</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="IMPLEMENTACAO_FINAL_IMAGENS.md" class="doc-link">
+                            <span class="doc-icon">🖼️</span>
+                            <div>
+                                <div class="doc-title">Implementação de Imagens</div>
+                                <div class="doc-description">Sistema de upload e visualização de imagens</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="doc-category">
+                <h2 class="category-title">🤖 Integração com IA</h2>
+                <ul class="doc-list">
+                    <li class="doc-item">
+                        <a href="ANALISE_INTEGRACAO_IA.md" class="doc-link">
+                            <span class="doc-icon">🧠</span>
+                            <div>
+                                <div class="doc-title">Análise de Integração IA</div>
+                                <div class="doc-description">Análise detalhada da integração com IA</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="ANALISE_INTEGRACAO_IA_REORGANIZADO.md" class="doc-link">
+                            <span class="doc-icon">🔄</span>
+                            <div>
+                                <div class="doc-title">IA Reorganizada</div>
+                                <div class="doc-description">Versão reorganizada da análise de IA</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="doc-category">
+                <h2 class="category-title">📱 Integrações Sociais</h2>
+                <ul class="doc-list">
+                    <li class="doc-item">
+                        <a href="FACEBOOK_INSTAGRAM_SETUP.md" class="doc-link">
+                            <span class="doc-icon">📘</span>
+                            <div>
+                                <div class="doc-title">Setup Facebook/Instagram</div>
+                                <div class="doc-description">Configuração das integrações sociais</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="CONFIGURAR_FACEBOOK_REAL.md" class="doc-link">
+                            <span class="doc-icon">⚙️</span>
+                            <div>
+                                <div class="doc-title">Configuração Facebook Real</div>
+                                <div class="doc-description">Configuração para ambiente de produção</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="doc-category">
+                <h2 class="category-title">🎨 Interface e Design</h2>
+                <ul class="doc-list">
+                    <li class="doc-item">
+                        <a href="ALTERACAO_CORES_MENU.md" class="doc-link">
+                            <span class="doc-icon">🎨</span>
+                            <div>
+                                <div class="doc-title">Alteração de Cores do Menu</div>
+                                <div class="doc-description">Customização visual do menu</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="FONTE_LATO_IMPLEMENTADA.md" class="doc-link">
+                            <span class="doc-icon">🔤</span>
+                            <div>
+                                <div class="doc-title">Fonte Lato Implementada</div>
+                                <div class="doc-description">Implementação da fonte Lato no sistema</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="TITULOS_PESO_MELHORADO.md" class="doc-link">
+                            <span class="doc-icon">📝</span>
+                            <div>
+                                <div class="doc-title">Títulos com Peso Melhorado</div>
+                                <div class="doc-description">Melhorias na tipografia dos títulos</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="doc-category">
+                <h2 class="category-title">🔧 Componentes</h2>
+                <ul class="doc-list">
+                    <li class="doc-item">
+                        <a href="COMPONENTE_TOGGLE_PADRAO.md" class="doc-link">
+                            <span class="doc-icon">🔘</span>
+                            <div>
+                                <div class="doc-title">Componente Toggle Padrão</div>
+                                <div class="doc-description">Implementação de componente toggle</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="doc-category">
+                <h2 class="category-title">🐛 Correções e Soluções</h2>
+                <ul class="doc-list">
+                    <li class="doc-item">
+                        <a href="CORRECAO_ENVIO_ARQUIVOS.md" class="doc-link">
+                            <span class="doc-icon">📎</span>
+                            <div>
+                                <div class="doc-title">Correção Envio de Arquivos</div>
+                                <div class="doc-description">Correções no sistema de upload</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="CORRECAO_PREVIEW_IMAGENS.md" class="doc-link">
+                            <span class="doc-icon">👁️</span>
+                            <div>
+                                <div class="doc-title">Correção Preview de Imagens</div>
+                                <div class="doc-description">Correções na visualização de imagens</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="CORREÇÃO_SETORES.md" class="doc-link">
+                            <span class="doc-icon">🏢</span>
+                            <div>
+                                <div class="doc-title">Correção de Setores</div>
+                                <div class="doc-description">Correções no sistema de setores</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="SOLUCAO_ERRO_API.md" class="doc-link">
+                            <span class="doc-icon">🔌</span>
+                            <div>
+                                <div class="doc-title">Solução Erro API</div>
+                                <div class="doc-description">Soluções para erros de API</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="doc-item">
+                        <a href="SOLUCAO_MESSAGEQUEUE_ERRO.md" class="doc-link">
+                            <span class="doc-icon">📬</span>
+                            <div>
+                                <div class="doc-title">Solução MessageQueue</div>
+                                <div class="doc-description">Correções no sistema de filas</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="doc-category">
+                <h2 class="category-title">📊 Status e Acompanhamento</h2>
+                <ul class="doc-list">
+                    <li class="doc-item">
+                        <a href="STATUS_ATUAL.md" class="doc-link">
+                            <span class="doc-icon">📈</span>
+                            <div>
+                                <div class="doc-title">Status Atual</div>
+                                <div class="doc-description">Status atual do desenvolvimento</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2024 Smart Atendimento - Documentação do Projeto</p>
+            <p>Última atualização: <span id="lastUpdate"></span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Funcionalidade de busca
+        const searchBox = document.getElementById('searchBox');
+        const docLinks = document.querySelectorAll('.doc-link');
+        const docCategories = document.querySelectorAll('.doc-category');
+
+        searchBox.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            docCategories.forEach(category => {
+                let hasVisibleItems = false;
+                const items = category.querySelectorAll('.doc-item');
+                
+                items.forEach(item => {
+                    const link = item.querySelector('.doc-link');
+                    const title = link.querySelector('.doc-title').textContent.toLowerCase();
+                    const description = link.querySelector('.doc-description').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                        item.style.display = 'block';
+                        hasVisibleItems = true;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                category.style.display = hasVisibleItems ? 'block' : 'none';
+            });
+        });
+
+        // Atualizar data
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('pt-BR');
+
+        // Adicionar efeito de hover suave
+        docLinks.forEach(link => {
+            link.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateX(5px)';
+            });
+            
+            link.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateX(0)';
+            });
+        });
+    </script>
+</body>
+</html>

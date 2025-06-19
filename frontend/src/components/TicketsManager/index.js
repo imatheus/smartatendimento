@@ -58,13 +58,14 @@ const useStyles = makeStyles(theme => ({
 		padding: theme.spacing(1),
 	},
 
-	serachInputWrapper: {
+	searchInputWrapper: {
 		flex: 1,
-		background: "#fff",
+		background: theme.palette.background.paper,
 		display: "flex",
 		borderRadius: 40,
 		padding: 4,
 		marginRight: theme.spacing(1),
+		border: `1px solid ${theme.palette.divider}`,
 	},
 
 	searchIcon: {
@@ -198,7 +199,7 @@ const TicketsManager = () => {
 			</Paper>
 			<Paper square elevation={0} className={classes.ticketOptionsBox}>
 				{tab === "search" ? (
-					<div className={classes.serachInputWrapper}>
+					<div className={classes.searchInputWrapper}>
 						<SearchIcon className={classes.searchIcon} />
 						<InputBase
 							className={classes.searchInput}

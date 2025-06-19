@@ -68,7 +68,7 @@ export const ThemeProvider = ({ children }) => {
       primary: '#44b774',
       secondary: '#f50057',
       background: {
-        default: '#f5f5f5',
+        default: 'transparent',
         paper: '#ffffff',
         drawer: '#44b774',
         appBar: '#ffffff',

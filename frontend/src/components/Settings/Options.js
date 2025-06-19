@@ -7,11 +7,9 @@ import InputLabel from "@material-ui/core/InputLabel";
 import Select from "@material-ui/core/Select";
 import FormHelperText from "@material-ui/core/FormHelperText";
 import useSettings from "../../hooks/useSettings";
-import StandardToggleSwitch from "../StandardToggleSwitch";
 import { toast } from 'react-toastify';
 import { makeStyles } from "@material-ui/core/styles";
 import { grey, blue } from "@material-ui/core/colors";
-import { useCustomTheme } from "../../context/Theme/ThemeContext";
 
 //import 'react-toastify/dist/ReactToastify.css';
  
@@ -72,18 +70,11 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     textAlign: "left",
   },
-  toggleContainer: {
-    width: "100%",
-    textAlign: "left",
-    display: "flex",
-    flexDirection: "column",
-  },
 }));
 
 export default function Options(props) {
   const { settings } = props;
   const classes = useStyles();
-  const { darkMode, toggleDarkMode, drawerCollapsed, toggleDrawerCollapse } = useCustomTheme();
   const [userRating, setUserRating] = useState("disabled");
   const [callType, setCallType] = useState("enabled");
   const [chatbotType, setChatbotType] = useState("");
@@ -170,32 +161,6 @@ export default function Options(props) {
         {/* <Grid xs={12} item>
                     <Title>Configurações Gerais</Title>
                 </Grid> */}
-        <Grid xs={12} sm={6} md={4} item>
-          <FormControl className={classes.toggleContainer}>
-            <StandardToggleSwitch
-              label="Modo Escuro"
-              checked={darkMode}
-              onChange={toggleDarkMode}
-              name="darkMode"
-            />
-            <FormHelperText>
-              Ativar/desativar o tema escuro da interface
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-        <Grid xs={12} sm={6} md={4} item>
-          <FormControl className={classes.toggleContainer}>
-            <StandardToggleSwitch
-              label="Menu Recolhido"
-              checked={drawerCollapsed}
-              onChange={toggleDrawerCollapse}
-              name="drawerCollapsed"
-            />
-            <FormHelperText>
-              Recolher o menu lateral mostrando apenas os ícones
-            </FormHelperText>
-          </FormControl>
-        </Grid>
         <Grid xs={12} sm={6} md={4} item>
           <FormControl className={classes.selectContainer}>
             <InputLabel id="ratings-label">Avaliações</InputLabel>

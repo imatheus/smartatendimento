@@ -272,10 +272,11 @@ const useStyles = makeStyles((theme) => ({
 
   documentPreview: {
     width: 250,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "transparent",
     borderRadius: 8,
     padding: 12,
     margin: "4px 0",
+    border: `1px solid ${theme.palette.divider}`,
   },
 
   documentHeader: {

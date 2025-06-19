@@ -14,7 +14,6 @@ const toastError = err => {
 				pauseOnHover: false,
 				draggable: true,
 				progress: undefined,
-				theme: "light",
 			});
 			return
 		} else {
@@ -26,7 +25,6 @@ const toastError = err => {
 				pauseOnHover: false,
 				draggable: true,
 				progress: undefined,
-				theme: "light",
 			});
 			return
 		}

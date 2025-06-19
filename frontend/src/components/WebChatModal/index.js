@@ -39,8 +39,9 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2, 0),
   },
   codeBlock: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "transparent",
     padding: theme.spacing(2),
+    border: `1px solid ${theme.palette.divider}`,
     borderRadius: theme.shape.borderRadius,
     fontFamily: "monospace",
     fontSize: "12px",

@@ -99,7 +99,7 @@
 .theme-dark .makeStyles-shortcodeChip-719,
 [data-theme="dark"] .makeStyles-shortcodeChip-720,
 .theme-dark .makeStyles-shortcodeChip-720 {
-  background-color: #333333 !important;
+  background-color: transparent !important;
   color: #ffffff !important;
 }
 
@@ -185,7 +185,7 @@
 
 [data-theme="dark"] [class*="makeStyles-shortcodeChip"],
 .theme-dark [class*="makeStyles-shortcodeChip"] {
-  background-color: #333333 !important;
+  background-color: transparent !important;
   color: #ffffff !important;
 }
 
@@ -480,8 +480,22 @@
 
 [data-theme="dark"] span[class*="shortcodeChip"],
 .theme-dark span[class*="shortcodeChip"] {
-  background-color: #333333 !important;
+  background-color: transparent !important;
   color: #ffffff !important;
+}
+
+/* Regra específica para todas as variações de shortcodeChip */
+[data-theme="dark"] .makeStyles-shortcodeChip-667,
+[data-theme="dark"] .makeStyles-shortcodeChip-668,
+[data-theme="dark"] .makeStyles-shortcodeChip-669,
+[data-theme="dark"] .makeStyles-shortcodeChip-670,
+.theme-dark .makeStyles-shortcodeChip-667,
+.theme-dark .makeStyles-shortcodeChip-668,
+.theme-dark .makeStyles-shortcodeChip-669,
+.theme-dark .makeStyles-shortcodeChip-670 {
+  background-color: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
 }
 
 [data-theme="dark"] div[class*="autocompletePaper"],

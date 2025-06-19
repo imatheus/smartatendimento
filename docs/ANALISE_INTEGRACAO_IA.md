@@ -5,11 +5,11 @@
 Após análise do código, identifiquei que o sistema atual possui:
 
 ### Estrutura Existente
-- **Backend**: Node.js/TypeScript com Express
-- **WhatsApp Integration**: Baileys (@whiskeysockets/baileys)
-- **Processamento de Mensagens**: `wbotMessageListener.ts` - ponto central de processamento
-- **Sistema de Filas**: Já implementado com chatbot básico baseado em opções
-- **Banco de Dados**: Sequelize com PostgreSQL/MySQL
+- Backend: Node.js/TypeScript com Express
+- WhatsApp Integration: Baileys (@whiskeysockets/baileys)
+- Processamento de Mensagens: `wbotMessageListener.ts` - ponto central de processamento
+- Sistema de Filas: Já implementado com chatbot básico baseado em opções
+- Banco de Dados: Sequelize com PostgreSQL/MySQL
 
 ### Dependências Atuais Relevantes
 ```json
@@ -37,17 +37,17 @@ O sistema processa mensagens através do arquivo `wbotMessageListener.ts`:
 
 ### 1. Características Essenciais do Agente PEPE
 
-#### **Identidade e Comportamento Básico**
-- **Nome**: PEPE (Processador Eletrônico de Perguntas e Esclarecimentos)
-- **Usuário Dedicado**: Conta de usuário própria no sistema (`pepe@ai.system`)
-- **Sem Assinatura**: Mensagens enviadas sem identificação de remetente
-- **Ícone Visual**: Ícone 🤖 para identificar atendimento por IA
-- **Ativação**: Inicia após conclusão do fluxo de chatbot básico dos setores
+#### Identidade e Comportamento Básico
+- Nome: PEPE (Processador Eletrônico de Perguntas e Esclarecimentos)
+- Usuário Dedicado: Conta de usuário própria no sistema (`pepe@ai.system`)
+- Sem Assinatura: Mensagens enviadas sem identificação de remetente
+- Ícone Visual: Ícone 🤖 para identificar atendimento por IA
+- Ativação: Inicia após conclusão do fluxo de chatbot básico dos setores
 
-#### **Controles Básicos de Operação**
-- **Pausa Manual**: Operadores podem pausar IA (transfere para "Aguardando")
-- **Transferência Automática**: Quando IA não consegue responder → "Aguardando"
-- **Alertas Simples**: Notificação quando IA precisa de ajuda humana
+#### Controles Básicos de Operação
+- Pausa Manual: Operadores podem pausar IA (transfere para "Aguardando")
+- Transferência Automática: Quando IA não consegue responder → "Aguardando"
+- Alertas Simples: Notificação quando IA precisa de ajuda humana
 
 ### 2. Integração com Sistema de Planos
 

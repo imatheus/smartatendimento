@@ -16,6 +16,7 @@ import "./assets/css/message-input-dark.css";
 import "./assets/css/messages-list-dark.css";
 import "./assets/css/preserve-colors-dark.css";
 import "./assets/css/input-fixes-dark.css";
+import "./assets/css/toast-dark-theme.css";
 
 const AppContent = () => {
 	const { theme } = useCustomTheme();

@@ -151,14 +151,15 @@ const useStyles = makeStyles((theme) => ({
   },
 
   shortcodeChip: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "transparent",
     borderRadius: "50px",
     padding: "4px 12px",
     fontSize: "0.875rem",
     fontWeight: 500,
-    color: "#666",
+    color: theme.palette.text.secondary,
     display: "inline-block",
     marginBottom: "4px",
+    border: `1px solid ${theme.palette.divider}`,
   },
 
   autocompletePopper: {
