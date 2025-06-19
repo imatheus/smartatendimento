@@ -11,83 +11,55 @@ import {
   Box,
   Card,
   CardContent,
-  CardHeader,
-  Divider,
   Chip,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   IconButton,
   Tooltip,
   InputAdornment
 } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
 import { 
   Send as SendIcon,
   Code as CodeIcon,
-  Description as DescriptionIcon,
   Image as ImageIcon,
-  ExpandMore as ExpandMoreIcon,
   FileCopy as FileCopyIcon,
-  Info as InfoIcon,
-  CheckCircle as CheckCircleIcon
+  FiberManualRecord as DotIcon
 } from "@material-ui/icons";
 import { Field, Form, Formik } from "formik";
 import toastError from "../../errors/toastError";
 import { toast } from "react-toastify";
-import { i18n } from "../../translate/i18n";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     padding: theme.spacing(2),
+    fontFamily: theme.typography.fontFamily,
   },
-  sectionCard: {
-    marginBottom: theme.spacing(3),
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    borderRadius: theme.spacing(2),
-  },
-  methodCard: {
+  compactCard: {
     marginBottom: theme.spacing(2),
-    border: `1px solid ${theme.palette.divider}`,
-    borderRadius: theme.spacing(1),
-  },
-  formContainer: {
     padding: theme.spacing(2),
-    backgroundColor: theme.palette.grey[50],
-    borderRadius: theme.spacing(1),
   },
-  codeBlock: {
-    backgroundColor: theme.palette.grey[900],
-    color: theme.palette.common.white,
-    padding: theme.spacing(2),
+  endpointBox: {
+    backgroundColor: theme.palette.grey[100],
+    padding: theme.spacing(1.5),
     borderRadius: theme.spacing(1),
     fontFamily: 'monospace',
     fontSize: '0.875rem',
-    position: 'relative',
-    overflow: 'auto',
-  },
-  copyButton: {
-    position: 'absolute',
-    top: theme.spacing(1),
-    right: theme.spacing(1),
-    color: theme.palette.common.white,
-  },
-  endpointChip: {
-    backgroundColor: theme.palette.success.main,
-    color: theme.palette.success.contrastText,
-    fontFamily: 'monospace',
-    fontSize: '0.75rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing(2),
   },
   methodChip: {
-    backgroundColor: theme.palette.info.main,
-    color: theme.palette.info.contrastText,
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
     fontWeight: 'bold',
+    marginRight: theme.spacing(1),
+    fontSize: '0.75rem',
+    fontFamily: theme.typography.fontFamily,
   },
   submitButton: {
-    borderRadius: theme.spacing(3),
-    padding: theme.spacing(1, 4),
+    borderRadius: theme.spacing(1),
     textTransform: 'none',
     fontWeight: 600,
+    fontFamily: theme.typography.fontFamily,
   },
   fileInput: {
     display: 'none',
@@ -95,33 +67,45 @@ const useStyles = makeStyles((theme) => ({
   fileInputLabel: {
     border: `2px dashed ${theme.palette.primary.main}`,
     borderRadius: theme.spacing(1),
-    padding: theme.spacing(3),
+    padding: theme.spacing(2),
     textAlign: 'center',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
+    fontFamily: theme.typography.fontFamily,
     '&:hover': {
       backgroundColor: theme.palette.primary.light + '10',
     },
   },
-  infoAlert: {
-    marginBottom: theme.spacing(2),
+  statusDot: {
+    fontSize: '1rem',
+    marginRight: theme.spacing(0.5),
   },
-  stepNumber: {
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText,
-    width: 32,
-    height: 32,
-    borderRadius: '50%',
+  statusBox: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 'bold',
-    marginRight: theme.spacing(2),
-  },
-  stepContainer: {
-    display: 'flex',
-    alignItems: 'flex-start',
+    gap: theme.spacing(2),
+    padding: theme.spacing(1.5),
+    backgroundColor: theme.palette.grey[50],
+    borderRadius: theme.spacing(1),
     marginBottom: theme.spacing(2),
+    fontFamily: theme.typography.fontFamily,
+  },
+  infoText: {
+    fontSize: '0.875rem',
+    color: theme.palette.text.secondary,
+    marginBottom: theme.spacing(1),
+    fontFamily: theme.typography.fontFamily,
+  },
+  sectionTitle: {
+    fontWeight: 600,
+    marginBottom: theme.spacing(1),
+    fontSize: '1.1rem',
+    fontFamily: theme.typography.fontFamily,
+  },
+  formContainer: {
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.grey[50],
+    borderRadius: theme.spacing(1),
   },
 }));
 
@@ -138,7 +122,7 @@ const MessagesAPITab = () => {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copiado para a área de transferência!');
+    toast.success('Copiado!');
   };
 
   const handleSendTextMessage = async (values) => {
@@ -192,433 +176,253 @@ const MessagesAPITab = () => {
     setSelectedFileName(e.target.files[0]?.name || '');
   };
 
-  const textMessageExample = `{
-  "number": "5511999999999",
-  "body": "Olá! Esta é uma mensagem de teste."
-}`;
-
-  const curlTextExample = `curl -X POST "${getEndpoint()}" \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer SEU_TOKEN_AQUI" \\
-  -d '${textMessageExample}'`;
-
-  const curlMediaExample = `curl -X POST "${getEndpoint()}" \\
-  -H "Content-Type: multipart/form-data" \\
-  -H "Authorization: Bearer SEU_TOKEN_AQUI" \\
-  -F "number=5511999999999" \\
-  -F "body=nome_do_arquivo.jpg" \\
-  -F "medias=@/caminho/para/arquivo.jpg"`;
-
   return (
     <div className={classes.root}>
-      {/* Informações Importantes */}
-      <Card className={classes.sectionCard}>
-        <CardHeader 
-          title="Informações Importantes" 
-          avatar={<InfoIcon color="primary" />}
-        />
+      {/* Informações Básicas */}
+      <Card className={classes.compactCard}>
         <CardContent>
-          <Alert severity="info" className={classes.infoAlert}>
-            <Typography variant="body2">
-              <strong>Configuração do Token:</strong> Antes de usar a API, configure o token na seção "Conexões" do sistema.
-            </Typography>
-          </Alert>
-          
-          <Typography variant="h6" gutterBottom color="primary">
-            Formato do Número
+          <Typography variant="h6" className={classes.sectionTitle}>
+            Configuração da API
           </Typography>
-          <Typography variant="body2" paragraph>
-            O número deve seguir o formato internacional sem símbolos:
+          <Typography variant="body2" className={classes.infoText}>
+            Copie o token na seção "Conexões" antes de usar a API.
           </Typography>
-          <Box ml={2}>
-            <Typography variant="body2" component="div">
-              • <strong>Código do país:</strong> 55 (Brasil)<br/>
-              • <strong>DDD:</strong> 11, 21, etc.<br/>
-              • <strong>Número:</strong> 999999999<br/>
-              • <strong>Exemplo:</strong> 5511999999999
-            </Typography>
-          </Box>
+          <Typography variant="body2" className={classes.infoText}>
+            <Box component="span" fontWeight="bold">Formato do número:</Box> 5511999999999 (código país + DDD + número)
+          </Typography>
         </CardContent>
       </Card>
 
       {/* Endpoint */}
-      <Card className={classes.sectionCard}>
+      <Card className={classes.compactCard}>
         <CardContent>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-            <Typography variant="h6">Endpoint da API</Typography>
+          <Typography variant="h6" className={classes.sectionTitle}>
+            Endpoint
+          </Typography>
+          <Box className={classes.endpointBox}>
+            <Box display="flex" alignItems="center">
+              <Chip label="POST" className={classes.methodChip} size="small" />
+              <Typography variant="body2" style={{ fontFamily: 'monospace' }}>
+                {getEndpoint()}
+              </Typography>
+            </Box>
             <Tooltip title="Copiar endpoint">
-              <IconButton onClick={() => copyToClipboard(getEndpoint())}>
-                <FileCopyIcon />
+              <IconButton size="small" onClick={() => copyToClipboard(getEndpoint())}>
+                <FileCopyIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           </Box>
-          <Chip 
-            label={getEndpoint()} 
-            className={classes.endpointChip}
-            size="medium"
-          />
-          <Box mt={1}>
-            <Chip 
-              label="POST" 
-              className={classes.methodChip}
-              size="small"
-            />
-          </Box>
         </CardContent>
       </Card>
 
-      {/* Mensagens de Texto */}
-      <Card className={classes.sectionCard}>
-        <CardHeader 
-          title="1. Mensagens de Texto" 
-          avatar={<DescriptionIcon color="primary" />}
-        />
+      {/* Teste de Mensagem de Texto */}
+      <Card className={classes.compactCard}>
         <CardContent>
-          <Grid container spacing={3}>
-            {/* Documentação */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>
-                Documentação
-              </Typography>
-              
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Headers Necessários</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box>
-                    <Typography variant="body2" component="div">
-                      • <code>Content-Type: application/json</code><br/>
-                      • <code>Authorization: Bearer SEU_TOKEN</code>
-                    </Typography>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Exemplo de Body (JSON)</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box className={classes.codeBlock}>
-                    <Tooltip title="Copiar código">
-                      <IconButton 
-                        className={classes.copyButton}
-                        onClick={() => copyToClipboard(textMessageExample)}
+          <Typography variant="h6" className={classes.sectionTitle}>
+            Enviar Mensagem de Texto
+          </Typography>
+          <Paper className={classes.formContainer}>
+            <Formik
+              initialValues={formMessageTextData}
+              enableReinitialize={true}
+              onSubmit={(values, actions) => {
+                setTimeout(async () => {
+                  await handleSendTextMessage(values);
+                  actions.setSubmitting(false);
+                  actions.resetForm();
+                }, 400);
+              }}
+            >
+              {({ isSubmitting }) => (
+                <Form>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <Field
+                        as={TextField}
+                        label="Token"
+                        name="token"
+                        variant="outlined"
+                        fullWidth
+                        required
                         size="small"
-                      >
-                        <FileCopyIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <pre>{textMessageExample}</pre>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Exemplo cURL</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box className={classes.codeBlock}>
-                    <Tooltip title="Copiar comando">
-                      <IconButton 
-                        className={classes.copyButton}
-                        onClick={() => copyToClipboard(curlTextExample)}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <CodeIcon color="action" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        as={TextField}
+                        label="Número"
+                        name="number"
+                        variant="outlined"
+                        fullWidth
+                        required
                         size="small"
+                        placeholder="5511999999999"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        as={TextField}
+                        label="Mensagem"
+                        name="body"
+                        variant="outlined"
+                        fullWidth
+                        required
+                        size="small"
+                        placeholder="Sua mensagem..."
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        className={classes.submitButton}
+                        startIcon={isSubmitting ? <CircularProgress size={16} /> : <SendIcon />}
+                        disabled={isSubmitting}
+                        fullWidth
                       >
-                        <FileCopyIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.75rem' }}>
-                      {curlTextExample}
-                    </pre>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-            </Grid>
-
-            {/* Teste de Envio */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>
-                Teste de Envio
-              </Typography>
-              <Paper className={classes.formContainer}>
-                <Formik
-                  initialValues={formMessageTextData}
-                  enableReinitialize={true}
-                  onSubmit={(values, actions) => {
-                    setTimeout(async () => {
-                      await handleSendTextMessage(values);
-                      actions.setSubmitting(false);
-                      actions.resetForm();
-                    }, 400);
-                  }}
-                >
-                  {({ isSubmitting }) => (
-                    <Form>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                          <Field
-                            as={TextField}
-                            label="Token de Autorização"
-                            name="token"
-                            variant="outlined"
-                            fullWidth
-                            required
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <CodeIcon color="action" />
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Field
-                            as={TextField}
-                            label="Número do WhatsApp"
-                            name="number"
-                            variant="outlined"
-                            fullWidth
-                            required
-                            placeholder="5511999999999"
-                            helperText="Formato: código do país + DDD + número"
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Field
-                            as={TextField}
-                            label="Mensagem"
-                            name="body"
-                            variant="outlined"
-                            fullWidth
-                            multiline
-                            rows={3}
-                            required
-                            placeholder="Digite sua mensagem aqui..."
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            size="large"
-                            className={classes.submitButton}
-                            startIcon={isSubmitting ? <CircularProgress size={20} /> : <SendIcon />}
-                            disabled={isSubmitting}
-                            fullWidth
-                          >
-                            {isSubmitting ? 'Enviando...' : 'Enviar Mensagem'}
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    </Form>
-                  )}
-                </Formik>
-              </Paper>
-            </Grid>
-          </Grid>
+                        {isSubmitting ? 'Enviando...' : 'Enviar Mensagem'}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Form>
+              )}
+            </Formik>
+          </Paper>
         </CardContent>
       </Card>
 
-      {/* Mensagens de Mídia */}
-      <Card className={classes.sectionCard}>
-        <CardHeader 
-          title="2. Mensagens de Mídia" 
-          avatar={<ImageIcon color="primary" />}
-        />
+      {/* Teste de Mensagem de Mídia */}
+      <Card className={classes.compactCard}>
         <CardContent>
-          <Grid container spacing={3}>
-            {/* Documentação */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>
-                Documentação
-              </Typography>
-              
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Headers Necessários</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box>
-                    <Typography variant="body2" component="div">
-                      • <code>Content-Type: multipart/form-data</code><br/>
-                      • <code>Authorization: Bearer SEU_TOKEN</code>
-                    </Typography>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Campos do FormData</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box>
-                    <Typography variant="body2" component="div">
-                      • <code>number</code>: Número do WhatsApp<br/>
-                      • <code>body</code>: Nome do arquivo<br/>
-                      • <code>medias</code>: Arquivo a ser enviado
-                    </Typography>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>Exemplo cURL</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box className={classes.codeBlock}>
-                    <Tooltip title="Copiar comando">
-                      <IconButton 
-                        className={classes.copyButton}
-                        onClick={() => copyToClipboard(curlMediaExample)}
+          <Typography variant="h6" className={classes.sectionTitle}>
+            Enviar Mensagem de Mídia
+          </Typography>
+          <Paper className={classes.formContainer}>
+            <Formik
+              initialValues={formMessageMediaData}
+              enableReinitialize={true}
+              onSubmit={(values, actions) => {
+                setTimeout(async () => {
+                  await handleSendMediaMessage(values);
+                  actions.setSubmitting(false);
+                  actions.resetForm();
+                  setSelectedFileName('');
+                  document.getElementById('medias').value = null;
+                }, 400);
+              }}
+            >
+              {({ isSubmitting }) => (
+                <Form>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <Field
+                        as={TextField}
+                        label="Token"
+                        name="token"
+                        variant="outlined"
+                        fullWidth
+                        required
                         size="small"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <CodeIcon color="action" />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        as={TextField}
+                        label="Número"
+                        name="number"
+                        variant="outlined"
+                        fullWidth
+                        required
+                        size="small"
+                        placeholder="5511999999999"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <input
+                        type="file"
+                        name="medias"
+                        id="medias"
+                        className={classes.fileInput}
+                        onChange={handleFileChange}
+                        accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+                      />
+                      <label htmlFor="medias" className={classes.fileInputLabel}>
+                        <Box display="flex" alignItems="center" justifyContent="center">
+                          <ImageIcon color="primary" style={{ marginRight: 8 }} />
+                          <Typography variant="body2" color="primary">
+                            {selectedFileName || 'Selecionar arquivo'}
+                          </Typography>
+                        </Box>
+                      </label>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        className={classes.submitButton}
+                        startIcon={isSubmitting ? <CircularProgress size={16} /> : <SendIcon />}
+                        disabled={isSubmitting || !selectedFileName}
+                        fullWidth
                       >
-                        <FileCopyIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.75rem' }}>
-                      {curlMediaExample}
-                    </pre>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-            </Grid>
-
-            {/* Teste de Envio */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>
-                Teste de Envio
-              </Typography>
-              <Paper className={classes.formContainer}>
-                <Formik
-                  initialValues={formMessageMediaData}
-                  enableReinitialize={true}
-                  onSubmit={(values, actions) => {
-                    setTimeout(async () => {
-                      await handleSendMediaMessage(values);
-                      actions.setSubmitting(false);
-                      actions.resetForm();
-                      setSelectedFileName('');
-                      document.getElementById('medias').value = null;
-                    }, 400);
-                  }}
-                >
-                  {({ isSubmitting }) => (
-                    <Form>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                          <Field
-                            as={TextField}
-                            label="Token de Autorização"
-                            name="token"
-                            variant="outlined"
-                            fullWidth
-                            required
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <CodeIcon color="action" />
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Field
-                            as={TextField}
-                            label="Número do WhatsApp"
-                            name="number"
-                            variant="outlined"
-                            fullWidth
-                            required
-                            placeholder="5511999999999"
-                            helperText="Formato: código do país + DDD + número"
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <input
-                            type="file"
-                            name="medias"
-                            id="medias"
-                            className={classes.fileInput}
-                            onChange={handleFileChange}
-                            accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
-                          />
-                          <label htmlFor="medias" className={classes.fileInputLabel}>
-                            <Box display="flex" flexDirection="column" alignItems="center">
-                              <ImageIcon color="primary" style={{ fontSize: 48, marginBottom: 8 }} />
-                              <Typography variant="body1" color="primary">
-                                {selectedFileName || 'Clique para selecionar um arquivo'}
-                              </Typography>
-                              <Typography variant="caption" color="textSecondary">
-                                Imagens, vídeos, áudios, PDF, DOC
-                              </Typography>
-                            </Box>
-                          </label>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            size="large"
-                            className={classes.submitButton}
-                            startIcon={isSubmitting ? <CircularProgress size={20} /> : <SendIcon />}
-                            disabled={isSubmitting || !selectedFileName}
-                            fullWidth
-                          >
-                            {isSubmitting ? 'Enviando...' : 'Enviar Mídia'}
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    </Form>
-                  )}
-                </Formik>
-              </Paper>
-            </Grid>
-          </Grid>
+                        {isSubmitting ? 'Enviando...' : 'Enviar Mídia'}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Form>
+              )}
+            </Formik>
+          </Paper>
         </CardContent>
       </Card>
 
       {/* Status Codes */}
-      <Card className={classes.sectionCard}>
-        <CardHeader 
-          title="Códigos de Resposta" 
-          avatar={<CheckCircleIcon color="primary" />}
-        />
+      <Card className={classes.compactCard}>
         <CardContent>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box p={2} bgcolor="success.light" borderRadius={1}>
-                <Typography variant="h6" color="success.contrastText">200</Typography>
-                <Typography variant="body2" color="success.contrastText">Sucesso</Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box p={2} bgcolor="error.light" borderRadius={1}>
-                <Typography variant="h6" color="error.contrastText">400</Typography>
-                <Typography variant="body2" color="error.contrastText">Dados inválidos</Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box p={2} bgcolor="warning.light" borderRadius={1}>
-                <Typography variant="h6" color="warning.contrastText">401</Typography>
-                <Typography variant="body2" color="warning.contrastText">Token inválido</Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box p={2} bgcolor="grey.600" borderRadius={1}>
-                <Typography variant="h6" style={{ color: 'white' }}>500</Typography>
-                <Typography variant="body2" style={{ color: 'white' }}>Erro interno</Typography>
-              </Box>
-            </Grid>
-          </Grid>
+          <Typography variant="h6" className={classes.sectionTitle}>
+            Códigos de Resposta
+          </Typography>
+          <Box className={classes.statusBox}>
+            <Box display="flex" alignItems="center">
+              <DotIcon className={classes.statusDot} style={{ color: '#4caf50' }} />
+              <Typography variant="body2">
+                <Box component="span" fontWeight="bold">200</Box> - Sucesso
+              </Typography>
+            </Box>
+            <Box display="flex" alignItems="center">
+              <DotIcon className={classes.statusDot} style={{ color: '#f44336' }} />
+              <Typography variant="body2">
+                <Box component="span" fontWeight="bold">400</Box> - Dados inválidos
+              </Typography>
+            </Box>
+            <Box display="flex" alignItems="center">
+              <DotIcon className={classes.statusDot} style={{ color: '#ff9800' }} />
+              <Typography variant="body2">
+                <Box component="span" fontWeight="bold">401</Box> - Token inválido
+              </Typography>
+            </Box>
+            <Box display="flex" alignItems="center">
+              <DotIcon className={classes.statusDot} style={{ color: '#9e9e9e' }} />
+              <Typography variant="body2">
+                <Box component="span" fontWeight="bold">500</Box> - Erro interno
+              </Typography>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
     </div>

@@ -16,6 +16,7 @@ import SendWhatsAppMedia from "../services/WbotServices/SendWhatsAppMedia";
 import SendWhatsAppMessage from "../services/WbotServices/SendWhatsAppMessage";
 import CheckContactNumber from "../services/WbotServices/CheckNumber";
 import CheckIsValidContact from "../services/WbotServices/CheckIsValidContact";
+import { SendMessage } from "../helpers/SendMessage";
 
 import {sendFacebookMessageMedia} from "../services/FacebookServices/sendFacebookMessageMedia";
 import sendFaceMessage from "../services/FacebookServices/sendFacebookMessage";
@@ -143,11 +144,15 @@ export const send = async (req: Request, res: Response): Promise<Response> => {
     const whatsapp = await Whatsapp.findByPk(whatsappId);
 
     if (!whatsapp) {
-      throw new Error("Não foi possível realizar a operação");
+      throw new AppError("Conexão WhatsApp não encontrada. Verifique se o token está correto.", 404);
+    }
+
+    if (!whatsapp.status || whatsapp.status !== "CONNECTED") {
+      throw new AppError("WhatsApp não está conectado. Verifique a conexão na seção 'Conexões'.", 400);
     }
 
     if (messageData.number === undefined) {
-      throw new Error("O número é obrigatório");
+      throw new AppError("O número é obrigatório", 400);
     }
 
     const numberToTest = messageData.number;
@@ -155,50 +160,50 @@ export const send = async (req: Request, res: Response): Promise<Response> => {
 
     const companyId = whatsapp.companyId;
 
-    const CheckValidNumber = await CheckContactNumber(numberToTest, companyId);
-    const number = CheckValidNumber.jid.replace(/\D/g, "");
+    try {
+      const CheckValidNumber = await CheckContactNumber(numberToTest, companyId);
+      const number = CheckValidNumber.jid.replace(/\D/g, "");
 
-    if (medias) {
-      await Promise.all(
-        medias.map(async (media: Express.Multer.File) => {
-          await req.app.get("queues").messageQueue.add(
-            "SendMessage",
-            {
-              whatsappId,
-              data: {
-                number,
-                body: media.originalname,
-                mediaPath: media.path
-              }
-            },
-            { removeOnComplete: true, attempts: 3 }
-          );
-        })
-      );
-    } else {
-      req.app.get("queues").messageQueue.add(
-        "SendMessage",
-        {
-          whatsappId,
-          data: {
-            number,
-            body
-          }
-        },
+      if (medias) {
+        // Enviar mídia diretamente
+        await Promise.all(
+          medias.map(async (media: Express.Multer.File) => {
+            await SendMessage(whatsapp, {
+              number,
+              body: media.originalname,
+              mediaPath: media.path
+            });
+          })
+        );
+      } else {
+        // Enviar mensagem de texto diretamente
+        await SendMessage(whatsapp, {
+          number,
+          body
+        });
+      }
 
-        { removeOnComplete: false, attempts: 3 }
-
-      );
+      return res.send({ mensagem: "Mensagem enviada com sucesso" });
+    } catch (checkError: any) {
+      if (checkError.message === "ERR_CHECK_NUMBER") {
+        throw new AppError("Número não possui WhatsApp ativo", 400);
+      } else if (checkError.message === "ERR_NO_DEF_WAPP_FOUND") {
+        throw new AppError("Nenhuma conexão WhatsApp padrão encontrada. Configure uma conexão como padrão na seção 'Conexões'.", 400);
+      } else {
+        throw new AppError(`Erro ao validar número: ${checkError.message}`, 400);
+      }
     }
-
-    return res.send({ mensagem: "Mensagem enviada" });
   } catch (err: any) {
-    if (Object.keys(err).length === 0) {
-      throw new AppError(
-        "Não foi possível enviar a mensagem, tente novamente em alguns instantes"
-      );
-    } else {
-      throw new AppError(err.message);
+    // Se já é um AppError, apenas re-throw
+    if (err instanceof AppError) {
+      throw err;
     }
+    
+    // Para outros erros, log e throw genérico
+    console.error("Erro no envio de mensagem:", err);
+    throw new AppError(
+      "Não foi possível enviar a mensagem, tente novamente em alguns instantes",
+      500
+    );
   }
 };

@@ -1,6 +1,7 @@
 /* Cor de fundo do body */
 body {
   background-color: #d7d7d7 !important;
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
 }
 
 /* Estilos customizados para MuiPaper-outlined */
@@ -37,4 +38,57 @@ body {
 [data-theme="dark"] body,
 .theme-dark body {
   background-color: #121212 !important;
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que todos os elementos usem a fonte Lato */
+* {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que Typography components usem Lato */
+.MuiTypography-root {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que botões usem Lato */
+.MuiButton-root {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que inputs usem Lato */
+.MuiInputBase-root,
+.MuiInputLabel-root,
+.MuiFormLabel-root {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que chips usem Lato */
+.MuiChip-root {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que labels usem Lato */
+label {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que divs usem Lato */
+div {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que spans usem Lato */
+span {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que strong tags usem Lato */
+strong {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* Garantir que todos os elementos de texto usem Lato */
+p, h1, h2, h3, h4, h5, h6 {
+  font-family: "Lato", "Helvetica", "Arial", sans-serif !important;
 }

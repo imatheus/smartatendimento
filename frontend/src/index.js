@@ -5,6 +5,7 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import App from "./App";
 import { AuthProvider } from "./context/Auth/AuthContext"; 
 import process from 'process';
+import './index.css';
 
 // PASSO 2: O código do polyfill (window.process) vem DEPOIS das importações.
 window.process = process;

@@ -55,7 +55,7 @@ const messages = {
 					add: "Add WhatsApp",
 					disconnect: "Disconnect",
 					tryAgain: "Try Again",
-					qrcode: "QR CODE",
+					qrcode: "GERAR QR CODE",
 					newQr: "New QR CODE",
 					connecting: "Connectiing",
 				},

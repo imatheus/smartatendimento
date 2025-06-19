@@ -6,9 +6,8 @@ import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import Select from "@material-ui/core/Select";
 import FormHelperText from "@material-ui/core/FormHelperText";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Switch from "@material-ui/core/Switch";
 import useSettings from "../../hooks/useSettings";
+import StandardToggleSwitch from "../StandardToggleSwitch";
 import { toast } from 'react-toastify';
 import { makeStyles } from "@material-ui/core/styles";
 import { grey, blue } from "@material-ui/core/colors";
@@ -72,6 +71,12 @@ const useStyles = makeStyles((theme) => ({
   selectContainer: {
     width: "100%",
     textAlign: "left",
+  },
+  toggleContainer: {
+    width: "100%",
+    textAlign: "left",
+    display: "flex",
+    flexDirection: "column",
   },
 }));
 
@@ -166,17 +171,12 @@ export default function Options(props) {
                     <Title>Configurações Gerais</Title>
                 </Grid> */}
         <Grid xs={12} sm={6} md={4} item>
-          <FormControl className={classes.selectContainer}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={darkMode}
-                  onChange={toggleDarkMode}
-                  name="darkMode"
-                  color="primary"
-                />
-              }
+          <FormControl className={classes.toggleContainer}>
+            <StandardToggleSwitch
               label="Modo Escuro"
+              checked={darkMode}
+              onChange={toggleDarkMode}
+              name="darkMode"
             />
             <FormHelperText>
               Ativar/desativar o tema escuro da interface
@@ -184,17 +184,12 @@ export default function Options(props) {
           </FormControl>
         </Grid>
         <Grid xs={12} sm={6} md={4} item>
-          <FormControl className={classes.selectContainer}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={drawerCollapsed}
-                  onChange={toggleDrawerCollapse}
-                  name="drawerCollapsed"
-                  color="primary"
-                />
-              }
+          <FormControl className={classes.toggleContainer}>
+            <StandardToggleSwitch
               label="Menu Recolhido"
+              checked={drawerCollapsed}
+              onChange={toggleDrawerCollapse}
+              name="drawerCollapsed"
             />
             <FormHelperText>
               Recolher o menu lateral mostrando apenas os ícones

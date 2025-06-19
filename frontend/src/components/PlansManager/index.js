@@ -16,7 +16,7 @@ import {
 import { Formik, Form, Field } from 'formik';
 import ButtonWithSpinner from "../ButtonWithSpinner";
 import ConfirmationModal from "../ConfirmationModal";
-import BlackToggleSwitch from "../BlackToggleSwitch";
+import StandardToggleSwitch from "../StandardToggleSwitch";
 import { Edit as EditIcon } from "@material-ui/icons";
 
 import { toast } from "react-toastify";
@@ -166,7 +166,7 @@ export function PlanManagerForm(props) {
                         <Grid xs={12} sm={4} md={4} item>
                             <Field name="useWhatsapp">
                                 {({ field }) => (
-                                    <BlackToggleSwitch
+                                    <StandardToggleSwitch
                                         label="WhatsApp"
                                         checked={field.value}
                                         onChange={field.onChange}
@@ -178,7 +178,7 @@ export function PlanManagerForm(props) {
                         <Grid xs={12} sm={4} md={4} item>
                             <Field name="useFacebook">
                                 {({ field }) => (
-                                    <BlackToggleSwitch
+                                    <StandardToggleSwitch
                                         label="Facebook"
                                         checked={field.value}
                                         onChange={field.onChange}
@@ -190,7 +190,7 @@ export function PlanManagerForm(props) {
                         <Grid xs={12} sm={4} md={4} item>
                             <Field name="useInstagram">
                                 {({ field }) => (
-                                    <BlackToggleSwitch
+                                    <StandardToggleSwitch
                                         label="Instagram"
                                         checked={field.value}
                                         onChange={field.onChange}

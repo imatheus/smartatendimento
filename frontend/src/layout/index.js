@@ -46,6 +46,9 @@ const useStyles = makeStyles((theme) => ({
   toolbar: {
     paddingRight: 24,
     paddingLeft: 16,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
@@ -65,12 +68,26 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     flexGrow: 1,
-    fontSize: 14,
-    marginLeft: 16,
+    fontSize: 15,
+    textAlign: 'center',
+    fontWeight: 500,
+  },
+  userNameTag: {
+    backgroundColor: '#44b774',
+    color: '#f5fff5',
+    padding: '1px 15px',
+    borderRadius: '50px',
+    display: 'inline-block',
+    fontWeight: 'normal',
   },
   logoContainer: {
     display: "flex",
     alignItems: "center",
+  },
+  rightSection: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
   },
   drawer: {
     width: drawerWidth,
@@ -379,6 +396,19 @@ const LoggedInLayout = ({ children }) => {
     }
   };
 
+  const getGreeting = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    
+    if (hour >= 4 && hour < 12) {
+      return "Bom dia";
+    } else if (hour >= 12 && hour < 18) {
+      return "Boa tarde";
+    } else {
+      return "Boa noite";
+    }
+  };
+
   if (loading) {
     return <BackdropLoading />;
   }
@@ -396,11 +426,11 @@ const LoggedInLayout = ({ children }) => {
               style={{ 
                 height: '50px', 
                 width: '50px',
-                marginRight: '16px'
               }} 
               alt="logo"
             />
           </div>
+          
           <Typography
             component="h1"
             variant="h6"
@@ -410,26 +440,15 @@ const LoggedInLayout = ({ children }) => {
           >
             {greaterThenSm ? (
               <>
-                Olá <b>{user.name}</b>, {(() => {
-                  const now = new Date();
-                  const hour = now.getHours();
-                  
-                  if (hour >= 4 && hour < 12) {
-                    return "Bom dia!";
-                  } else if (hour >= 12 && hour < 18) {
-                    return "Boa tarde!";
-                  } else {
-                    return "Boa noite!";
-                  }
-                })()}
+                {getGreeting()}, <span className={classes.userNameTag}>{user.name}</span>
               </>
             ) : (
-              user.name
+              <span className={classes.userNameTag}>{user.name}</span>
             )}
           </Typography>
-          {user.id && <NotificationsPopOver />}
 
-          <div>
+          <div className={classes.rightSection}>
+            {user.id && <NotificationsPopOver />}
             <IconButton
               aria-label="account of current user"
               aria-controls="menu-appbar"

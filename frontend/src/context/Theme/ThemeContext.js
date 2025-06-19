@@ -60,6 +60,46 @@ export const ThemeProvider = ({ children }) => {
 
   const lightTheme = createTheme(
     {
+      typography: {
+        fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        h1: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h2: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h3: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h4: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h5: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h6: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        subtitle1: {
+          fontWeight: 600,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        subtitle2: {
+          fontWeight: 600,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        button: {
+          fontWeight: 600,
+          textTransform: 'none',
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+      },
       scrollbarStyles: {
         '&::-webkit-scrollbar': {
           width: '8px',
@@ -91,6 +131,13 @@ export const ThemeProvider = ({ children }) => {
         danger: { main: '#525252' },
       },
       overrides: {
+        MuiTab: {
+          root: {
+            fontWeight: 700,
+            textTransform: 'none',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+          },
+        },
         MuiAppBar: {
           root: {
             backgroundColor: '#151515 !important',
@@ -119,6 +166,7 @@ export const ThemeProvider = ({ children }) => {
             },
             '& .MuiListItemText-primary': {
               color: '#ffffff !important',
+              fontWeight: 500,
             },
             '& .MuiDivider-root': {
               backgroundColor: 'rgba(255, 255, 255, 0.2) !important',
@@ -147,11 +195,33 @@ export const ThemeProvider = ({ children }) => {
         MuiTypography: {
           root: {
             color: '#151515',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+          },
+          h1: {
+            fontWeight: 700,
+          },
+          h2: {
+            fontWeight: 700,
+          },
+          h3: {
+            fontWeight: 700,
+          },
+          h4: {
+            fontWeight: 700,
+          },
+          h5: {
+            fontWeight: 700,
+          },
+          h6: {
+            fontWeight: 700,
           },
         },
         MuiButton: {
           root: {
             color: '#151515',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+            fontWeight: 600,
+            textTransform: 'none',
           },
         },
         MuiIconButton: {
@@ -163,6 +233,10 @@ export const ThemeProvider = ({ children }) => {
           root: {
             color: '#151515',
             borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+          },
+          head: {
+            fontWeight: 600,
           },
         },
         MuiTableHead: {
@@ -174,9 +248,12 @@ export const ThemeProvider = ({ children }) => {
           root: {
             '& .MuiInputBase-root': {
               color: '#151515',
+              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
             },
             '& .MuiInputLabel-root': {
               color: '#666666',
+              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+              fontWeight: 500,
             },
             '& .MuiOutlinedInput-notchedOutline': {
               borderColor: '#cccccc',
@@ -192,9 +269,22 @@ export const ThemeProvider = ({ children }) => {
         MuiMenuItem: {
           root: {
             color: '#151515',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
             '&:hover': {
               backgroundColor: 'rgba(0, 0, 0, 0.04)',
             },
+          },
+        },
+        MuiDialogTitle: {
+          root: {
+            fontWeight: 700,
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+          },
+        },
+        MuiCardHeader: {
+          title: {
+            fontWeight: 700,
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
           },
         },
         MuiSvgIcon: {
@@ -209,6 +299,46 @@ export const ThemeProvider = ({ children }) => {
 
   const darkTheme = createTheme(
     {
+      typography: {
+        fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        h1: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h2: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h3: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h4: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h5: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        h6: {
+          fontWeight: 700,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        subtitle1: {
+          fontWeight: 600,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        subtitle2: {
+          fontWeight: 600,
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+        button: {
+          fontWeight: 600,
+          textTransform: 'none',
+          fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+        },
+      },
       scrollbarStyles: {
         '&::-webkit-scrollbar': {
           width: '8px',
@@ -240,11 +370,19 @@ export const ThemeProvider = ({ children }) => {
         danger: { main: '#cf6679' },
       },
       overrides: {
+        MuiTab: {
+          root: {
+            fontWeight: 700,
+            textTransform: 'none',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+          },
+        },
         MuiCssBaseline: {
           '@global': {
             body: {
               backgroundColor: '#121212',
               color: '#ffffff',
+              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
             },
           },
         },
@@ -274,6 +412,7 @@ export const ThemeProvider = ({ children }) => {
         MuiListItem: {
           root: {
             color: '#ffffff !important',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
             '&:hover': {
               backgroundColor: 'rgba(187, 134, 252, 0.1) !important',
             },
@@ -291,6 +430,8 @@ export const ThemeProvider = ({ children }) => {
         MuiListItemText: {
           primary: {
             color: '#ffffff !important',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+            fontWeight: 500,
           },
         },
         MuiDivider: {
@@ -302,6 +443,7 @@ export const ThemeProvider = ({ children }) => {
           root: {
             backgroundColor: '#1e1e1e !important',
             color: '#ffffff !important',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
           },
         },
         MuiIconButton: {
@@ -313,9 +455,12 @@ export const ThemeProvider = ({ children }) => {
           root: {
             '& .MuiInputBase-root': {
               color: '#ffffff',
+              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
             },
             '& .MuiInputLabel-root': {
               color: '#aaaaaa',
+              fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+              fontWeight: 500,
             },
             '& .MuiOutlinedInput-notchedOutline': {
               borderColor: '#555555',
@@ -326,6 +471,10 @@ export const ThemeProvider = ({ children }) => {
           root: {
             color: '#ffffff !important',
             borderBottom: '1px solid rgba(255, 255, 255, 0.2) !important',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+          },
+          head: {
+            fontWeight: 600,
           },
         },
         MuiTableHead: {
@@ -336,6 +485,49 @@ export const ThemeProvider = ({ children }) => {
         MuiButton: {
           root: {
             color: '#ffffff',
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+            fontWeight: 600,
+            textTransform: 'none',
+          },
+        },
+        MuiTypography: {
+          root: {
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+          },
+          h1: {
+            fontWeight: 700,
+          },
+          h2: {
+            fontWeight: 700,
+          },
+          h3: {
+            fontWeight: 700,
+          },
+          h4: {
+            fontWeight: 700,
+          },
+          h5: {
+            fontWeight: 700,
+          },
+          h6: {
+            fontWeight: 700,
+          },
+        },
+        MuiMenuItem: {
+          root: {
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+          },
+        },
+        MuiDialogTitle: {
+          root: {
+            fontWeight: 700,
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
+          },
+        },
+        MuiCardHeader: {
+          title: {
+            fontWeight: 700,
+            fontFamily: '"Lato", "Helvetica", "Arial", sans-serif',
           },
         },
         MuiSvgIcon: {
