@@ -21,12 +21,12 @@ const ShowUserService = async (id: string | number): Promise<User> => {
       { 
         model: Company, 
         as: "company", 
-        attributes: ["id", "name"],
+        attributes: ["id", "name", "dueDate", "recurrence", "trialExpiration"],
         include: [
           { 
             model: Plan, 
             as: "plan", 
-            attributes: ["id", "name", "useWhatsapp", "useFacebook", "useInstagram"] 
+            attributes: ["id", "name", "users", "connections", "queues", "value", "useWhatsapp", "useFacebook", "useInstagram"] 
           }
         ]
       }

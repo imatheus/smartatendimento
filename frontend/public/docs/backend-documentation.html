@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Atendimento - Backend Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="backend-styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="layout">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h1>Smart Atendimento</h1>
+                    <p>Backend Documentation</p>
+                </div>
+
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="#overview" class="nav-link active" data-section="overview"><i class="fas fa-home"></i> Visão Geral</a></li>
+                        <li><a href="#architecture" class="nav-link" data-section="architecture"><i class="fas fa-sitemap"></i> Arquitetura</a></li>
+                        <li><a href="#features" class="nav-link" data-section="features"><i class="fas fa-cogs"></i> Funcionalidades</a></li>
+                        <li><a href="#models" class="nav-link" data-section="models"><i class="fas fa-database"></i> Modelos</a></li>
+                        <li><a href="#apis" class="nav-link" data-section="apis"><i class="fas fa-plug"></i> APIs</a></li>
+                        <li><a href="#ai-agent" class="nav-link" data-section="ai-agent"><i class="fas fa-robot"></i> Agente de IA</a></li>
+                        <li><a href="#treinamento" class="nav-link" data-section="treinamento"><i class="fas fa-graduation-cap"></i> Treinamento</a></li>
+                        <li><a href="#config" class="nav-link" data-section="config"><i class="fas fa-cog"></i> Configuração</a></li>
+                    </ul>
+                </nav>
+
+                <div class="quick-links">
+                    <h3><i class="fas fa-bolt"></i> Links Rápidos</h3>
+                    <ul>
+                        <li><a href="#" onclick="scrollToSection('whatsapp-integration')"><i class="fab fa-whatsapp"></i> WhatsApp</a></li>
+                        <li><a href="#" onclick="scrollToSection('ticket-system')"><i class="fas fa-ticket-alt"></i> Tickets</a></li>
+                        <li><a href="#" onclick="scrollToSection('multi-tenant')"><i class="fas fa-building"></i> Multi-Tenant</a></li>
+                        <li><a href="#" onclick="scrollToSection('campaigns')"><i class="fas fa-bullhorn"></i> Campanhas</a></li>
+                        <li><a href="#" onclick="scrollToSection('ai-agent')"><i class="fas fa-robot"></i> Agente IA</a></li>
+                        <li><a href="#" onclick="scrollToSection('treinamento')"><i class="fas fa-graduation-cap"></i> Treinamento</a></li>
+                    </ul>
+                </div>
+
+                <div class="docs-links">
+                    <h3><i class="fas fa-book"></i> Documentos</h3>
+                    <ul>
+                        <li><a href="#" onclick="loadMarkdownContent('architecture', 'Arquitetura')"><i class="fas fa-sitemap"></i> Arquitetura</a></li>
+                        <li><a href="#" onclick="loadMarkdownContent('dependencies', 'Dependências')"><i class="fas fa-cube"></i> Dependências</a></li>
+                        <li><a href="#" onclick="loadMarkdownContent('api', 'API Reference')"><i class="fas fa-plug"></i> API Reference</a></li>
+                        <li><a href="#" onclick="loadMarkdownContent('development', 'Dev Guide')"><i class="fas fa-code"></i> Dev Guide</a></li>
+                        <li><a href="#" onclick="loadMarkdownContent('troubleshooting', 'Troubleshooting')"><i class="fas fa-wrench"></i> Troubleshooting</a></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <main class="main">
+            <section id="overview" class="section active">
+                <h2>Visão Geral</h2>
+                <div class="content">
+                    <p>Sistema de atendimento multi-tenant com integração WhatsApp, desenvolvido em Node.js/TypeScript.</p>
+                    
+                    <h3>Stack Principal</h3>
+                    <ul>
+                        <li><strong>Runtime:</strong> Node.js + TypeScript</li>
+                        <li><strong>Framework:</strong> Express.js</li>
+                        <li><strong>ORM:</strong> Sequelize</li>
+                        <li><strong>Banco:</strong> PostgreSQL</li>
+                        <li><strong>WebSocket:</strong> Socket.IO</li>
+                        <li><strong>Filas:</strong> Bull + Redis</li>
+                        <li><strong>WhatsApp:</strong> @whiskeysockets/baileys</li>
+                    </ul>
+
+                    <h3>Estrutura de Pastas</h3>
+                    <pre><code>backend/
+├── src/
+│   ├── controllers/     # Controladores das rotas
+│   ├── models/         # Modelos Sequelize
+│   ├── services/       # Lógica de negócio
+│   ├── routes/         # Definição das rotas
+│   ├── middleware/     # Middlewares customizados
+│   ├── database/       # Migrations e seeders
+│   ├── libs/          # Bibliotecas customizadas
+│   ├── helpers/       # Funções auxiliares
+│   └── utils/         # Utilitários
+├── uploads/           # Arquivos enviados
+└── public/           # Arquivos estáticos</code></pre>
+                </div>
+            </section>
+
+            <section id="architecture" class="section">
+                <h2>Arquitetura</h2>
+                <div class="content">
+                    <h3>Camadas da Aplicação</h3>
+                    <div class="layer">
+                        <h4>1. Rotas (Routes)</h4>
+                        <p><code>src/routes/</code> - Definição dos endpoints da API</p>
+                    </div>
+                    <div class="layer">
+                        <h4>2. Controladores (Controllers)</h4>
+                        <p><code>src/controllers/</code> - Lógica de controle das requisições</p>
+                    </div>
+                    <div class="layer">
+                        <h4>3. Serviços (Services)</h4>
+                        <p><code>src/services/</code> - Regras de negócio e integrações</p>
+                    </div>
+                    <div class="layer">
+                        <h4>4. Modelos (Models)</h4>
+                        <p><code>src/models/</code> - Definição das entidades do banco</p>
+                    </div>
+
+                    <h3>Integrações Principais</h3>
+                    <ul>
+                        <li><strong>WhatsApp:</strong> <code>src/libs/wbot.ts</code></li>
+                        <li><strong>Socket.IO:</strong> <code>src/libs/socket.ts</code></li>
+                        <li><strong>Filas:</strong> <code>src/libs/Queue.ts</code></li>
+                        <li><strong>Database:</strong> <code>src/database/</code></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="features" class="section">
+                <h2>Funcionalidades</h2>
+                <div class="content">
+                    <div class="feature-group" id="multi-tenant">
+                        <h3>Sistema Multi-Tenant</h3>
+                        <p><strong>Onde alterar:</strong> <code>src/models/Company.ts</code>, <code>src/middleware/CheckAuth.ts</code></p>
+                        <ul>
+                            <li>Isolamento por empresa</li>
+                            <li>Planos de assinatura</li>
+                            <li>Limites configuráveis</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-group" id="whatsapp-integration">
+                        <h3>WhatsApp Integration</h3>
+                        <p><strong>Onde alterar:</strong> <code>src/services/WbotServices/</code>, <code>src/libs/wbot.ts</code></p>
+                        <ul>
+                            <li>Múltiplas conexões</li>
+                            <li>Gerenciamento de sessões</li>
+                            <li>Envio de mídia</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-group" id="ticket-system">
+                        <h3>Sistema de Tickets</h3>
+                        <p><strong>Onde alterar:</strong> <code>src/services/TicketServices/</code>, <code>src/models/Ticket.ts</code></p>
+                        <ul>
+                            <li>Criação automática</li>
+                            <li>Estados (pendente/aberto/fechado)</li>
+                            <li>Atribuição de atendentes</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-group">
+                        <h3>Chatbot</h3>
+                        <p><strong>Onde alterar:</strong> <code>src/services/WbotServices/wbotMessageListener.ts</code></p>
+                        <ul>
+                            <li>Opções automáticas</li>
+                            <li>Fluxo de conversação</li>
+                            <li>Integração com tickets</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-group" id="campaigns">
+                        <h3>Campanhas</h3>
+                        <p><strong>Onde alterar:</strong> <code>src/services/CampaignServices/</code>, <code>src/jobs/</code></p>
+                        <ul>
+                            <li>Envio em massa</li>
+                            <li>Agendamento</li>
+                            <li>Processamento em filas</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="models" class="section">
+                <h2>Modelos de Dados</h2>
+                <div class="content">
+                    <div class="model-grid">
+                        <div class="model-item">
+                            <h4>Company</h4>
+                            <p>Empresas do sistema</p>
+                            <code>src/models/Company.ts</code>
+                        </div>
+                        <div class="model-item">
+                            <h4>User</h4>
+                            <p>Usuários/atendentes</p>
+                            <code>src/models/User.ts</code>
+                        </div>
+                        <div class="model-item">
+                            <h4>Contact</h4>
+                            <p>Contatos/clientes</p>
+                            <code>src/models/Contact.ts</code>
+                        </div>
+                        <div class="model-item">
+                            <h4>Ticket</h4>
+                            <p>Tickets de atendimento</p>
+                            <code>src/models/Ticket.ts</code>
+                        </div>
+                        <div class="model-item">
+                            <h4>Message</h4>
+                            <p>Mensagens trocadas</p>
+                            <code>src/models/Message.ts</code>
+                        </div>
+                        <div class="model-item">
+                            <h4>Whatsapp</h4>
+                            <p>Conexões WhatsApp</p>
+                            <code>src/models/Whatsapp.ts</code>
+                        </div>
+                        <div class="model-item">
+                            <h4>Queue</h4>
+                            <p>Filas de atendimento</p>
+                            <code>src/models/Queue.ts</code>
+                        </div>
+                        <div class="model-item">
+                            <h4>Campaign</h4>
+                            <p>Campanhas de marketing</p>
+                            <code>src/models/Campaign.ts</code>
+                        </div>
+                    </div>
+
+                    <!-- Aba: Treinamento -->
+                    <div class="ai-tab-content" id="training">
+                        <h3>Sistema de Treinamento da IA com Embeddings e Similaridade</h3>
+                        
+                        <div class="training-overview">
+                            <h4>Visão Geral do Treinamento</h4>
+                            <p>O PEPE será treinado usando uma combinação de embeddings vetoriais e análise de similaridade para fornecer respostas contextuais e precisas baseadas no conhecimento específico de cada empresa.</p>
+                        </div>
+
+                        <div class="embedding-system">
+                            <h4>Sistema de Embeddings</h4>
+                            
+                            <div class="embedding-process">
+                                <h5>Como Funciona</h5>
+                                <div class="process-steps">
+                                    <div class="step">
+                                        <span class="step-number">1</span>
+                                        <div class="step-content">
+                                            <h6>Coleta de Dados</h6>
+                                            <p>Extração de informações da empresa: site, documentos, FAQs, histórico de conversas</p>
+                                        </div>
+                                    </div>
+                                    <div class="step">
+                                        <span class="step-number">2</span>
+                                        <div class="step-content">
+                                            <h6>Processamento de Texto</h6>
+                                            <p>Segmentação em chunks, limpeza e normalização dos dados</p>
+                                        </div>
+                                    </div>
+                                    <div class="step">
+                                        <span class="step-number">3</span>
+                                        <div class="step-content">
+                                            <h6>Geração de Embeddings</h6>
+                                            <p>Conversão de texto em vetores usando modelos de embedding</p>
+                                        </div>
+                                    </div>
+                                    <div class="step">
+                                        <span class="step-number">4</span>
+                                        <div class="step-content">
+                                            <h6>Armazenamento Vetorial</h6>
+                                            <p>Indexação em banco de dados vetorial para busca rápida</p>
+                                        </div>
+                                    </div>
+                                    <div class="step">
+                                        <span class="step-number">5</span>
+                                        <div class="step-content">
+                                            <h6>Busca por Similaridade</h6>
+                                            <p>Recuperação de contexto relevante baseado na pergunta do cliente</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="embedding-models">
+                                <h5>Modelos de Embedding</h5>
+                                <div class="model-grid">
+                                    <div class="model-card">
+                                        <h6>text-embedding-3-small</h6>
+                                        <p><strong>Provedor:</strong> OpenAI via OpenRouter</p>
+                                        <p><strong>Dimensões:</strong> 1536</p>
+                                        <p><strong>Custo:</strong> $0.00002/1K tokens</p>
+                                        <p><strong>Uso:</strong> Embedding principal para textos gerais</p>
+                                    </div>
+                                    <div class="model-card">
+                                        <h6>text-embedding-3-large</h6>
+                                        <p><strong>Provedor:</strong> OpenAI via OpenRouter</p>
+                                        <p><strong>Dimensões:</strong> 3072</p>
+                                        <p><strong>Custo:</strong> $0.00013/1K tokens</p>
+                                        <p><strong>Uso:</strong> Embedding de alta precisão para documentos importantes</p>
+                                    </div>
+                                    <div class="model-card">
+                                        <h6>multilingual-e5-large</h6>
+                                        <p><strong>Provedor:</strong> Hugging Face</p>
+                                        <p><strong>Dimensões:</strong> 1024</p>
+                                        <p><strong>Custo:</strong> Gratuito</p>
+                                        <p><strong>Uso:</strong> Fallback para textos multilíngues</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="similarity-search">
+                            <h4>Sistema de Busca por Similaridade</h4>
+                            
+                            <div class="similarity-process">
+                                <h5>Algoritmo de Similaridade</h5>
+                                <div class="algorithm-explanation">
+                                    <div class="algorithm-step">
+                                        <h6>1. Embedding da Pergunta</h6>
+                                        <p>Pergunta do cliente é convertida em vetor usando o mesmo modelo de embedding</p>
+                                        <pre><code>const questionEmbedding = await embeddingModel.embed(userQuestion);</code></pre>
+                                    </div>
+                                    
+                                    <div class="algorithm-step">
+                                        <h6>2. Busca Vetorial</h6>
+                                        <p>Busca por similaridade coseno no banco de dados vetorial</p>
+                                        <pre><code>const similarChunks = await vectorDB.search({
+  vector: questionEmbedding,
+  topK: 5,
+  threshold: 0.7
+});</code></pre>
+                                    </div>
+                                    
+                                    <div class="algorithm-step">
+                                        <h6>3. Ranking e Filtragem</h6>
+                                        <p>Ordenação por score de similaridade e filtragem por relevância</p>
+                                        <pre><code>const relevantContext = similarChunks
+  .filter(chunk => chunk.score > 0.7)
+  .slice(0, 3)
+  .map(chunk => chunk.content);</code></pre>
+                                    </div>
+                                    
+                                    <div class="algorithm-step">
+                                        <h6>4. Construção do Contexto</h6>
+                                        <p>Combinação dos chunks mais relevantes para formar o contexto</p>
+                                        <pre><code>const context = relevantContext.join('\n\n');
+const prompt = buildPrompt(userQuestion, context, companyInfo);</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="similarity-metrics">
+                                <h5>Métricas de Similaridade</h5>
+                                <div class="metrics-explanation">
+                                    <div class="metric-item">
+                                        <h6>Similaridade Coseno</h6>
+                                        <p>Medida principal: varia de -1 a 1, onde 1 = idêntico</p>
+                                        <p><strong>Threshold:</strong> 0.7 (mínimo para considerar relevante)</p>
+                                    </div>
+                                    <div class="metric-item">
+                                        <h6>Distância Euclidiana</h6>
+                                        <p>Métrica secundária para desempate</p>
+                                        <p><strong>Uso:</strong> Quando múltiplos chunks têm score similar</p>
+                                    </div>
+                                    <div class="metric-item">
+                                        <h6>Score de Relevância</h6>
+                                        <p>Combinação de similaridade + metadados (data, categoria)</p>
+                                        <p><strong>Peso:</strong> 70% similaridade + 30% metadados</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="training-data-sources">
+                            <h4>Fontes de Dados para Treinamento</h4>
+                            
+                            <div class="data-sources-grid">
+                                <div class="source-item">
+                                    <h5>🌐 Website da Empresa</h5>
+                                    <ul>
+                                        <li>Páginas principais (sobre, serviços, produtos)</li>
+                                        <li>FAQ e documentação</li>
+                                        <li>Políticas e termos de uso</li>
+                                        <li>Blog posts e artigos</li>
+                                    </ul>
+                                    <p><strong>Atualização:</strong> Semanal automática</p>
+                                </div>
+                                
+                                <div class="source-item">
+                                    <h5>💬 Histórico de Conversas</h5>
+                                    <ul>
+                                        <li>Mensagens de tickets resolvidos</li>
+                                        <li>Perguntas frequentes identificadas</li>
+                                        <li>Respostas bem avaliadas</li>
+                                        <li>Padrões de linguagem da empresa</li>
+                                    </ul>
+                                    <p><strong>Atualização:</strong> Diária incremental</p>
+                                </div>
+                                
+                                <div class="source-item">
+                                    <h5>📄 Documentos Manuais</h5>
+                                    <ul>
+                                        <li>Manuais de produtos/serviços</li>
+                                        <li>Catálogos e listas de preços</li>
+                                        <li>Procedimentos internos</li>
+                                        <li>Scripts de atendimento</li>
+                                    </ul>
+                                    <p><strong>Atualização:</strong> Manual via upload</p>
+                                </div>
+                                
+                                <div class="source-item">
+                                    <h5>🎯 Treinamento Customizado</h5>
+                                    <ul>
+                                        <li>Perguntas e respostas específicas</li>
+                                        <li>Casos de uso particulares</li>
+                                        <li>Linguagem e tom da marca</li>
+                                        <li>Regras de negócio específicas</li>
+                                    </ul>
+                                    <p><strong>Atualização:</strong> Sob demanda</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="vector-database">
+                            <h4>Banco de Dados Vetorial</h4>
+                            
+                            <div class="database-options">
+                                <h5>Opções de Implementação</h5>
+                                <div class="db-comparison">
+                                    <div class="db-option recommended">
+                                        <h6>🏆 Pinecone (Recomendado)</h6>
+                                        <div class="pros-cons">
+                                            <div class="pros">
+                                                <h7>Prós:</h7>
+                                                <ul>
+                                                    <li>Managed service (sem manutenção)</li>
+                                                    <li>Escalabilidade automática</li>
+                                                    <li>Performance otimizada</li>
+                                                    <li>Integração simples</li>
+                                                </ul>
+                                            </div>
+                                            <div class="cons">
+                                                <h7>Contras:</h7>
+                                                <ul>
+                                                    <li>Custo por uso</li>
+                                                    <li>Dependência externa</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <p><strong>Custo:</strong> $70/mês para 100K vetores</p>
+                                    </div>
+                                    
+                                    <div class="db-option">
+                                        <h6>🐘 PostgreSQL + pgvector</h6>
+                                        <div class="pros-cons">
+                                            <div class="pros">
+                                                <h7>Prós:</h7>
+                                                <ul>
+                                                    <li>Integração com banco existente</li>
+                                                    <li>Sem custos adicionais</li>
+                                                    <li>Controle total</li>
+                                                    <li>ACID compliance</li>
+                                                </ul>
+                                            </div>
+                                            <div class="cons">
+                                                <h7>Contras:</h7>
+                                                <ul>
+                                                    <li>Performance limitada</li>
+                                                    <li>Manutenção manual</li>
+                                                    <li>Escalabilidade complexa</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <p><strong>Custo:</strong> Apenas recursos de servidor</p>
+                                    </div>
+                                    
+                                    <div class="db-option">
+                                        <h6>🔍 Weaviate</h6>
+                                        <div class="pros-cons">
+                                            <div class="pros">
+                                                <h7>Prós:</h7>
+                                                <ul>
+                                                    <li>Open source</li>
+                                                    <li>Recursos avançados</li>
+                                                    <li>Múltiplos tipos de dados</li>
+                                                    <li>GraphQL API</li>
+                                                </ul>
+                                            </div>
+                                            <div class="cons">
+                                                <h7>Contras:</h7>
+                                                <ul>
+                                                    <li>Complexidade de setup</li>
+                                                    <li>Curva de aprendizado</li>
+                                                    <li>Recursos de servidor</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <p><strong>Custo:</strong> Self-hosted ou $25/mês cloud</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="database-schema">
+                                <h5>Estrutura do Banco Vetorial</h5>
+                                <pre><code>-- Tabela para armazenar embeddings
+CREATE TABLE ai_embeddings (
+  id SERIAL PRIMARY KEY,
+  company_id INTEGER REFERENCES companies(id),
+  content_type VARCHAR(50), -- 'website', 'conversation', 'document', 'manual'
+  content_text TEXT NOT NULL,
+  content_summary TEXT,
+  embedding VECTOR(1536), -- Para text-embedding-3-small
+  metadata JSONB, -- {category, url, date, tags, etc}
+  similarity_threshold DECIMAL(3,2) DEFAULT 0.7,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Índices para performance
+CREATE INDEX idx_ai_embeddings_company ON ai_embeddings(company_id);
+CREATE INDEX idx_ai_embeddings_type ON ai_embeddings(content_type);
+CREATE INDEX idx_ai_embeddings_vector ON ai_embeddings USING ivfflat (embedding vector_cosine_ops);
+
+-- Tabela para controle de treinamento
+CREATE TABLE ai_training_jobs (
+  id SERIAL PRIMARY KEY,
+  company_id INTEGER REFERENCES companies(id),
+  job_type VARCHAR(50), -- 'website_crawl', 'document_upload', 'conversation_analysis'
+  status VARCHAR(20), -- 'pending', 'running', 'completed', 'failed'
+  source_url VARCHAR(500),
+  processed_chunks INTEGER DEFAULT 0,
+  total_chunks INTEGER DEFAULT 0,
+  error_message TEXT,
+  started_at TIMESTAMP,
+  completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="training-pipeline">
+                            <h4>Pipeline de Treinamento</h4>
+                            
+                            <div class="pipeline-stages">
+                                <div class="stage">
+                                    <h5>Estágio 1: Coleta de Dados</h5>
+                                    <div class="stage-details">
+                                        <h6>Extração de Website</h6>
+                                        <pre><code>// Serviço de extração de website
+class WebsiteExtractionService {
+  async extractWebsite(url: string, companyId: number) {
+    const crawler = new WebCrawler({
+      maxPages: 50,
+      respectRobotsTxt: true,
+      delay: 1000
+    });
+    
+    const pages = await crawler.crawl(url);
+    
+    for (const page of pages) {
+      const chunks = this.chunkText(page.content, 500);
+      await this.processChunks(chunks, companyId, 'website');
+    }
+  }
+}</code></pre>
+                                        
+                                        <h6>Análise de Conversas</h6>
+                                        <pre><code>// Extração de padrões de conversas
+class ConversationAnalysisService {
+  async analyzeConversations(companyId: number) {
+    const resolvedTickets = await Ticket.findAll({
+      where: { companyId, status: 'closed' },
+      include: [{ model: Message }]
+    });
+    
+    for (const ticket of resolvedTickets) {
+      const conversation = this.extractQAPairs(ticket.messages);
+      await this.createEmbeddings(conversation, companyId);
+    }
+  }
+}</code></pre>
+                                    </div>
+                                </div>
+                                
+                                <div class="stage">
+                                    <h5>Estágio 2: Processamento de Texto</h5>
+                                    <div class="stage-details">
+                                        <h6>Chunking Inteligente</h6>
+                                        <pre><code>class TextChunker {
+  chunkText(text: string, maxTokens: number = 500): string[] {
+    // Divisão por parágrafos primeiro
+    const paragraphs = text.split('\n\n');
+    const chunks: string[] = [];
+    let currentChunk = '';
+    
+    for (const paragraph of paragraphs) {
+      const tokens = this.countTokens(currentChunk + paragraph);
+      
+      if (tokens > maxTokens && currentChunk) {
+        chunks.push(currentChunk.trim());
+        currentChunk = paragraph;
+      } else {
+        currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
+      }
+    }
+    
+    if (currentChunk) chunks.push(currentChunk.trim());
+    return chunks;
+  }
+}</code></pre>
+                                        
+                                        <h6>Limpeza e Normalização</h6>
+                                        <pre><code>class TextCleaner {
+  cleanText(text: string): string {
+    return text
+      .replace(/\s+/g, ' ') // Múltiplos espaços
+      .replace(/[^\w\s\.\,\!\?\-]/g, '') // Caracteres especiais
+      .trim()
+      .toLowerCase();
+  }
+  
+  extractKeywords(text: string): string[] {
+    // Extração de palavras-chave relevantes
+    const stopWords = ['o', 'a', 'de', 'para', 'com', 'em'];
+    return text.split(' ')
+      .filter(word => !stopWords.includes(word))
+      .filter(word => word.length > 3);
+  }
+}</code></pre>
+                                    </div>
+                                </div>
+                                
+                                <div class="stage">
+                                    <h5>Estágio 3: Geração de Embeddings</h5>
+                                    <div class="stage-details">
+                                        <h6>Serviço de Embedding</h6>
+                                        <pre><code>class EmbeddingService {
+  async generateEmbedding(text: string): Promise<number[]> {
+    const response = await openRouterClient.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: text
+    });
+    
+    return response.data[0].embedding;
+  }
+  
+  async batchEmbeddings(texts: string[]): Promise<number[][]> {
+    // Processamento em lotes para eficiência
+    const batches = this.chunkArray(texts, 100);
+    const allEmbeddings: number[][] = [];
+    
+    for (const batch of batches) {
+      const embeddings = await this.generateEmbedding(batch.join(' '));
+      allEmbeddings.push(...embeddings);
+    }
+    
+    return allEmbeddings;
+  }
+}</code></pre>
+                                    </div>
+                                </div>
+                                
+                                <div class="stage">
+                                    <h5>Estágio 4: Indexação e Armazenamento</h5>
+                                    <div class="stage-details">
+                                        <h6>Armazenamento no Banco Vetorial</h6>
+                                        <pre><code>class VectorStorageService {
+  async storeEmbedding(data: {
+    companyId: number;
+    contentType: string;
+    text: string;
+    embedding: number[];
+    metadata: any;
+  }) {
+    await AIEmbedding.create({
+      company_id: data.companyId,
+      content_type: data.contentType,
+      content_text: data.text,
+      content_summary: this.generateSummary(data.text),
+      embedding: data.embedding,
+      metadata: data.metadata
+    });
+  }
+  
+  async searchSimilar(
+    queryEmbedding: number[], 
+    companyId: number, 
+    limit: number = 5
+  ) {
+    return await AIEmbedding.findAll({
+      where: { company_id: companyId },
+      order: [
+        [sequelize.fn('cosine_distance', 
+          sequelize.col('embedding'), 
+          queryEmbedding
+        ), 'ASC']
+      ],
+      limit
+    });
+  }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="training-interface">
+                            <h4>Interface de Treinamento</h4>
+                            
+                            <div class="interface-mockup">
+                                <h5>Painel de Treinamento do PEPE</h5>
+                                <div class="training-sections">
+                                    <div class="training-section">
+                                        <h6>📊 Status do Treinamento</h6>
+                                        <ul>
+                                            <li>Total de chunks processados: 1,247</li>
+                                            <li>Última atualização: 2 horas atrás</li>
+                                            <li>Qualidade do embedding: 94%</li>
+                                            <li>Cobertura de tópicos: 87%</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="training-section">
+                                        <h6>🌐 Fontes de Dados</h6>
+                                        <ul>
+                                            <li>Website: ✅ 45 páginas processadas</li>
+                                            <li>Conversas: ✅ 892 tickets analisados</li>
+                                            <li>Documentos: ⏳ 3 arquivos pendentes</li>
+                                            <li>FAQ Manual: ✅ 67 pares Q&A</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="training-section">
+                                        <h6>🎯 Teste de Qualidade</h6>
+                                        <div class="quality-test">
+                                            <input type="text" placeholder="Digite uma pergunta para testar..." />
+                                            <button>Testar Similaridade</button>
+                                            <div class="test-results">
+                                                <p><strong>Chunks encontrados:</strong> 3</p>
+                                                <p><strong>Melhor score:</strong> 0.89</p>
+                                                <p><strong>Contexto relevante:</strong> Sim</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="training-section">
+                                        <h6>⚙️ Configurações Avançadas</h6>
+                                        <ul>
+                                            <li>Threshold de similaridade: 0.7</li>
+                                            <li>Tamanho do chunk: 500 tokens</li>
+                                            <li>Overlap entre chunks: 50 tokens</li>
+                                            <li>Modelo de embedding: text-embedding-3-small</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="training-costs">
+                            <h4>Custos de Treinamento</h4>
+                            
+                            <div class="cost-breakdown">
+                                <div class="cost-item">
+                                    <h5>💰 Embedding Generation</h5>
+                                    <p><strong>Modelo:</strong> text-embedding-3-small</p>
+                                    <p><strong>Custo:</strong> $0.00002 por 1K tokens</p>
+                                    <p><strong>Estimativa:</strong> ~$2-5 por empresa (setup inicial)</p>
+                                </div>
+                                
+                                <div class="cost-item">
+                                    <h5>🗄️ Vector Storage</h5>
+                                    <p><strong>Pinecone:</strong> $70/mês para 100K vetores</p>
+                                    <p><strong>PostgreSQL:</strong> Incluído no servidor</p>
+                                    <p><strong>Estimativa:</strong> $0.70 por empresa/mês (Pinecone)</p>
+                                </div>
+                                
+                                <div class="cost-item">
+                                    <h5>🔄 Atualizações</h5>
+                                    <p><strong>Website crawling:</strong> Semanal</p>
+                                    <p><strong>Conversation analysis:</strong> Diário</p>
+                                    <p><strong>Estimativa:</strong> $1-3 por empresa/mês</p>
+                                </div>
+                                
+                                <div class="cost-total">
+                                    <h5>📊 Total Estimado</h5>
+                                    <p><strong>Setup inicial:</strong> $2-5 por empresa</p>
+                                    <p><strong>Custo mensal:</strong> $2-6 por empresa</p>
+                                    <p><strong>ROI esperado:</strong> 300-500% (redução de atendimento manual)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="apis" class="section">
+                <h2>APIs e Endpoints</h2>
+                <div class="content">
+                    <h3>Principais Rotas</h3>
+                    <div class="api-group">
+                        <h4>Autenticação</h4>
+                        <p><code>src/routes/authRoutes.ts</code></p>
+                        <ul>
+                            <li>POST /auth/login</li>
+                            <li>POST /auth/refresh</li>
+                            <li>POST /auth/logout</li>
+                        </ul>
+                    </div>
+
+                    <div class="api-group">
+                        <h4>Tickets</h4>
+                        <p><code>src/routes/ticketRoutes.ts</code></p>
+                        <ul>
+                            <li>GET /tickets</li>
+                            <li>POST /tickets</li>
+                            <li>PUT /tickets/:id</li>
+                            <li>DELETE /tickets/:id</li>
+                        </ul>
+                    </div>
+
+                    <div class="api-group">
+                        <h4>WhatsApp</h4>
+                        <p><code>src/routes/whatsappRoutes.ts</code></p>
+                        <ul>
+                            <li>GET /whatsapp</li>
+                            <li>POST /whatsapp</li>
+                            <li>PUT /whatsapp/:id</li>
+                            <li>POST /whatsapp/:id/start</li>
+                        </ul>
+                    </div>
+
+                    <div class="api-group">
+                        <h4>Mensagens</h4>
+                        <p><code>src/routes/messageRoutes.ts</code></p>
+                        <ul>
+                            <li>GET /messages</li>
+                            <li>POST /messages</li>
+                            <li>PUT /messages/:id</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ai-agent" class="section"<h2>Agente de IA - Implantação Futura</h2>
+                <div class="content">
+                    <!-- Navegação por abas internas -->
+                    <div class="ai-tabs-navigation">
+                        <button class="ai-tab-btn active" data-tab="overview">Visão Geral</button>
+                        <button class="ai-tab-btn" data-tab="pepe-agent">Agente PEPE</button>
+                        <button class="ai-tab-btn" data-tab="plan-integration">Integração com Planos</button>
+                        <button class="ai-tab-btn" data-tab="ui-changes">Mudanças na Interface</button>
+                        <button class="ai-tab-btn" data-tab="technical-specs">Especificações Técnicas</button>
+                        <button class="ai-tab-btn" data-tab="training">Treinamento</button>
+                        <button class="ai-tab-btn" data-tab="fluxograma">Fluxograma</button>
+                    </div>
+
+                    <!-- Aba: Visão Geral -->
+                    <div class="ai-tab-content active" id="overview">
+                        <div class="ai-overview">
+                            <h3>Visão Geral do Projeto</h3>
+                            <p>O Smart Atendimento será expandido com o <strong>Agente PEPE</strong> (Processador Eletrônico de Perguntas e Esclarecimentos), um agente de IA inteligente que revolucionará o atendimento ao cliente através da integração com OpenRouter.</p>
+                            
+                            <div class="pepe-highlights">
+                                <h4>Características Principais do PEPE</h4>
+                                <div class="highlight-grid">
+                                    <div class="highlight-item">
+                                        <h5>🤖 Identidade Própria</h5>
+                                        <p>Usuário dedicado no sistema (pepe@ai.system) com ícone visual distintivo</p>
+                                    </div>
+                                    <div class="highlight-item">
+                                        <h5>📝 Mensagens Limpas</h5>
+                                        <p>Sem assinatura ou identificação nas mensagens enviadas</p>
+                                    </div>
+                                    <div class="highlight-item">
+                                        <h5>🎯 Ativação Inteligente</h5>
+                                        <p>Inicia após conclusão do fluxo de chatbot básico dos setores</p>
+                                    </div>
+                                    <div class="highlight-item">
+                                        <h5>⚡ Controle Total</h5>
+                                        <p>Operadores podem pausar, retomar ou assumir controle a qualquer momento</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba: Agente PEPE -->
+                    <div class="ai-tab-content" id="pepe-agent">
+                        <h3>Agente PEPE - Especificações Detalhadas</h3>
+                        
+                        <div class="pepe-identity">
+                            <h4>Identidade e Comportamento</h4>
+                            <ul>
+                                <li><strong>Nome:</strong> PEPE (Processador Eletrônico de Perguntas e Esclarecimentos)</li>
+                                <li><strong>Usuário Sistema:</strong> pepe@ai.system</li>
+                                <li><strong>Ícone Visual:</strong> 🤖 para identificação nos tickets</li>
+                                <li><strong>Assinatura:</strong> Nenhuma (mensagens sem identificação)</li>
+                                <li><strong>Perfil:</strong> ai_agent (novo tipo de usuário)</li>
+                            </ul>
+                        </div>
+
+                        <div class="pepe-activation">
+                            <h4>Fluxo de Ativação</h4>
+                            <div class="activation-steps">
+                                <div class="step">
+                                    <span class="step-number">1</span>
+                                    <div class="step-content">
+                                        <h5>Cliente Inicia Conversa</h5>
+                                        <p>Mensagem recebida via WhatsApp</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">2</span>
+                                    <div class="step-content">
+                                        <h5>Chatbot Básico</h5>
+                                        <p>Sistema apresenta opções de setores</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">3</span>
+                                    <div class="step-content">
+                                        <h5>Seleção de Setor</h5>
+                                        <p>Cliente escolhe setor de atendimento</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">4</span>
+                                    <div class="step-content">
+                                        <h5>Verificação de Plano</h5>
+                                        <p>Sistema verifica se empresa tem acesso ao PEPE</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">5</span>
+                                    <div class="step-content">
+                                        <h5>PEPE Ativado</h5>
+                                        <p>Agente assume o atendimento automaticamente</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pepe-controls">
+                            <h4>Controles Operacionais</h4>
+                            <div class="control-grid">
+                                <div class="control-item">
+                                    <h5>⏸️ Pausa Manual</h5>
+                                    <p>Operadores podem pausar PEPE e transferir para "Aguardando"</p>
+                                </div>
+                                <div class="control-item">
+                                    <h5>🔄 Transferência Automática</h5>
+                                    <p>PEPE transfere automaticamente quando não consegue responder</p>
+                                </div>
+                                <div class="control-item">
+                                    <h5>🚨 Alertas Inteligentes</h5>
+                                    <p>Notificações quando PEPE precisa de intervenção humana</p>
+                                </div>
+                                <div class="control-item">
+                                    <h5>👤 Assumir Controle</h5>
+                                    <p>Atendentes podem assumir controle direto do ticket</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba: Integração com Planos -->
+                    <div class="ai-tab-content" id="plan-integration">
+                        <h3>Integração com Sistema de Planos</h3>
+                        
+                        <div class="plan-parameter">
+                            <h4>Novo Parâmetro: ai_agent_enabled</h4>
+                            <p><strong>Localização:</strong> Configurações > Planos do Sistema</p>
+                            
+                            <div class="parameter-behavior">
+                                <div class="behavior-item enabled">
+                                    <h5>✅ Se Habilitado (true)</h5>
+                                    <ul>
+                                        <li>Libera o agente PEPE na tela "Minhas Conexões"</li>
+                                        <li>Mostra aba "Agente de IA" nas integrações</li>
+                                        <li>Permite configuração e uso do agente</li>
+                                        <li>Ativa processamento de IA pós-chatbot</li>
+                                    </ul>
+                                </div>
+                                <div class="behavior-item disabled">
+                                    <h5>❌ Se Desabilitado (false)</h5>
+                                    <ul>
+                                        <li>Esconde completamente a aba "Agente de IA"</li>
+                                        <li>Não processa mensagens com IA</li>
+                                        <li>Mantém fluxo tradicional de atendimento</li>
+                                        <li>Exibe mensagem de upgrade quando necessário</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="request-limits">
+                            <h4>Controle de Requests Mensais</h4>
+                            <p><strong>Nova Funcionalidade:</strong> Limite de requests de IA por empresa/mês</p>
+                            
+                            <div class="limits-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Plano</th>
+                                            <th>Agente IA</th>
+                                            <th>Requests/Mês</th>
+                                            <th>Custo Estimado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Básico</td>
+                                            <td>❌ Não</td>
+                                            <td>0</td>
+                                            <td>-</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Premium</td>
+                                            <td>✅ Sim</td>
+                                            <td>1.000</td>
+                                            <td>~$15/mês</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Enterprise</td>
+                                            <td>✅ Sim</td>
+                                            <td>5.000</td>
+                                            <td>~$50/mês</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Custom</td>
+                                            <td>✅ Sim</td>
+                                            <td>Ilimitado</td>
+                                            <td>Negociável</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="request-monitoring">
+                                <h5>Monitoramento de Uso</h5>
+                                <ul>
+                                    <li>Contador de requests utilizados no mês</li>
+                                    <li>Alertas quando atingir 80% do limite</li>
+                                    <li>Bloqueio automático ao atingir 100%</li>
+                                    <li>Relatório mensal de uso por empresa</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="database-changes">
+                            <h4>Alterações no Banco de Dados</h4>
+                            <pre><code>-- Adicionar parâmetro de IA nos planos
+ALTER TABLE plans ADD COLUMN ai_agent_enabled BOOLEAN DEFAULT false;
+ALTER TABLE plans ADD COLUMN ai_monthly_requests INTEGER DEFAULT 0;
+
+-- Tabela para controle de uso mensal
+CREATE TABLE ai_usage_tracking (
+  id SERIAL PRIMARY KEY,
+  company_id INTEGER REFERENCES companies(id),
+  month_year VARCHAR(7), -- formato: 2024-03
+  requests_used INTEGER DEFAULT 0,
+  requests_limit INTEGER,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Índices para performance
+CREATE INDEX idx_ai_usage_company_month ON ai_usage_tracking(company_id, month_year);</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Aba: Mudanças na Interface -->
+                    <div class="ai-tab-content" id="ui-changes">
+                        <h3>Mudanças na Interface do Usuário</h3>
+                        
+                        <div class="new-tab-pepe">
+                            <h4>Nova Aba "Pepe AI" na Tela de Atendimentos</h4>
+                            <p><strong>Localização:</strong> Ao lado das abas "Atendendo" e "Aguardando"</p>
+                            
+                            <div class="tab-structure">
+                                <div class="tabs-preview">
+                                    <div class="tab-item">Aguardando</div>
+                                    <div class="tab-item">Atendendo</div>
+                                    <div class="tab-item new-tab">Pepe AI 🤖</div>
+                                </div>
+                            </div>
+
+                            <div class="tab-behavior">
+                                <h5>Comportamento da Nova Aba</h5>
+                                <ul>
+                                    <li><strong>Conteúdo:</strong> Tickets sendo atendidos pelo agente PEPE</li>
+                                    <li><strong>Filtro:</strong> WHERE aiAssisted = true AND status = 'open'</li>
+                                    <li><strong>Ícone:</strong> 🤖 nos tickets para identificação visual</li>
+                                    <li><strong>Contador:</strong> Número de tickets ativos com IA</li>
+                                    <li><strong>Atualização:</strong> Tempo real via WebSocket</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="ticket-flow-change">
+                            <h4>Mudança no Fluxo de Tickets</h4>
+                            <p><strong>Situação Atual:</strong> Nova conversa → Diretamente para "Aguardando"</p>
+                            <p><strong>Nova Situação:</strong> Nova conversa → Chatbot → PEPE (se habilitado) → "Pepe AI"</p>
+                            
+                            <div class="flow-diagram">
+                                <div class="flow-step">
+                                    <div class="step-box">Nova Mensagem</div>
+                                    <div class="arrow">↓</div>
+                                </div>
+                                <div class="flow-step">
+                                    <div class="step-box">Chatbot Básico</div>
+                                    <div class="arrow">↓</div>
+                                </div>
+                                <div class="flow-step">
+                                    <div class="step-box decision">Plano tem IA?</div>
+                                    <div class="arrow-split">
+                                        <div class="arrow-yes">Sim → PEPE → "Pepe AI"</div>
+                                        <div class="arrow-no">Não → "Aguardando"</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ai-integration-tab"<h4>Botão "Treinar o Pepe" na Tela "Minhas Conexões"</h4>
+                            <p><strong>Localização:</strong> Minhas Conexões > Botão "Treinar o Pepe" (ao lado de cada conexão WhatsApp)</p>
+                            
+                            <div class="integration-features">
+                                <h5>Funcionalidades da Aba</h5>
+                                <div class="feature-list">
+                                    <div class="feature-item">
+                                        <h6>🔧 Configurações Básicas</h6>
+                                        <ul>
+                                            <li>Ativar/Desativar PEPE</li>
+                                            <li>Seleção de modelo de IA</li>
+                                            <li>Configuração de temperatura</li>
+                                        </ul>
+                                    </div>
+                                    <div class="feature-item">
+                                        <h6>📚 Treinamento Personalizado</h6>
+                                        <ul>
+                                            <li>Informações da empresa</li>
+                                            <li>Perguntas e respostas customizadas</li>
+                                            <li>Extração automática do site</li>
+                                        </ul>
+                                    </div>
+                                    <div class="feature-item">
+                                        <h6>⚙️ Controles Avançados</h6>
+                                        <ul>
+                                            <li>Regras de transferência</li>
+                                            <li>Teste do agente</li>
+                                            <li>Monitoramento de uso</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="visual-indicators">
+                            <h4>Indicadores Visuais</h4>
+                            <div class="indicator-list">
+                                <div class="indicator-item">
+                                    <span class="indicator-icon">🤖</span>
+                                    <div class="indicator-desc">
+                                        <h6>Ícone do Ticket</h6>
+                                        <p>Tickets atendidos por PEPE mostram ícone de robô</p>
+                                    </div>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-icon">⏸️</span>
+                                    <div class="indicator-desc">
+                                        <h6>Status de Pausa</h6>
+                                        <p>Indicador quando IA está pausada no ticket</p>
+                                    </div>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-icon">🚨</span>
+                                    <div class="indicator-desc">
+                                        <h6>Alertas de IA</h6>
+                                        <p>Notificações quando PEPE precisa de ajuda</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba: Especificações Técnicas -->
+                    <div class="ai-tab-content" id="technical-specs">
+                        <h3>Especificações Técnicas com OpenRouter</h3>
+
+                        <div class="ai-features">
+                            <h4>Funcionalidades Planejadas</h4>
+                        <div class="feature-grid">
+                            <div class="ai-feature-item">
+                                <h4><i class="fas fa-brain"></i> Processamento de Linguagem Natural</h4>
+                                <p>Compreensão avançada de intenções e contexto das mensagens dos clientes</p>
+                                <ul>
+                                    <li>Análise de sentimento</li>
+                                    <li>Extração de entidades</li>
+                                    <li>Classificação de intenções</li>
+                                </ul>
+                            </div>
+                            <div class="ai-feature-item">
+                                <h4><i class="fas fa-comments"></i> Respostas Inteligentes</h4>
+                                <p>Geração automática de respostas personalizadas e contextualmente relevantes</p>
+                                <ul>
+                                    <li>Base de conhecimento dinâmica</li>
+                                    <li>Respostas adaptativas</li>
+                                    <li>Suporte multilíngue</li>
+                                </ul>
+                            </div>
+                            <div class="ai-feature-item">
+                                <h4><i class="fas fa-chart-line"></i> Aprendizado Contínuo</h4>
+                                <p>Sistema que evolui com base nas interações e feedback dos usuários</p>
+                                <ul>
+                                    <li>Machine Learning adaptativo</li>
+                                    <li>Análise de performance</li>
+                                    <li>Otimização automática</li>
+                                </ul>
+                            </div>
+                            <div class="ai-feature-item">
+                                <h4><i class="fas fa-route"></i> Roteamento Inteligente</h4>
+                                <p>Direcionamento automático para o atendente mais adequado</p>
+                                <ul>
+                                    <li>Análise de especialização</li>
+                                    <li>Balanceamento de carga</li>
+                                    <li>Priorização por urgência</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ai-architecture">
+                        <h3>Arquitetura Técnica Planejada</h3>
+                        <div class="tech-stack">
+                            <h4>Stack de IA com OpenRouter</h4>
+                            <ul>
+                                <li><strong>Provedor Principal:</strong> OpenRouter (Acesso unificado a múltiplos LLMs)</li>
+                                <li><strong>Modelos Disponíveis:</strong> GPT-4, Claude, Llama, Gemini, e outros</li>
+                                <li><strong>SDK:</strong> OpenRouter JavaScript SDK</li>
+                                <li><strong>Vector Database:</strong> Pinecone / Weaviate para embeddings</li>
+                                <li><strong>Cache:</strong> Redis para respostas frequentes e rate limiting</li>
+                                <li><strong>Fallback:</strong> Sistema de fallback entre diferentes modelos</li>
+                            </ul>
+                        </div>
+
+                        <div class="integration-points">
+                            <h4>Pontos de Integração</h4>
+                            <p><strong>Arquivos a serem criados/modificados:</strong></p>
+                            <ul>
+                                <li><code>src/services/AIServices/</code> - Serviços de IA com OpenRouter</li>
+                                <li><code>src/libs/openRouter.ts</code> - Cliente OpenRouter configurado</li>
+                                <li><code>src/models/AIKnowledgeBase.ts</code> - Base de conhecimento</li>
+                                <li><code>src/models/AIConversation.ts</code> - Histórico de conversas IA</li>
+                                <li><code>src/libs/aiAgent.ts</code> - Core do agente IA</li>
+                                <li><code>src/middleware/aiMiddleware.ts</code> - Middleware de IA</li>
+                                <li><code>src/jobs/aiTraining.ts</code> - Jobs de análise e otimização</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="ai-implementation">
+                        <h3>Fases de Implementação</h3>
+                        <div class="phase-timeline">
+                            <div class="phase">
+                                <h4>Fase 1 - Fundação (Q1 2024)</h4>
+                                <ul>
+                                    <li>Integração com OpenRouter API</li>
+                                    <li>Configuração de múltiplos modelos (GPT-4, Claude, Llama)</li>
+                                    <li>Sistema básico de respostas automáticas</li>
+                                    <li>Interface de configuração de IA</li>
+                                    <li>Métricas básicas de performance e custos</li>
+                                </ul>
+                            </div>
+                            <div class="phase">
+                                <h4>Fase 2 - Inteligência (Q2 2024)</h4>
+                                <ul>
+                                    <li>Sistema de fallback automático entre modelos</li>
+                                    <li>Otimização de custos com seleção inteligente de modelos</li>
+                                    <li>Sistema de feedback e melhoria contínua</li>
+                                    <li>Roteamento inteligente avançado</li>
+                                    <li>Análise de sentimento em tempo real</li>
+                                </ul>
+                            </div>
+                            <div class="phase">
+                                <h4>Fase 3 - Otimização (Q3 2024)</h4>
+                                <ul>
+                                    <li>Personalização por empresa/setor com modelos específicos</li>
+                                    <li>Balanceamento de carga entre diferentes provedores</li>
+                                    <li>Integração com CRM externo</li>
+                                    <li>Analytics avançados de IA e custos por modelo</li>
+                                    <li>API pública para desenvolvedores</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ai-benefits">
+                        <h3>Benefícios Esperados com OpenRouter</h3>
+                        <div class="benefits-grid">
+                            <div class="benefit-item">
+                                <h4><i class="fas fa-clock"></i> Redução de Tempo de Resposta</h4>
+                                <p>Respostas instantâneas 24/7, reduzindo tempo médio de primeira resposta em até 90%</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h4><i class="fas fa-users"></i> Melhoria na Satisfação</h4>
+                                <p>Atendimento mais preciso e personalizado, aumentando NPS em até 40%</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h4><i class="fas fa-chart-bar"></i> Otimização de Recursos</h4>
+                                <p>Redução de carga de trabalho manual em até 60%, focando atendentes em casos complexos</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h4><i class="fas fa-cogs"></i> Escalabilidade</h4>
+                                <p>Capacidade de atender milhares de conversas simultâneas sem degradação de qualidade</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h4><i class="fas fa-dollar-sign"></i> Otimização de Custos</h4>
+                                <p>Seleção inteligente de modelos baseada em custo-benefício, reduzindo gastos em até 50%</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h4><i class="fas fa-shield-alt"></i> Redundância e Confiabilidade</h4>
+                                <p>Sistema de fallback automático garante disponibilidade mesmo com falhas de provedores</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h4><i class="fas fa-brain"></i> Diversidade de Modelos</h4>
+                                <p>Acesso a múltiplos LLMs permite escolher o melhor modelo para cada tipo de interação</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h4><i class="fas fa-chart-line"></i> Flexibilidade Estratégica</h4>
+                                <p>Capacidade de adaptar estratégia de IA conforme evolução do mercado e novos modelos</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ai-config">
+                        <h3>Configurações Futuras com OpenRouter</h3>
+                        <p><strong>Variáveis de ambiente adicionais:</strong></p>
+                        <pre><code># OpenRouter Configuration
+AI_ENABLED=true
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=your-openrouter-api-key
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+
+# Model Configuration
+AI_PRIMARY_MODEL=openai/gpt-4-turbo-preview
+AI_FALLBACK_MODEL=anthropic/claude-3-haiku
+AI_BUDGET_MODEL=meta-llama/llama-3-8b-instruct
+AI_TEMPERATURE=0.7
+AI_MAX_TOKENS=150
+
+# Model Selection Strategy
+AI_MODEL_SELECTION=smart  # smart, cost-optimized, performance
+AI_MAX_COST_PER_REQUEST=0.01  # USD
+AI_FALLBACK_ENABLED=true
+
+# Vector Database
+VECTOR_DB_URL=your-vector-db-url
+VECTOR_DB_API_KEY=your-vector-db-key
+
+# Monitoring & Analytics
+AI_ANALYTICS_ENABLED=true
+AI_COST_TRACKING=true
+AI_PERFORMANCE_MONITORING=true</code></pre>
+
+                        <h3>Métricas de Monitoramento com OpenRouter</h3>
+                        <ul>
+                            <li><strong>Accuracy Rate:</strong> Taxa de acerto das respostas IA por modelo</li>
+                            <li><strong>Response Time:</strong> Tempo médio de resposta por modelo</li>
+                            <li><strong>Cost per Request:</strong> Custo médio por requisição por modelo</li>
+                            <li><strong>Model Usage Distribution:</strong> Distribuição de uso entre modelos</li>
+                            <li><strong>Fallback Rate:</strong> Taxa de uso do modelo de fallback</li>
+                            <li><strong>Escalation Rate:</strong> Taxa de transferência para humanos</li>
+                            <li><strong>User Satisfaction:</strong> Avaliação dos usuários sobre respostas IA</li>
+                            <li><strong>Cost Efficiency:</strong> Relação custo-benefício por modelo</li>
+                        </ul>
+                    </div>
+
+                    <div class="ai-roadmap"<h3>Roadmap de Desenvolvimento</h3>
+                        <div class="roadmap-item">
+                            <h4>🚀 Próximos Passos com OpenRouter</h4>
+                            <ol>
+                                <li>Análise de requisitos detalhada com stakeholders</li>
+                                <li>Configuração da conta OpenRouter e análise de modelos disponíveis</li>
+                                <li>Prova de conceito com diferentes modelos (GPT-4, Claude, Llama)</li>
+                                <li>Implementação do sistema de fallback e seleção inteligente</li>
+                                <li>Desenvolvimento do MVP do agente com monitoramento de custos</li>
+                                <li>Testes A/B comparando performance e custos entre modelos</li>
+                                <li>Otimização da estratégia de seleção de modelos</li>
+                                <li>Refinamento baseado em feedback e métricas de custo-benefício</li>
+                                <li>Lançamento gradual para toda a base com controle de custos</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Aba: Fluxograma -->
+                    <div class="ai-tab-content" id="fluxograma">
+                        <h3>Fluxograma Completo - Integração Agente PEPE</h3>
+                        
+                        <div class="flowchart-overview">
+                            <h4>🔄 Fluxo Principal de Integração</h4>
+                            <p>Este fluxograma mostra todo o processo de integração do PEPE, desde a configuração inicial até o atendimento automatizado.</p>
+                        </div>
+
+                        <div class="flowchart-stages">
+                            <h4>📋 Etapas do Fluxograma</h4>
+                            
+                            <div class="stage-flow">
+                                <h5>1️⃣ Configuração Inicial</h5>
+                                <div class="flow-description">
+                                    <p><strong>Admin do Sistema:</strong></p>
+                                    <ul>
+                                        <li>Acessa Configurações > Planos</li>
+                                        <li>Habilita parâmetro <code>ai_agent_enabled = true</code></li>
+                                        <li>Empresa ganha acesso ao PEPE</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="stage-flow">
+                                <h5>2️⃣ Treinamento do PEPE</h5>
+                                <div class="flow-description">
+                                    <p><strong>Usuário da Empresa:</strong></p>
+                                    <ul>
+                                        <li>Acessa "Minhas Conexões"</li>
+                                        <li>Clica botão "Treinar IA"</li>
+                                        <li>Preenche formulário da empresa</li>
+                                        <li>Clica "Treinar/Concluir"</li>
+                                        <li>PEPE é automaticamente ativado</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="stage-flow">
+                                <h5>3️⃣ Processamento de Mensagens</h5>
+                                <div class="flow-description">
+                                    <p><strong>Fluxo Automático:</strong></p>
+                                    <ul>
+                                        <li>Nova mensagem WhatsApp chega</li>
+                                        <li>Chatbot básico apresenta setores</li>
+                                        <li>Cliente escolhe setor</li>
+                                        <li>Sistema verifica se PEPE está ativo</li>
+                                        <li>PEPE assume o ticket automaticamente</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="stage-flow">
+                                <h5>4️⃣ Processamento com IA</h5>
+                                <div class="flow-description">
+                                    <p><strong>PEPE em Ação:</strong></p>
+                                    <ul>
+                                        <li>Busca dados de treinamento da empresa</li>
+                                        <li>Gera embedding da pergunta do cliente</li>
+                                        <li>Busca similaridade no banco vetorial</li>
+                                        <li>Monta prompt com contexto relevante</li>
+                                        <li>Envia para DeepSeek API</li>
+                                        <li>Recebe e envia resposta para cliente</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="stage-flow">
+                                <h5>5️⃣ Controles Operacionais</h5>
+                                <div class="flow-description">
+                                    <p><strong>Intervenção Humana:</strong></p>
+                                    <ul>
+                                        <li>Atendente pode pausar PEPE</li>
+                                        <li>Atendente pode assumir controle</li>
+                                        <li>PEPE transfere automaticamente quando não consegue responder</li>
+                                        <li>Sistema gera alertas para intervenção</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="decision-points">
+                            <h4>🎯 Pontos de Decisão Críticos</h4>
+                            
+                            <div class="decision-item">
+                                <h5>Verificação de Plano</h5>
+                                <pre><code>if (company.plan.ai_agent_enabled) {
+  // Mostra botão "Treinar IA"
+} else {
+  // Esconde botão ou mostra desabilitado
+}</code></pre>
+                            </div>
+
+                            <div class="decision-item">
+                                <h5>Ativação do PEPE</h5>
+                                <pre><code>if (ticket.queueId && !ticket.userId && whatsapp.ai_enabled) {
+  // PEPE assume o ticket
+} else {
+  // Fluxo normal para "Aguardando"
+}</code></pre>
+                            </div>
+
+                            <div class="decision-item">
+                                <h5>Busca por Similaridade</h5>
+                                <pre><code>if (similarityScore >= 0.7) {
+  // Usa contexto encontrado
+} else {
+  // Transfere para humano
+}</code></pre>
+                            </div>
+
+                            <div class="decision-item">
+                                <h5>Controle de IA</h5>
+                                <pre><code>if (aiSession.isPaused) {
+  // Não processa com IA
+} else {
+  // PEPE pode processar
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="system-states">
+                            <h4>📊 Estados do Sistema</h4>
+                            
+                            <div class="state-list">
+                                <div class="state-item">
+                                    <h5>🚫 Sem IA</h5>
+                                    <p>Plano não permite → Fluxo normal sem PEPE</p>
+                                </div>
+                                
+                                <div class="state-item">
+                                    <h5>⚙️ Não Treinado</h5>
+                                    <p>IA permitida mas não configurada → Botão "Treinar IA"</p>
+                                </div>
+                                
+                                <div class="state-item">
+                                    <h5>✅ PEPE Ativo</h5>
+                                    <p>IA treinada e funcionando → Processa mensagens</p>
+                                </div>
+                                
+                                <div class="state-item">
+                                    <h5>⏸️ IA Pausada</h5>
+                                    <p>Operador pausou → Aguarda reativação</p>
+                                </div>
+                                
+                                <div class="state-item">
+                                    <h5>👤 Atendimento Humano</h5>
+                                    <p>Humano assumiu controle → PEPE inativo</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="data-flow">
+                            <h4>🔄 Fluxo de Dados</h4>
+                            
+                            <div class="flow-sequence">
+                                <h5>Sequência de Treinamento:</h5>
+                                <ol>
+                                    <li>Usuário → Frontend: Clica "Treinar IA"</li>
+                                    <li>Frontend → Usuário: Abre modal</li>
+                                    <li>Usuário → Frontend: Preenche dados</li>
+                                    <li>Frontend → Backend: POST /ai-training/simple</li>
+                                    <li>Backend → Database: Salva dados</li>
+                                    <li>Backend → Database: Gera embeddings</li>
+                                    <li>Backend → Database: Ativa PEPE</li>
+                                    <li>Backend → Frontend: Sucesso</li>
+                                    <li>Frontend → Usuário: "PEPE ativado!"</li>
+                                </ol>
+                            </div>
+
+                            <div class="flow-sequence">
+                                <h5>Sequência de Atendimento:</h5>
+                                <ol>
+                                    <li>WhatsApp → Backend: Nova mensagem</li>
+                                    <li>Backend → Database: Busca ticket</li>
+                                    <li>Backend → Backend: Chatbot básico</li>
+                                    <li>WhatsApp → Backend: Cliente escolhe setor</li>
+                                    <li>Backend → Database: Verifica PEPE ativo</li>
+                                    <li>Backend → Database: PEPE assume ticket</li>
+                                    <li>Backend → Database: Busca dados treinamento</li>
+                                    <li>Backend → Database: Gera embedding pergunta</li>
+                                    <li>Backend → Database: Busca similaridade</li>
+                                    <li>Backend → DeepSeek API: Envia prompt</li>
+                                    <li>DeepSeek API → Backend: Resposta IA</li>
+                                    <li>Backend → WhatsApp: Envia resposta</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="implementation-checklist">
+                            <h4>📋 Checklist de Implementação</h4>
+                            
+                            <div class="checklist-grid">
+                                <div class="checklist-section">
+                                    <h5>✅ Configuração</h5>
+                                    <ul>
+                                        <li>Parâmetro ai_agent_enabled nos planos</li>
+                                        <li>Usuário PEPE no sistema</li>
+                                        <li>Extensão pgvector no PostgreSQL</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="checklist-section">
+                                    <h5>✅ Treinamento</h5>
+                                    <ul>
+                                        <li>Modal de treinamento na tela Conexões</li>
+                                        <li>API de salvamento de dados</li>
+                                        <li>Geração de embeddings locais</li>
+                                        <li>Ativação automática do PEPE</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="checklist-section">
+                                    <h5>✅ Processamento</h5>
+                                    <ul>
+                                        <li>Integração com DeepSeek API</li>
+                                        <li>Busca por similaridade vetorial</li>
+                                        <li>Geração de respostas contextuais</li>
+                                        <li>Sistema de fallback para humanos</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="checklist-section">
+                                    <h5>✅ Interface</h5>
+                                    <ul>
+                                        <li>Nova aba "Pepe AI" nos atendimentos</li>
+                                        <li>Controles de pausa/retomada</li>
+                                        <li>Indicadores visuais de IA ativa</li>
+                                        <li>Alertas para intervenção humana</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="architecture-files">
+                            <h4>🗂️ Estrutura de Arquivos</h4>
+                            
+                            <div class="file-structure">
+                                <h5>Backend:</h5>
+                                <ul>
+                                    <li><code>src/services/AIServices/PepeAIService.ts</code></li>
+                                    <li><code>src/services/AIServices/EmbeddingService.ts</code></li>
+                                    <li><code>src/services/AIServices/DeepSeekService.ts</code></li>
+                                    <li><code>src/models/AITrainingSimple.ts</code></li>
+                                    <li><code>src/models/AIEmbeddingLocal.ts</code></li>
+                                    <li><code>src/controllers/AITrainingController.ts</code></li>
+                                    <li><code>src/routes/aiTrainingRoutes.ts</code></li>
+                                </ul>
+                            </div>
+
+                            <div class="file-structure">
+                                <h5>Frontend:</h5>
+                                <ul>
+                                    <li><code>pages/Connections/TrainingModal.tsx</code></li>
+                                    <li><code>pages/Connections/TrainAIButton.tsx</code></li>
+                                    <li><code>pages/Tickets/PepeAITab.tsx</code></li>
+                                    <li><code>pages/Tickets/AIControlPanel.tsx</code></li>
+                                </ul>
+                            </div>
+
+                            <div class="file-structure">
+                                <h5>Database:</h5>
+                                <ul>
+                                    <li><code>ai_training_simple</code> - Dados de treinamento</li>
+                                    <li><code>ai_embeddings_local</code> - Embeddings vetoriais</li>
+                                    <li><code>users</code> - Usuário PEPE</li>
+                                    <li><code>plans</code> - Parâmetro ai_agent_enabled</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="treinamento" class="section">
+                <h2>Treinamento do Agente IA</h2>
+                <div class="content">
+                    <div class="training-overview">
+                        <h3>Sistema de Treinamento da IA com Embeddings e Similaridade</h3>
+                        <p>O PEPE será treinado usando uma combinação de embeddings vetoriais e análise de similaridade para fornecer respostas contextuais e precisas baseadas no conhecimento específico de cada empresa.</p>
+                    </div>
+
+                    <div class="embedding-system">
+                        <h3>Sistema de Embeddings</h3>
+                        
+                        <div class="embedding-process">
+                            <h4>Como Funciona</h4>
+                            <div class="process-steps">
+                                <div class="step">
+                                    <span class="step-number">1</span>
+                                    <div class="step-content">
+                                        <h5>Coleta de Dados</h5>
+                                        <p>Extração de informações da empresa: site, documentos, FAQs, histórico de conversas</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">2</span>
+                                    <div class="step-content">
+                                        <h5>Processamento de Texto</h5>
+                                        <p>Segmentação em chunks, limpeza e normalização dos dados</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">3</span>
+                                    <div class="step-content">
+                                        <h5>Geração de Embeddings</h5>
+                                        <p>Conversão de texto em vetores usando modelos de embedding</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">4</span>
+                                    <div class="step-content">
+                                        <h5>Armazenamento Vetorial</h5>
+                                        <p>Indexação em banco de dados vetorial para busca rápida</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <span class="step-number">5</span>
+                                    <div class="step-content">
+                                        <h5>Busca por Similaridade</h5>
+                                        <p>Recuperação de contexto relevante baseado na pergunta do cliente</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="embedding-models">
+                            <h4>Modelos de Embedding</h4>
+                            <div class="model-grid">
+                                <div class="model-card">
+                                    <h5>text-embedding-3-small</h5>
+                                    <p><strong>Provedor:</strong> OpenAI via OpenRouter</p>
+                                    <p><strong>Dimensões:</strong> 1536</p>
+                                    <p><strong>Custo:</strong> $0.00002/1K tokens</p>
+                                    <p><strong>Uso:</strong> Embedding principal para textos gerais</p>
+                                </div>
+                                <div class="model-card">
+                                    <h5>text-embedding-3-large</h5>
+                                    <p><strong>Provedor:</strong> OpenAI via OpenRouter</p>
+                                    <p><strong>Dimensões:</strong> 3072</p>
+                                    <p><strong>Custo:</strong> $0.00013/1K tokens</p>
+                                    <p><strong>Uso:</strong> Embedding de alta precisão para documentos importantes</p>
+                                </div>
+                                <div class="model-card">
+                                    <h5>multilingual-e5-large</h5>
+                                    <p><strong>Provedor:</strong> Hugging Face</p>
+                                    <p><strong>Dimensões:</strong> 1024</p>
+                                    <p><strong>Custo:</strong> Gratuito</p>
+                                    <p><strong>Uso:</strong> Fallback para textos multilíngues</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="similarity-search">
+                        <h3>Sistema de Busca por Similaridade</h3>
+                        
+                        <div class="similarity-process">
+                            <h4>Algoritmo de Similaridade</h4>
+                            <div class="algorithm-explanation">
+                                <div class="algorithm-step">
+                                    <h5>1. Embedding da Pergunta</h5>
+                                    <p>Pergunta do cliente é convertida em vetor usando o mesmo modelo de embedding</p>
+                                    <pre><code>const questionEmbedding = await embeddingModel.embed(userQuestion);</code></pre>
+                                </div>
+                                
+                                <div class="algorithm-step">
+                                    <h5>2. Busca Vetorial</h5>
+                                    <p>Busca por similaridade coseno no banco de dados vetorial</p>
+                                    <pre><code>const similarChunks = await vectorDB.search({
+  vector: questionEmbedding,
+  topK: 5,
+  threshold: 0.7
+});</code></pre>
+                                </div>
+                                
+                                <div class="algorithm-step">
+                                    <h5>3. Ranking e Filtragem</h5>
+                                    <p>Ordenação por score de similaridade e filtragem por relevância</p>
+                                    <pre><code>const relevantContext = similarChunks
+  .filter(chunk => chunk.score > 0.7)
+  .slice(0, 3)
+  .map(chunk => chunk.content);</code></pre>
+                                </div>
+                                
+                                <div class="algorithm-step">
+                                    <h5>4. Construção do Contexto</h5>
+                                    <p>Combinação dos chunks mais relevantes para formar o contexto</p>
+                                    <pre><code>const context = relevantContext.join('\n\n');
+const prompt = buildPrompt(userQuestion, context, companyInfo);</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="similarity-metrics">
+                            <h4>Métricas de Similaridade</h4>
+                            <div class="metrics-explanation">
+                                <div class="metric-item">
+                                    <h5>Similaridade Coseno</h5>
+                                    <p>Medida principal: varia de -1 a 1, onde 1 = idêntico</p>
+                                    <p><strong>Threshold:</strong> 0.7 (mínimo para considerar relevante)</p>
+                                </div>
+                                <div class="metric-item">
+                                    <h5>Distância Euclidiana</h5>
+                                    <p>Métrica secundária para desempate</p>
+                                    <p><strong>Uso:</strong> Quando múltiplos chunks têm score similar</p>
+                                </div>
+                                <div class="metric-item">
+                                    <h5>Score de Relevância</h5>
+                                    <p>Combinação de similaridade + metadados (data, categoria)</p>
+                                    <p><strong>Peso:</strong> 70% similaridade + 30% metadados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="training-data-sources">
+                        <h3>Fontes de Dados para Treinamento</h3>
+                        
+                        <div class="data-sources-grid">
+                            <div class="source-item">
+                                <h4>🌐 Website da Empresa</h4>
+                                <ul>
+                                    <li>Páginas principais (sobre, serviços, produtos)</li>
+                                    <li>FAQ e documentação</li>
+                                    <li>Políticas e termos de uso</li>
+                                    <li>Blog posts e artigos</li>
+                                </ul>
+                                <p><strong>Atualização:</strong> Semanal automática</p>
+                            </div>
+                            
+                            <div class="source-item">
+                                <h4>💬 Histórico de Conversas</h4>
+                                <ul>
+                                    <li>Mensagens de tickets resolvidos</li>
+                                    <li>Perguntas frequentes identificadas</li>
+                                    <li>Respostas bem avaliadas</li>
+                                    <li>Padrões de linguagem da empresa</li>
+                                </ul>
+                                <p><strong>Atualização:</strong> Diária incremental</p>
+                            </div>
+                            
+                            <div class="source-item">
+                                <h4>📄 Documentos Manuais</h4>
+                                <ul>
+                                    <li>Manuais de produtos/serviços</li>
+                                    <li>Catálogos e listas de preços</li>
+                                    <li>Procedimentos internos</li>
+                                    <li>Scripts de atendimento</li>
+                                </ul>
+                                <p><strong>Atualização:</strong> Manual via upload</p>
+                            </div>
+                            
+                            <div class="source-item">
+                                <h4>🎯 Treinamento Customizado</h4>
+                                <ul>
+                                    <li>Perguntas e respostas específicas</li>
+                                    <li>Casos de uso particulares</li>
+                                    <li>Linguagem e tom da marca</li>
+                                    <li>Regras de negócio específicas</li>
+                                </ul>
+                                <p><strong>Atualização:</strong> Sob demanda</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vector-database">
+                        <h3>Banco de Dados Vetorial</h3>
+                        
+                        <div class="database-options">
+                            <h4>Opções de Implementação</h4>
+                            <div class="db-comparison">
+                                <div class="db-option recommended">
+                                    <h5>🏆 Pinecone (Recomendado)</h5>
+                                    <div class="pros-cons">
+                                        <div class="pros">
+                                            <h6>Prós:</h6>
+                                            <ul>
+                                                <li>Managed service (sem manutenção)</li>
+                                                <li>Escalabilidade automática</li>
+                                                <li>Performance otimizada</li>
+                                                <li>Integração simples</li>
+                                            </ul>
+                                        </div>
+                                        <div class="cons">
+                                            <h6>Contras:</h6>
+                                            <ul>
+                                                <li>Custo por uso</li>
+                                                <li>Dependência externa</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <p><strong>Custo:</strong> $70/mês para 100K vetores</p>
+                                </div>
+                                
+                                <div class="db-option">
+                                    <h5>🐘 PostgreSQL + pgvector</h5>
+                                    <div class="pros-cons">
+                                        <div class="pros">
+                                            <h6>Prós:</h6>
+                                            <ul>
+                                                <li>Integração com banco existente</li>
+                                                <li>Sem custos adicionais</li>
+                                                <li>Controle total</li>
+                                                <li>ACID compliance</li>
+                                            </ul>
+                                        </div>
+                                        <div class="cons">
+                                            <h6>Contras:</h6>
+                                            <ul>
+                                                <li>Performance limitada</li>
+                                                <li>Manutenção manual</li>
+                                                <li>Escalabilidade complexa</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <p><strong>Custo:</strong> Apenas recursos de servidor</p>
+                                </div>
+                                
+                                <div class="db-option">
+                                    <h5>🔍 Weaviate</h5>
+                                    <div class="pros-cons">
+                                        <div class="pros">
+                                            <h6>Prós:</h6>
+                                            <ul>
+                                                <li>Open source</li>
+                                                <li>Recursos avançados</li>
+                                                <li>Múltiplos tipos de dados</li>
+                                                <li>GraphQL API</li>
+                                            </ul>
+                                        </div>
+                                        <div class="cons">
+                                            <h6>Contras:</h6>
+                                            <ul>
+                                                <li>Complexidade de setup</li>
+                                                <li>Curva de aprendizado</li>
+                                                <li>Recursos de servidor</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <p><strong>Custo:</strong> Self-hosted ou $25/mês cloud</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="database-schema">
+                            <h4>Estrutura do Banco Vetorial</h4>
+                            <pre><code>-- Tabela para armazenar embeddings
+CREATE TABLE ai_embeddings (
+  id SERIAL PRIMARY KEY,
+  company_id INTEGER REFERENCES companies(id),
+  content_type VARCHAR(50), -- 'website', 'conversation', 'document', 'manual'
+  content_text TEXT NOT NULL,
+  content_summary TEXT,
+  embedding VECTOR(1536), -- Para text-embedding-3-small
+  metadata JSONB, -- {category, url, date, tags, etc}
+  similarity_threshold DECIMAL(3,2) DEFAULT 0.7,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Índices para performance
+CREATE INDEX idx_ai_embeddings_company ON ai_embeddings(company_id);
+CREATE INDEX idx_ai_embeddings_type ON ai_embeddings(content_type);
+CREATE INDEX idx_ai_embeddings_vector ON ai_embeddings USING ivfflat (embedding vector_cosine_ops);
+
+-- Tabela para controle de treinamento
+CREATE TABLE ai_training_jobs (
+  id SERIAL PRIMARY KEY,
+  company_id INTEGER REFERENCES companies(id),
+  job_type VARCHAR(50), -- 'website_crawl', 'document_upload', 'conversation_analysis'
+  status VARCHAR(20), -- 'pending', 'running', 'completed', 'failed'
+  source_url VARCHAR(500),
+  processed_chunks INTEGER DEFAULT 0,
+  total_chunks INTEGER DEFAULT 0,
+  error_message TEXT,
+  started_at TIMESTAMP,
+  completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="training-pipeline">
+                        <h3>Pipeline de Treinamento</h3>
+                        
+                        <div class="pipeline-stages">
+                            <div class="stage">
+                                <h4>Estágio 1: Coleta de Dados</h4>
+                                <div class="stage-details">
+                                    <h5>Extração de Website</h5>
+                                    <pre><code>// Serviço de extração de website
+class WebsiteExtractionService {
+  async extractWebsite(url: string, companyId: number) {
+    const crawler = new WebCrawler({
+      maxPages: 50,
+      respectRobotsTxt: true,
+      delay: 1000
+    });
+    
+    const pages = await crawler.crawl(url);
+    
+    for (const page of pages) {
+      const chunks = this.chunkText(page.content, 500);
+      await this.processChunks(chunks, companyId, 'website');
+    }
+  }
+}</code></pre>
+                                    
+                                    <h5>Análise de Conversas</h5>
+                                    <pre><code>// Extração de padrões de conversas
+class ConversationAnalysisService {
+  async analyzeConversations(companyId: number) {
+    const resolvedTickets = await Ticket.findAll({
+      where: { companyId, status: 'closed' },
+      include: [{ model: Message }]
+    });
+    
+    for (const ticket of resolvedTickets) {
+      const conversation = this.extractQAPairs(ticket.messages);
+      await this.createEmbeddings(conversation, companyId);
+    }
+  }
+}</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="stage">
+                                <h4>Estágio 2: Processamento de Texto</h4>
+                                <div class="stage-details">
+                                    <h5>Chunking Inteligente</h5>
+                                    <pre><code>class TextChunker {
+  chunkText(text: string, maxTokens: number = 500): string[] {
+    // Divisão por parágrafos primeiro
+    const paragraphs = text.split('\n\n');
+    const chunks: string[] = [];
+    let currentChunk = '';
+    
+    for (const paragraph of paragraphs) {
+      const tokens = this.countTokens(currentChunk + paragraph);
+      
+      if (tokens > maxTokens && currentChunk) {
+        chunks.push(currentChunk.trim());
+        currentChunk = paragraph;
+      } else {
+        currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
+      }
+    }
+    
+    if (currentChunk) chunks.push(currentChunk.trim());
+    return chunks;
+  }
+}</code></pre>
+                                    
+                                    <h5>Limpeza e Normalização</h5>
+                                    <pre><code>class TextCleaner {
+  cleanText(text: string): string {
+    return text
+      .replace(/\s+/g, ' ') // Múltiplos espaços
+      .replace(/[^\w\s\.\,\!\?\-]/g, '') // Caracteres especiais
+      .trim()
+      .toLowerCase();
+  }
+  
+  extractKeywords(text: string): string[] {
+    // Extração de palavras-chave relevantes
+    const stopWords = ['o', 'a', 'de', 'para', 'com', 'em'];
+    return text.split(' ')
+      .filter(word => !stopWords.includes(word))
+      .filter(word => word.length > 3);
+  }
+}</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="stage">
+                                <h4>Estágio 3: Geração de Embeddings</h4>
+                                <div class="stage-details">
+                                    <h5>Serviço de Embedding</h5>
+                                    <pre><code>class EmbeddingService {
+  async generateEmbedding(text: string): Promise<number[]> {
+    const response = await openRouterClient.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: text
+    });
+    
+    return response.data[0].embedding;
+  }
+  
+  async batchEmbeddings(texts: string[]): Promise<number[][]> {
+    // Processamento em lotes para eficiência
+    const batches = this.chunkArray(texts, 100);
+    const allEmbeddings: number[][] = [];
+    
+    for (const batch of batches) {
+      const embeddings = await this.generateEmbedding(batch.join(' '));
+      allEmbeddings.push(...embeddings);
+    }
+    
+    return allEmbeddings;
+  }
+}</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="stage">
+                                <h4>Estágio 4: Indexação e Armazenamento</h4>
+                                <div class="stage-details">
+                                    <h5>Armazenamento no Banco Vetorial</h5>
+                                    <pre><code>class VectorStorageService {
+  async storeEmbedding(data: {
+    companyId: number;
+    contentType: string;
+    text: string;
+    embedding: number[];
+    metadata: any;
+  }) {
+    await AIEmbedding.create({
+      company_id: data.companyId,
+      content_type: data.contentType,
+      content_text: data.text,
+      content_summary: this.generateSummary(data.text),
+      embedding: data.embedding,
+      metadata: data.metadata
+    });
+  }
+  
+  async searchSimilar(
+    queryEmbedding: number[], 
+    companyId: number, 
+    limit: number = 5
+  ) {
+    return await AIEmbedding.findAll({
+      where: { company_id: companyId },
+      order: [
+        [sequelize.fn('cosine_distance', 
+          sequelize.col('embedding'), 
+          queryEmbedding
+        ), 'ASC']
+      ],
+      limit
+    });
+  }
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="training-interface">
+                        <h3>Interface de Treinamento</h3>
+                        
+                        <div class="interface-mockup">
+                            <h4>Painel de Treinamento do PEPE</h4>
+                            <div class="training-sections">
+                                <div class="training-section">
+                                    <h5>📊 Status do Treinamento</h5>
+                                    <ul>
+                                        <li>Total de chunks processados: 1,247</li>
+                                        <li>Última atualização: 2 horas atrás</li>
+                                        <li>Qualidade do embedding: 94%</li>
+                                        <li>Cobertura de tópicos: 87%</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="training-section">
+                                    <h5>🌐 Fontes de Dados</h5>
+                                    <ul>
+                                        <li>Website: ✅ 45 páginas processadas</li>
+                                        <li>Conversas: ✅ 892 tickets analisados</li>
+                                        <li>Documentos: ⏳ 3 arquivos pendentes</li>
+                                        <li>FAQ Manual: ✅ 67 pares Q&A</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="training-section">
+                                    <h5>🎯 Teste de Qualidade</h5>
+                                    <div class="quality-test">
+                                        <input type="text" placeholder="Digite uma pergunta para testar..." />
+                                        <button>Testar Similaridade</button>
+                                        <div class="test-results">
+                                            <p><strong>Chunks encontrados:</strong> 3</p>
+                                            <p><strong>Melhor score:</strong> 0.89</p>
+                                            <p><strong>Contexto relevante:</strong> Sim</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="training-section">
+                                    <h5>⚙️ Configurações Avançadas</h5>
+                                    <ul>
+                                        <li>Threshold de similaridade: 0.7</li>
+                                        <li>Tamanho do chunk: 500 tokens</li>
+                                        <li>Overlap entre chunks: 50 tokens</li>
+                                        <li>Modelo de embedding: text-embedding-3-small</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="training-costs">
+                        <h3>Custos de Treinamento</h3>
+                        
+                        <div class="cost-breakdown">
+                            <div class="cost-item">
+                                <h4>💰 Embedding Generation</h4>
+                                <p><strong>Modelo:</strong> text-embedding-3-small</p>
+                                <p><strong>Custo:</strong> $0.00002 por 1K tokens</p>
+                                <p><strong>Estimativa:</strong> ~$2-5 por empresa (setup inicial)</p>
+                            </div>
+                            
+                            <div class="cost-item">
+                                <h4>🗄️ Vector Storage</h4>
+                                <p><strong>Pinecone:</strong> $70/mês para 100K vetores</p>
+                                <p><strong>PostgreSQL:</strong> Incluído no servidor</p>
+                                <p><strong>Estimativa:</strong> $0.70 por empresa/mês (Pinecone)</p>
+                            </div>
+                            
+                            <div class="cost-item">
+                                <h4>🔄 Atualizações</h4>
+                                <p><strong>Website crawling:</strong> Semanal</p>
+                                <p><strong>Conversation analysis:</strong> Diário</p>
+                                <p><strong>Estimativa:</strong> $1-3 por empresa/mês</p>
+                            </div>
+                            
+                            <div class="cost-total">
+                                <h4>📊 Total Estimado</h4>
+                                <p><strong>Setup inicial:</strong> $2-5 por empresa</p>
+                                <p><strong>Custo mensal:</strong> $2-6 por empresa</p>
+                                <p><strong>ROI esperado:</strong> 300-500% (redução de atendimento manual)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="training-types">
+                        <h3>Tipos de Treinamento por Plano</h3>
+                        
+                        <div class="training-plans">
+                            <div class="plan-item">
+                                <h4>Treinamento Básico (Todos os Planos com IA)</h4>
+                                <ul>
+                                    <li>Informações básicas da empresa</li>
+                                    <li>10 perguntas e respostas personalizadas</li>
+                                    <li>Configurações simples de transferência</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="plan-item">
+                                <h4>Treinamento Avançado (Planos Premium)</h4>
+                                <ul>
+                                    <li>Até 50 perguntas e respostas personalizadas</li>
+                                    <li>Upload de documentos (catálogos, manuais)</li>
+                                    <li>Integração com sistemas externos (estoque, preços)</li>
+                                    <li>Analytics de performance da IA</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="plan-item">
+                                <h4>Treinamento Enterprise</h4>
+                                <ul>
+                                    <li>Treinamento ilimitado</li>
+                                    <li>IA dedicada por empresa</li>
+                                    <li>Suporte técnico especializado</li>
+                                    <li>Customizações específicas</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="config" class="section">
+                <h2>Configuração</h2>
+                <div class="content">
+                    <h3>Variáveis de Ambiente</h3>
+                    <p><strong>Arquivo:</strong> <code>.env</code></p>
+                    <pre><code># Database
+DB_DIALECT=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=smartatendimento
+DB_USER=root
+DB_PASS=
+
+# Redis
+IO_REDIS_SERVER=localhost
+IO_REDIS_PORT=6379
+
+# JWT
+JWT_SECRET=your-secret-key
+JWT_REFRESH_SECRET=your-refresh-secret
+
+# WhatsApp
+CHROME_ARGS=--no-sandbox</code></pre>
+
+                    <h3>Scripts Principais</h3>
+                    <ul>
+                        <li><code>npm run dev</code> - Desenvolvimento</li>
+                        <li><code>npm run build</code> - Build para produção</li>
+                        <li><code>npm start</code> - Iniciar produção</li>
+                        <li><code>npm run db:migrate</code> - Executar migrations</li>
+                        <li><code>npm run db:seed</code> - Executar seeders</li>
+                    </ul>
+
+                    <h3>Configuração de Banco de Dados</h3>
+                    <p><strong>Banco de dados:</strong> PostgreSQL</p>
+                    <pre><code>DB_DIALECT=postgres
+DB_HOST=localhost
+DB_USER=postgres
+DB_NAME=smart_atendimento_db
+DB_PORT=5432</code></pre>
+
+                    <h3>Configurações Importantes</h3>
+                    <ul>
+                        <li><strong>Database:</strong> <code>src/database/index.ts</code></li>
+                        <li><strong>Server:</strong> <code>src/server.ts</code></li>
+                        <li><strong>App:</strong> <code>src/app.ts</code></li>
+                        <li><strong>Socket:</strong> <code>src/libs/socket.ts</code></li>
+                    </ul>
+                </div>
+            </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="documentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Documento</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <p>Carregando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="backend-script.js"></script>
+</body>
+</html>

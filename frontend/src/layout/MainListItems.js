@@ -319,7 +319,6 @@ const MainListItems = (props) => {
               icon={<SettingsOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
             />
-{}
           </>
         )}
       />

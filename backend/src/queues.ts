@@ -33,7 +33,7 @@ export const startQueueProcess = async () => {
     logger.info("Starting background job processors...");
     
     if (!scheduleQueue || !campaignQueue) {
-      logger.warn("Queues not initialized - Redis may not be available");
+      logger.warn("Some queues not initialized - Redis may not be available");
       return;
     }
 
@@ -66,6 +66,7 @@ export const startQueueProcess = async () => {
       Sentry.captureException(err);
     });
 
+    
     // Limpar jobs antigos
     try {
       await scheduleQueue.clean(24 * 60 * 60 * 1000, "completed");

@@ -16,6 +16,7 @@ const useStyles = makeStyles(theme => ({
 		padding: "5px",
 		height: `calc(100% - 48px)`,
 		overflowY: "hidden",
+		marginTop: "25px",
 	},
 
 	chatPapper: {

@@ -48,6 +48,9 @@ class Company extends Model<Company> {
   @Column
   recurrence: string;
 
+  @Column
+  trialExpiration: Date;
+
   @Column({
     type: DataType.JSONB
   })

@@ -145,8 +145,7 @@ const Login = () => {
 				</form>
 			</div>
 			<br/>
-			<a target="_blank" rel="noopener noreferrer" href="https://wa.me/5519971395449?text=Informa%C3%A7%C3%B5es+sobre+o+sistema+Central+de+Atendimento" className={classes.powered}>Maiores Informações</a>
-			<Box mt={8}>{/* <Copyright /> */}</Box>
+			<Box mt={8}>{'©2025 PepeAi - Todos os direitos reservados'}</Box>
 		</Container>
 		</div>
 	);

@@ -14,6 +14,7 @@ interface CompanyData {
   campaignsEnabled?: boolean;
   dueDate?: string;
   recurrence?: string;
+  trialExpiration?: string;
 }
 
 const CreateCompanyService = async (
@@ -28,7 +29,8 @@ const CreateCompanyService = async (
     password,
     campaignsEnabled,
     dueDate,
-    recurrence
+    recurrence,
+    trialExpiration
   } = companyData;
 
   const companySchema = Yup.object().shape({
@@ -64,7 +66,8 @@ const CreateCompanyService = async (
     status,
     planId,
     dueDate,
-    recurrence
+    recurrence,
+    trialExpiration: trialExpiration ? new Date(trialExpiration) : undefined
   });
   const [user, created] = await User.findOrCreate({
     where: { name, email },

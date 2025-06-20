@@ -166,12 +166,13 @@ export const webhook = async (
         const company = await Company.findByPk(companyId);
     
         const expiresAt = new Date(company.dueDate);
-        expiresAt.setDate(expiresAt.getDate() + 30);
+        expiresAt.setDate(expiresAt.getDate() + 7);
         const date = expiresAt.toISOString().split("T")[0];
 
         if (company) {
           await company.update({
-            dueDate: date
+            dueDate: date,
+            trialExpiration: null // Remove período de teste após pagamento
           });
          const invoi = await invoices.update({
             id: invoiceID,

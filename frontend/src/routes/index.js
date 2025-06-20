@@ -69,7 +69,8 @@ const Routes = () => {
                   isPrivate
                 />
                 <Route exact path="/tags" component={Tags} isPrivate />
-                <Route exact path="/contacts" component={Contacts} isPrivate />                <Route exact path="/users" component={Users} isPrivate />
+                <Route exact path="/contacts" component={Contacts} isPrivate />
+                <Route exact path="/users" component={Users} isPrivate />
                 <Route
                   exact
                   path="/integrations"
@@ -95,7 +96,7 @@ const Routes = () => {
                   component={Subscription}
                   isPrivate
                 />
-                                {showCampaigns && (
+                {showCampaigns && (
                   <>
                     <Route
                       exact

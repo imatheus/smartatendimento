@@ -80,10 +80,12 @@ const SignUp = () => {
 	const initialState = { name: "", email: "", password: "", planId: "", };
 
 	const [user] = useState(initialState);
-	const dueDate = moment().add(3, "day").format();
+	const dueDate = moment().add(7, "day").format();
+	const trialExpiration = moment().add(7, "day").format(); // Período de teste de 7 dias
 	const handleSignUp = async values => {
 		Object.assign(values, { recurrence: "MENSAL" });
 		Object.assign(values, { dueDate: dueDate });
+		Object.assign(values, { trialExpiration: trialExpiration });
 		Object.assign(values, { status: "t" });
 		Object.assign(values, { campaignsEnabled: true });
 		try {

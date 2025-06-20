@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useReducer, useContext } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
@@ -7,12 +7,17 @@ import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
+import Card from "@material-ui/core/Card";
+import CardContent from "@material-ui/core/CardContent";
+import Typography from "@material-ui/core/Typography";
+import Grid from "@material-ui/core/Grid";
 import MainContainer from "../../components/MainContainer";
 import MainHeader from "../../components/MainHeader";
 import Title from "../../components/Title";
 import SubscriptionModal from "../../components/SubscriptionModal";
 import api from "../../services/api";
 import TableRowSkeleton from "../../components/TableRowSkeleton";
+import { AuthContext } from "../../context/Auth/AuthContext";
 
 import toastError from "../../errors/toastError";
 
@@ -69,10 +74,30 @@ const useStyles = makeStyles((theme) => ({
     overflowY: "scroll",
     ...theme.scrollbarStyles,
   },
+  planCard: {
+    marginBottom: theme.spacing(2),
+    backgroundColor: theme.palette.background.paper,
+  },
+  planTitle: {
+    fontWeight: "bold",
+    color: theme.palette.primary.main,
+  },
+  planDetails: {
+    marginTop: theme.spacing(1),
+  },
+  cancelNotice: {
+    marginTop: theme.spacing(2),
+    padding: theme.spacing(1),
+    backgroundColor: theme.palette.grey[100],
+    borderRadius: theme.shape.borderRadius,
+    fontStyle: "italic",
+    color: theme.palette.text.secondary,
+  },
 }));
 
 const Invoices = () => {
   const classes = useStyles();
+  const { user } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
@@ -170,13 +195,65 @@ const Invoices = () => {
 
       ></SubscriptionModal>
       <MainHeader>
-        <Title>Faturas</Title>
+        <Title>Financeiro</Title>
       </MainHeader>
+      
+      {/* Plan Information Card */}
+      <Card className={classes.planCard}>
+        <CardContent>
+          <Typography variant="h6" className={classes.planTitle}>
+            Plano Contratado
+          </Typography>
+          <Grid container spacing={2} className={classes.planDetails}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2">
+                <strong>Nome do Plano:</strong> {user?.company?.plan?.name || "N/A"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2">
+                <strong>Valor:</strong> {user?.company?.plan?.value ? 
+                  user.company.plan.value.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }) : "N/A"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2">
+                <strong>Usuários:</strong> {user?.company?.plan?.users || "N/A"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2">
+                <strong>Conexões:</strong> {user?.company?.plan?.connections || "N/A"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2">
+                <strong>Filas:</strong> {user?.company?.plan?.queues || "N/A"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2">
+                <strong>Seu plano vence em:</strong> {user?.company?.dueDate ? 
+                  moment(user.company.dueDate).format("DD/MM/YYYY") : "N/A"}
+              </Typography>
+            </Grid>
+          </Grid>
+          <div className={classes.cancelNotice}>
+            <Typography variant="body2">
+              Para cancelar o plano, envie um e-mail para contato@pepchat.com.br
+            </Typography>
+          </div>
+        </CardContent>
+      </Card>
+
       <Paper
         className={classes.mainPaper}
         variant="outlined"
         onScroll={handleScroll}
       >
+        <Typography variant="h6" style={{ padding: '16px', fontWeight: 'bold' }}>
+          Faturas
+        </Typography>
         <Table size="small">
           <TableHead>
             <TableRow>

@@ -15,6 +15,7 @@ import {
   useTheme,
   useMediaQuery,
   Avatar,
+  Box,
 } from "@material-ui/core";
 
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
@@ -30,6 +31,7 @@ import { i18n } from "../translate/i18n";
 import toastError from "../errors/toastError";
 import logo from "../assets/logo.png"; 
 import { socketConnection } from "../services/socket";
+import moment from "moment";
 
 const drawerWidth = 300;
 const drawerCollapsedWidth = 100;
@@ -323,6 +325,23 @@ const useStyles = makeStyles((theme) => ({
     color: "#fff !important",
     margin: "8px",
   },
+  trialBanner: {
+    backgroundColor: "#ff9800",
+    color: "#fff",
+    padding: "8px 16px",
+    textAlign: "center",
+    fontSize: "14px",
+    fontWeight: 600,
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: theme.zIndex.appBar + 1,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+  },
+  contentWithBanner: {
+    marginTop: "40px", // Altura da tarja
+  },
 }));
 
 const LoggedInLayout = ({ children }) => {
@@ -429,15 +448,44 @@ const LoggedInLayout = ({ children }) => {
       .substring(0, 2);
   };
 
+  // Verificar se está em período de teste
+  const isInTrialPeriod = () => {
+    if (!user?.company?.trialExpiration) return false;
+    
+    // Verificar se o período de teste ainda não expirou
+    const trialExpiration = moment(user.company.trialExpiration);
+    const now = moment();
+    const isTrialActive = now.isBefore(trialExpiration);
+    
+    return isTrialActive;
+  };
+
+  const getDaysRemaining = () => {
+    if (!user?.company?.trialExpiration) return 0;
+    const trialExpiration = moment(user.company.trialExpiration);
+    const now = moment();
+    return Math.ceil(trialExpiration.diff(now, 'days', true));
+  };
+
   if (loading) {
     return <BackdropLoading />;
   }
 
   return (
     <div className={classes.root}>
+      {/* Tarja de Período de Testes */}
+      {isInTrialPeriod() && (
+        <Box className={classes.trialBanner}>
+          🚨 Período de Testes - {getDaysRemaining()} {getDaysRemaining() === 1 ? 'dia restante' : 'dias restantes'}
+        </Box>
+      )}
+      
       <AppBar
         position="fixed"
-        className={classes.appBar}
+        className={clsx(classes.appBar, {
+          [classes.contentWithBanner]: isInTrialPeriod()
+        })}
+        style={{ top: isInTrialPeriod() ? '-5px' : '0' }}
       >
         <Toolbar variant="dense" className={classes.toolbar}>
           <div className={classes.logoContainer}>
@@ -529,6 +577,12 @@ const LoggedInLayout = ({ children }) => {
             [classes.drawerPaperCollapsed]: drawerCollapsed,
           }),
         }}
+        PaperProps={{
+          style: {
+            height: isInTrialPeriod() ? "calc(100vh - 136px)" : "calc(100vh - 96px)",
+            marginTop: isInTrialPeriod() ? "110px" : "70px",
+          }
+        }}
         open={drawerOpen}
         ModalProps={{
           keepMounted: true,
@@ -554,8 +608,9 @@ const LoggedInLayout = ({ children }) => {
         userId={user?.id}
       />
       
-      <main className={classes.content}>
-        <div className={classes.appBarSpacer} />
+      <main className={classes.content} style={{ 
+        paddingTop: isInTrialPeriod() ? '88px' : '48px' 
+      }}>
         {children ? children : null}
       </main>
     </div>
