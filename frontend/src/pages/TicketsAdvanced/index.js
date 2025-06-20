@@ -9,6 +9,13 @@ const useStyles = makeStyles(theme => ({
 	grid: {
 		width: "100%",
 		height: "100%",
+		marginTop: "25px",
+		[theme.breakpoints.between("sm", "md")]: {
+			marginTop: "15px",
+		},
+		[theme.breakpoints.down("sm")]: {
+			marginTop: "10px",
+		},
 	},
 	paper: {
 		padding: theme.spacing(2),
@@ -16,6 +23,12 @@ const useStyles = makeStyles(theme => ({
 		overflow: "auto",
 		flexDirection: "column",
 		height: "100%",
+		[theme.breakpoints.between("sm", "md")]: {
+			padding: theme.spacing(1.5),
+		},
+		[theme.breakpoints.down("sm")]: {
+			padding: theme.spacing(1),
+		},
 	},
 }));
 

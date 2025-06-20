@@ -5,7 +5,9 @@ import Tickets from "../TicketsCustom"
 import TicketAdvanced from "../TicketsAdvanced";
 
 function TicketResponsiveContainer (props) {
-    if (isWidthUp('md', props.width)) {
+    // Para desktop (lg e acima) usar layout completo
+    // Para tablet e mobile usar layout simplificado
+    if (isWidthUp('lg', props.width)) {
         return <Tickets />;    
     }
     return <TicketAdvanced />

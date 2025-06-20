@@ -16,12 +16,23 @@ const useStyles = makeStyles(theme => ({
 		padding: "10px",
 		overflowY: "hidden",
 		marginTop: "25px",
+		[theme.breakpoints.between("sm", "md")]: {
+			padding: "6px",
+			marginTop: "15px",
+		},
+		[theme.breakpoints.down("sm")]: {
+			padding: "4px",
+			marginTop: "10px",
+		},
 	},
 
 	chatPapper: {
 		// backgroundColor: "red",
 		display: "flex",
 		height: "100%",
+		[theme.breakpoints.down("md")]: {
+			flexDirection: "column",
+		},
 	},
 
 	contactsWrapper: {
@@ -29,11 +40,18 @@ const useStyles = makeStyles(theme => ({
 		height: "100%",
 		flexDirection: "column",
 		overflowY: "hidden",
+		[theme.breakpoints.down("md")]: {
+			height: "40%",
+			minHeight: "300px",
+		},
 	},
 	messagessWrapper: {
 		display: "flex",
 		height: "100%",
 		flexDirection: "column",
+		[theme.breakpoints.down("md")]: {
+			height: "60%",
+		},
 	},
 	welcomeMsg: {
 		backgroundColor: "#eee",
@@ -53,10 +71,10 @@ const Chat = () => {
 		<div className={classes.chatContainer}>
 			<div className={classes.chatPapper}>
 				<Grid container spacing={0}>
-					<Grid item xs={4} className={classes.contactsWrapper}>
+					<Grid item xs={12} md={4} className={classes.contactsWrapper}>
 						<TicketsManager />
 					</Grid>
-					<Grid item xs={8} className={classes.messagessWrapper}>
+					<Grid item xs={12} md={8} className={classes.messagessWrapper}>
 						{ticketId ? (
 							<>
 								<Ticket />

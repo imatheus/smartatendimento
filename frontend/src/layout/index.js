@@ -20,6 +20,7 @@ import {
 
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import MenuIcon from "@material-ui/icons/Menu";
 
 import MainListItems from "./MainListItems";
 import NotificationsPopOver from "../components/NotificationsPopOver";
@@ -43,6 +44,9 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.down("sm")]: {
       height: "calc(100vh - 56px)",
     },
+    [theme.breakpoints.between("sm", "md")]: {
+      height: "100vh",
+    },
   },
 
   toolbar: {
@@ -51,6 +55,14 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    [theme.breakpoints.between("sm", "md")]: {
+      paddingRight: 16,
+      paddingLeft: 12,
+    },
+    [theme.breakpoints.down("sm")]: {
+      paddingRight: 8,
+      paddingLeft: 8,
+    },
   },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
@@ -67,7 +79,12 @@ const useStyles = makeStyles((theme) => ({
   },
   menuButton: {
     marginRight: 16,
-    display: "none", // Esconder o botão do header
+    [theme.breakpoints.up("md")]: {
+      display: "none",
+    },
+    [theme.breakpoints.down("md")]: {
+      display: "block",
+    },
   },
   title: {
     flexGrow: 1,
@@ -282,6 +299,12 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.text.primary,
     transition: 'background-color 0.3s ease, color 0.3s ease',
     ...theme.scrollbarStyles,
+    [theme.breakpoints.between("sm", "md")]: {
+      padding: theme.spacing(2),
+    },
+    [theme.breakpoints.down("sm")]: {
+      padding: theme.spacing(1),
+    },
   },
   container: {
     paddingTop: theme.spacing(4),
@@ -357,20 +380,45 @@ const LoggedInLayout = ({ children }) => {
 
   const theme = useTheme();
   const greaterThenSm = useMediaQuery(theme.breakpoints.up("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
-    if (document.body.offsetWidth > 600) {
-      setDrawerOpen(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (document.body.offsetWidth < 600) {
+    if (isMobile) {
+      setDrawerOpen(false);
+      setDrawerVariant("temporary");
+    } else if (isTablet) {
+      setDrawerOpen(false);
       setDrawerVariant("temporary");
     } else {
+      setDrawerOpen(true);
       setDrawerVariant("permanent");
     }
-  }, [drawerOpen]);
+  }, [isMobile, isTablet]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 600) {
+        // Mobile
+        setDrawerOpen(false);
+        setDrawerVariant("temporary");
+      } else if (width >= 600 && width < 960) {
+        // Tablet
+        setDrawerOpen(false);
+        setDrawerVariant("temporary");
+      } else {
+        // Desktop
+        setDrawerOpen(true);
+        setDrawerVariant("permanent");
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Executar na inicialização
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const companyId = localStorage.getItem("companyId");
@@ -421,9 +469,13 @@ const LoggedInLayout = ({ children }) => {
   };
 
   const drawerClose = () => {
-    if (document.body.offsetWidth < 600) {
+    if (window.innerWidth < 960) {
       setDrawerOpen(false);
     }
+  };
+
+  const handleDrawerToggle = () => {
+    setDrawerOpen(!drawerOpen);
   };
 
   const getGreeting = () => {
@@ -488,6 +540,15 @@ const LoggedInLayout = ({ children }) => {
         style={{ top: isInTrialPeriod() ? '-5px' : '0' }}
       >
         <Toolbar variant="dense" className={classes.toolbar}>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={handleDrawerToggle}
+            className={classes.menuButton}
+          >
+            <MenuIcon />
+          </IconButton>
+          
           <div className={classes.logoContainer}>
             <img 
               src={logo} 
@@ -584,6 +645,7 @@ const LoggedInLayout = ({ children }) => {
           }
         }}
         open={drawerOpen}
+        onClose={handleDrawerToggle}
         ModalProps={{
           keepMounted: true,
         }}
