@@ -24,6 +24,8 @@ type CompanyData = {
   id?: number;
   phone?: string;
   email?: string; 
+  fullName?: string;
+  document?: string;
   status?: boolean;
   planId?: number;
   campaignsEnabled?: boolean;

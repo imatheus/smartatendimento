@@ -93,6 +93,59 @@ const useStyles = makeStyles((theme) => ({
     overflowY: "scroll",
     ...theme.scrollbarStyles,
   },
+  statusBadge: {
+    padding: "4px 12px",
+    borderRadius: "12px",
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    textAlign: "center",
+    minWidth: "80px",
+    display: "inline-block",
+  },
+  statusInativa: {
+    backgroundColor: "#f8d7da",
+    color: "#721c24",
+    border: "1px solid #f5c6cb",
+  },
+  statusProgramada: {
+    backgroundColor: "#d1ecf1",
+    color: "#0c5460",
+    border: "1px solid #bee5eb",
+  },
+  statusEmAndamento: {
+    backgroundColor: "#fff3cd",
+    color: "#856404",
+    border: "1px solid #ffeaa7",
+  },
+  statusCancelada: {
+    backgroundColor: "#f8d7da",
+    color: "#721c24",
+    border: "1px solid #f5c6cb",
+  },
+  statusFinalizada: {
+    backgroundColor: "#d4edda",
+    color: "#155724",
+    border: "1px solid #c3e6cb",
+  },
+  completedBadge: {
+    padding: "4px 12px",
+    borderRadius: "12px",
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    textAlign: "center",
+    minWidth: "80px",
+    display: "inline-block",
+  },
+  completed: {
+    backgroundColor: "#d4edda",
+    color: "#155724",
+    border: "1px solid #c3e6cb",
+  },
+  notCompleted: {
+    backgroundColor: "#fff3cd",
+    color: "#856404",
+    border: "1px solid #ffeaa7",
+  },
 }));
 
 const Campaigns = () => {
@@ -214,6 +267,36 @@ const Campaigns = () => {
       default:
         return val;
     }
+  };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "INATIVA":
+        return `${classes.statusBadge} ${classes.statusInativa}`;
+      case "PROGRAMADA":
+        return `${classes.statusBadge} ${classes.statusProgramada}`;
+      case "EM_ANDAMENTO":
+        return `${classes.statusBadge} ${classes.statusEmAndamento}`;
+      case "CANCELADA":
+        return `${classes.statusBadge} ${classes.statusCancelada}`;
+      case "FINALIZADA":
+        return `${classes.statusBadge} ${classes.statusFinalizada}`;
+      default:
+        return `${classes.statusBadge} ${classes.statusInativa}`;
+    }
+  };
+
+  const renderCompletedStatus = (completedAt) => {
+    const isCompleted = !!completedAt;
+    const statusClass = isCompleted 
+      ? `${classes.completedBadge} ${classes.completed}`
+      : `${classes.completedBadge} ${classes.notCompleted}`;
+    
+    return (
+      <span className={statusClass}>
+        {isCompleted ? "Concluída" : "Não concluída"}
+      </span>
+    );
   };
 
   const cancelCampaign = async (campaign) => {
@@ -340,7 +423,9 @@ const Campaigns = () => {
                 <TableRow key={campaign.id}>
                   <TableCell align="center">{campaign.name}</TableCell>
                   <TableCell align="center">
-                    {formatStatus(campaign.status)}
+                    <span className={getStatusClass(campaign.status)}>
+                      {formatStatus(campaign.status)}
+                    </span>
                   </TableCell>
                   <TableCell align="center">
                     {campaign.contactListId
@@ -358,9 +443,7 @@ const Campaigns = () => {
                       : "Sem agendamento"}
                   </TableCell>
                   <TableCell align="center">
-                    {campaign.completedAt
-                      ? datetimeToClient(campaign.completedAt)
-                      : "Não concluída"}
+                    {renderCompletedStatus(campaign.completedAt)}
                   </TableCell>
                   <TableCell align="center">
                     {campaign.confirmation ? "Habilitada" : "Desabilitada"}

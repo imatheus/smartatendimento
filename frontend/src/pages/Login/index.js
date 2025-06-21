@@ -49,7 +49,9 @@ const useStyles = makeStyles(theme => ({
 		flexDirection: "column",
 		alignItems: "center",
 		padding: "55px 30px",
-		borderRadius: "12.5px",
+		borderRadius: "16px",
+		boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
+		border: "1px solid #e9ecef",
 	},
 	avatar: {
 		margin: theme.spacing(1),  
@@ -58,9 +60,25 @@ const useStyles = makeStyles(theme => ({
 	form: {
 		width: "100%", // Fix IE 11 issue.
 		marginTop: theme.spacing(1),
+		"& .MuiTextField-root": {
+			"& .MuiOutlinedInput-root": {
+				borderRadius: "12px",
+				backgroundColor: "#f8f9fa",
+				"&:hover": {
+					backgroundColor: "#f8f9fa",
+				},
+				"&.Mui-focused": {
+					backgroundColor: "#ffffff",
+				},
+			},
+		},
 	},
 	submit: {
 		margin: theme.spacing(3, 0, 2),
+		borderRadius: "12px",
+		padding: theme.spacing(1.5),
+		fontSize: "1rem",
+		fontWeight: 600,
 	},
 	powered: {
 		color: "white"
@@ -96,7 +114,7 @@ const Login = () => {
 				</Typography>
 				<form className={classes.form} noValidate onSubmit={handlSubmit}>
 					<TextField
-						variant="standard"
+						variant="outlined"
 						margin="normal"
 						required
 						fullWidth
@@ -109,7 +127,7 @@ const Login = () => {
 						autoFocus
 					/>
 					<TextField
-						variant="standard"
+						variant="outlined"
 						margin="normal"
 						required
 						fullWidth

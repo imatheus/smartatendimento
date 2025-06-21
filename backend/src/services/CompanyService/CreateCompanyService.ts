@@ -9,6 +9,8 @@ interface CompanyData {
   phone?: string;
   email?: string;
   password?: string;
+  fullName?: string;
+  document?: string;
   status?: boolean;
   planId?: number;
   campaignsEnabled?: boolean;
@@ -27,6 +29,8 @@ const CreateCompanyService = async (
     status,
     planId,
     password,
+    fullName,
+    document,
     campaignsEnabled,
     dueDate,
     recurrence,
@@ -36,17 +40,36 @@ const CreateCompanyService = async (
   const companySchema = Yup.object().shape({
     name: Yup.string()
       .min(2, "ERR_COMPANY_INVALID_NAME")
-      .required("ERR_COMPANY_INVALID_NAME")
+      .required("ERR_COMPANY_INVALID_NAME"),
+    email: Yup.string()
+      .email("ERR_COMPANY_INVALID_EMAIL")
+      .required("ERR_COMPANY_EMAIL_REQUIRED")
       .test(
-        "Check-unique-name",
-        "ERR_COMPANY_NAME_ALREADY_EXISTS",
+        "Check-unique-email",
+        "ERR_COMPANY_EMAIL_ALREADY_EXISTS",
         async value => {
           if (value) {
-            const companyWithSameName = await Company.findOne({
-              where: { name: value }
+            const companyWithSameEmail = await Company.findOne({
+              where: { email: value }
             });
 
-            return !companyWithSameName;
+            return !companyWithSameEmail;
+          }
+          return false;
+        }
+      ),
+    document: Yup.string()
+      .required("ERR_COMPANY_DOCUMENT_REQUIRED")
+      .test(
+        "Check-unique-document",
+        "ERR_COMPANY_DOCUMENT_ALREADY_EXISTS",
+        async value => {
+          if (value) {
+            const companyWithSameDocument = await Company.findOne({
+              where: { document: value }
+            });
+
+            return !companyWithSameDocument;
           }
           return false;
         }
@@ -54,7 +77,7 @@ const CreateCompanyService = async (
   });
 
   try {
-    await companySchema.validate({ name });
+    await companySchema.validate({ name, email, document });
   } catch (err: any) {
     throw new AppError(err.message);
   }
@@ -63,6 +86,8 @@ const CreateCompanyService = async (
     name,
     phone,
     email,
+    fullName,
+    document,
     status,
     planId,
     dueDate,

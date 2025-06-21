@@ -40,6 +40,12 @@ class Company extends Model<Company> {
   email: string;
 
   @Column
+  fullName: string;
+
+  @Column
+  document: string;
+
+  @Column
   status: boolean;
 
   @Column
