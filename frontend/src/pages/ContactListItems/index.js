@@ -26,6 +26,9 @@ import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
 import EditIcon from "@material-ui/icons/Edit";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import BlockIcon from "@material-ui/icons/Block";
+import ContactsIcon from "@material-ui/icons/Contacts";
+import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
+import CloudUploadIcon from "@material-ui/icons/CloudUpload";
 
 import api from "../../services/api";
 import TableRowSkeleton from "../../components/TableRowSkeleton";
@@ -40,7 +43,22 @@ import toastError from "../../errors/toastError";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { Can } from "../../components/Can";
 import useContactLists from "../../hooks/useContactLists";
-import { Grid } from "@material-ui/core";
+import { 
+  Grid, 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Checkbox,
+  CircularProgress,
+  Typography,
+  Menu,
+  MenuItem
+} from "@material-ui/core";
 
 import planilhaExemplo from "../../assets/planilha.xlsx";
 import { socketConnection } from "../../services/socket";
@@ -117,6 +135,11 @@ const ContactListItems = () => {
   const [hasMore, setHasMore] = useState(false);
   const [contactList, setContactList] = useState({});
   const fileUploadRef = useRef(null);
+  const [importContactsModalOpen, setImportContactsModalOpen] = useState(false);
+  const [availableContacts, setAvailableContacts] = useState([]);
+  const [selectedContacts, setSelectedContacts] = useState([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
+  const [importMenuAnchor, setImportMenuAnchor] = useState(null);
 
   const { findById: findContactList } = useContactLists();
 
@@ -229,6 +252,78 @@ const ContactListItems = () => {
     }
   };
 
+  const fetchAvailableContacts = async () => {
+    setLoadingContacts(true);
+    try {
+      const { data } = await api.get("/contacts", {
+        params: { pageNumber: 1, searchParam: "" }
+      });
+      setAvailableContacts(data.contacts || []);
+    } catch (err) {
+      toastError(err);
+    } finally {
+      setLoadingContacts(false);
+    }
+  };
+
+  const handleOpenImportContactsModal = () => {
+    setImportContactsModalOpen(true);
+    setSelectedContacts([]);
+    fetchAvailableContacts();
+  };
+
+  const handleCloseImportContactsModal = () => {
+    setImportContactsModalOpen(false);
+    setAvailableContacts([]);
+    setSelectedContacts([]);
+  };
+
+  const handleSelectContact = (contactId) => {
+    setSelectedContacts(prev => {
+      if (prev.includes(contactId)) {
+        return prev.filter(id => id !== contactId);
+      } else {
+        return [...prev, contactId];
+      }
+    });
+  };
+
+  const handleSelectAllContacts = () => {
+    if (selectedContacts.length === availableContacts.length) {
+      setSelectedContacts([]);
+    } else {
+      setSelectedContacts(availableContacts.map(contact => contact.id));
+    }
+  };
+
+  const handleImportSelectedContacts = async () => {
+    if (selectedContacts.length === 0) {
+      toast.warning("Selecione pelo menos um contato para importar");
+      return;
+    }
+
+    try {
+      const { data } = await api.post(`/contact-list-items/${contactListId}/import-contacts`, {
+        contactIds: selectedContacts
+      });
+      
+      toast.success(`${data.result.imported} contatos importados com sucesso!`);
+      if (data.result.skipped > 0) {
+        toast.info(`${data.result.skipped} contatos já existiam na lista`);
+      }
+      if (data.result.errors > 0) {
+        toast.error(`${data.result.errors} contatos falharam na importação`);
+      }
+      
+      handleCloseImportContactsModal();
+      // Recarregar a lista
+      setPageNumber(1);
+      setSearchParam("");
+    } catch (err) {
+      toastError(err);
+    }
+  };
+
   const loadMore = () => {
     setPageNumber((prevState) => prevState + 1);
   };
@@ -239,6 +334,25 @@ const ContactListItems = () => {
     if (scrollHeight - (scrollTop + 100) < clientHeight) {
       loadMore();
     }
+  };
+
+  const handleImportMenuClick = (event) => {
+    setImportMenuAnchor(event.currentTarget);
+  };
+
+  const handleImportMenuClose = () => {
+    setImportMenuAnchor(null);
+  };
+
+  const handleImportFromSpreadsheet = () => {
+    handleImportMenuClose();
+    fileUploadRef.current.value = null;
+    fileUploadRef.current.click();
+  };
+
+  const handleImportFromContacts = () => {
+    handleImportMenuClose();
+    handleOpenImportContactsModal();
   };
 
   const goToContactLists = () => {
@@ -253,6 +367,82 @@ const ContactListItems = () => {
         aria-labelledby="form-dialog-title"
         contactId={selectedContactId}
       ></ContactListItemModal>
+      
+      <Dialog 
+        open={importContactsModalOpen} 
+        onClose={handleCloseImportContactsModal}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Importar Contatos do Sistema
+          <Typography variant="body2" color="textSecondary">
+            Selecione os contatos que deseja importar para esta lista
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          {loadingContacts ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+              <CircularProgress />
+            </div>
+          ) : (
+            <>
+              <div style={{ marginBottom: '10px' }}>
+                <Button
+                  onClick={handleSelectAllContacts}
+                  color="primary"
+                  variant="outlined"
+                  size="small"
+                >
+                  {selectedContacts.length === availableContacts.length ? 
+                    'Desmarcar Todos' : 'Selecionar Todos'
+                  }
+                </Button>
+                <Typography variant="body2" style={{ marginTop: '5px' }}>
+                  {selectedContacts.length} de {availableContacts.length} contatos selecionados
+                </Typography>
+              </div>
+              
+              <List style={{ maxHeight: '400px', overflow: 'auto' }}>
+                {availableContacts.map((contact) => (
+                  <ListItem 
+                    key={contact.id} 
+                    button 
+                    onClick={() => handleSelectContact(contact.id)}
+                  >
+                    <Checkbox
+                      checked={selectedContacts.includes(contact.id)}
+                      onChange={() => handleSelectContact(contact.id)}
+                    />
+                    <ListItemText
+                      primary={contact.name}
+                      secondary={`${contact.number} - ${contact.email || 'Sem email'}`}
+                    />
+                  </ListItem>
+                ))}
+                {availableContacts.length === 0 && !loadingContacts && (
+                  <Typography variant="body2" color="textSecondary" style={{ padding: '20px', textAlign: 'center' }}>
+                    Nenhum contato encontrado no sistema
+                  </Typography>
+                )}
+              </List>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseImportContactsModal} color="secondary">
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleImportSelectedContacts} 
+            color="primary" 
+            variant="contained"
+            disabled={selectedContacts.length === 0 || loadingContacts}
+          >
+            Importar {selectedContacts.length} Contatos
+          </Button>
+        </DialogActions>
+      </Dialog>
       <ConfirmationModal
         title={
           deletingContact
@@ -318,13 +508,25 @@ const ContactListItems = () => {
                   fullWidth
                   variant="contained"
                   color="primary"
-                  onClick={() => {
-                    fileUploadRef.current.value = null;
-                    fileUploadRef.current.click();
-                  }}
+                  onClick={handleImportMenuClick}
+                  endIcon={<ArrowDropDownIcon />}
                 >
                   {i18n.t("contactListItems.buttons.import")}
                 </Button>
+                <Menu
+                  anchorEl={importMenuAnchor}
+                  open={Boolean(importMenuAnchor)}
+                  onClose={handleImportMenuClose}
+                >
+                  <MenuItem onClick={handleImportFromContacts}>
+                    <ContactsIcon style={{ marginRight: 8, color: '#4caf50' }} />
+                    Meus contatos
+                  </MenuItem>
+                  <MenuItem onClick={handleImportFromSpreadsheet}>
+                    <CloudUploadIcon style={{ marginRight: 8, color: '#2e7d32' }} />
+                    Planilha
+                  </MenuItem>
+                </Menu>
               </Grid>
               <Grid xs={4} sm={2} item>
                 <Button

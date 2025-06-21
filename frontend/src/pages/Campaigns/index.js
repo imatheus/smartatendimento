@@ -24,6 +24,8 @@ import DescriptionIcon from "@material-ui/icons/Description";
 import TimerOffIcon from "@material-ui/icons/TimerOff";
 import PlayCircleOutlineIcon from "@material-ui/icons/PlayCircleOutline";
 import PauseCircleOutlineIcon from "@material-ui/icons/PauseCircleOutline";
+import SyncIcon from "@material-ui/icons/Sync";
+import RefreshIcon from "@material-ui/icons/Refresh";
 
 import MainContainer from "../../components/MainContainer";
 import MainHeader from "../../components/MainHeader";
@@ -35,7 +37,7 @@ import TableRowSkeleton from "../../components/TableRowSkeleton";
 import CampaignModal from "../../components/CampaignModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import toastError from "../../errors/toastError";
-import { Grid } from "@material-ui/core";
+import { Grid, Fab } from "@material-ui/core";
 import { isArray } from "lodash";
 import { useDate } from "../../hooks/useDate";
 import { socketConnection } from "../../services/socket";
@@ -146,6 +148,53 @@ const useStyles = makeStyles((theme) => ({
     color: "#856404",
     border: "1px solid #ffeaa7",
   },
+  updatingRow: {
+    backgroundColor: "#e3f2fd",
+    transition: "background-color 0.3s ease",
+    "& td": {
+      borderColor: "#2196f3",
+    }
+  },
+  pulseAnimation: {
+    animation: "$pulse 1.5s ease-in-out infinite",
+  },
+  "@keyframes pulse": {
+    "0%": {
+      opacity: 1,
+    },
+    "50%": {
+      opacity: 0.7,
+    },
+    "100%": {
+      opacity: 1,
+    },
+  },
+  spinning: {
+    animation: "$spin 1s linear infinite",
+  },
+  "@keyframes spin": {
+    "0%": {
+      transform: "rotate(0deg)",
+    },
+    "100%": {
+      transform: "rotate(360deg)",
+    },
+  },
+  fab: {
+    position: 'fixed',
+    bottom: theme.spacing(2),
+    right: theme.spacing(2),
+    zIndex: 1000,
+    backgroundColor: '#1976d2',
+    color: 'white',
+    '&:hover': {
+      backgroundColor: '#1565c0',
+    },
+    '&:disabled': {
+      backgroundColor: '#e0e0e0',
+      color: '#9e9e9e',
+    }
+  },
 }));
 
 const Campaigns = () => {
@@ -162,6 +211,8 @@ const Campaigns = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [campaigns, dispatch] = useReducer(reducer, []);
+  const [updatingCampaigns, setUpdatingCampaigns] = useState(new Set());
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { datetimeToClient } = useDate();
 
@@ -185,7 +236,24 @@ const Campaigns = () => {
 
     socket.on(`company-${companyId}-campaign`, (data) => {
       if (data.action === "update" || data.action === "create") {
+        // Marcar campanha como sendo atualizada para mostrar indicador visual
+        setUpdatingCampaigns(prev => new Set([...prev, data.record.id]));
+        
         dispatch({ type: "UPDATE_CAMPAIGNS", payload: data.record });
+        
+        // Remover indicador após 2 segundos
+        setTimeout(() => {
+          setUpdatingCampaigns(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(data.record.id);
+            return newSet;
+          });
+        }, 2000);
+        
+        // Mostrar toast de atualização
+        if (data.action === "update") {
+          toast.info(`Campanha "${data.record.name}" foi atualizada - Status: ${formatStatus(data.record.status)}`);
+        }
       }
       if (data.action === "delete") {
         dispatch({ type: "DELETE_CAMPAIGN", payload: +data.id });
@@ -321,6 +389,20 @@ const Campaigns = () => {
     }
   };
 
+  const processPendingCampaigns = async () => {
+    setIsProcessing(true);
+    try {
+      await api.post("/campaigns/process-pending");
+      toast.success("Campanhas pendentes processadas com sucesso!");
+    } catch (err) {
+      toast.error("Erro ao processar campanhas pendentes: " + err.message);
+    } finally {
+      setTimeout(() => {
+        setIsProcessing(false);
+      }, 1000); // Manter animação por 1 segundo extra para feedback visual
+    }
+  };
+
   return (
     <MainContainer>
       <ConfirmationModal
@@ -419,14 +501,23 @@ const Campaigns = () => {
           </TableHead>
           <TableBody>
             <>
-              {campaigns.map((campaign) => (
-                <TableRow key={campaign.id}>
-                  <TableCell align="center">{campaign.name}</TableCell>
-                  <TableCell align="center">
-                    <span className={getStatusClass(campaign.status)}>
-                      {formatStatus(campaign.status)}
-                    </span>
-                  </TableCell>
+              {campaigns.map((campaign) => {
+                const isUpdating = updatingCampaigns.has(campaign.id);
+                return (
+                  <TableRow 
+                    key={campaign.id}
+                    className={isUpdating ? classes.updatingRow : ""}
+                  >
+                    <TableCell align="center">
+                      <span className={isUpdating ? classes.pulseAnimation : ""}>
+                        {campaign.name}
+                      </span>
+                    </TableCell>
+                    <TableCell align="center">
+                      <span className={`${getStatusClass(campaign.status)} ${isUpdating ? classes.pulseAnimation : ""}`}>
+                        {formatStatus(campaign.status)}
+                      </span>
+                    </TableCell>
                   <TableCell align="center">
                     {campaign.contactListId
                       ? campaign.contactList.name
@@ -493,12 +584,22 @@ const Campaigns = () => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
               {loading && <TableRowSkeleton columns={8} />}
             </>
           </TableBody>
         </Table>
       </Paper>
+      
+      <Fab 
+        className={classes.fab}
+        onClick={processPendingCampaigns}
+        title="Processar Campanhas Pendentes"
+        disabled={isProcessing}
+      >
+        {isProcessing ? <SyncIcon className={classes.spinning} /> : <RefreshIcon />}
+      </Fab>
     </MainContainer>
   );
 };

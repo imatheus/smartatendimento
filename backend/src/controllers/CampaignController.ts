@@ -4,6 +4,7 @@ import { getIO } from "../libs/socket";
 import { head } from "lodash";
 import fs from "fs";
 import path from "path";
+import UploadHelper from "../helpers/UploadHelper";
 
 import ListService from "../services/CampaignService/ListService";
 import CreateService from "../services/CampaignService/CreateService";
@@ -17,6 +18,10 @@ import Campaign from "../models/Campaign";
 import AppError from "../errors/AppError";
 import { CancelService } from "../services/CampaignService/CancelService";
 import { RestartService } from "../services/CampaignService/RestartService";
+import ProcessPendingCampaigns from "../services/CampaignService/ProcessPendingCampaigns";
+import TestMediaSend from "../services/CampaignService/TestMediaSend";
+import ProcessCampaignConfirmation from "../services/CampaignService/ProcessCampaignConfirmation";
+import MessageVariables from "../helpers/MessageVariables";
 
 type IndexQuery = {
   searchParam: string;
@@ -174,15 +179,51 @@ export const mediaUpload = async (
   res: Response
 ): Promise<Response> => {
   const { id } = req.params;
+  const { companyId } = req.user;
   const files = req.files as Express.Multer.File[];
   const file = head(files);
 
   try {
     const campaign = await Campaign.findByPk(id);
-    campaign.mediaPath = file.filename;
+    if (!campaign) {
+      throw new AppError("Campaign not found");
+    }
+
+    // Remover arquivo anterior se existir
+    if (campaign.mediaPath) {
+      UploadHelper.deleteFile(campaign.mediaPath);
+    }
+
+    // Organizar arquivo por empresa e categoria
+    const fileName = UploadHelper.generateFileName(file.originalname);
+    const uploadConfig = {
+      companyId: companyId,
+      category: 'campaigns' as const
+    };
+
+    let mediaPath: string;
+    try {
+      // Salvar arquivo no diretório organizado
+      if (file.buffer) {
+        mediaPath = await UploadHelper.saveBuffer(file.buffer, uploadConfig, fileName);
+      } else {
+        mediaPath = await UploadHelper.moveFile(file.path, uploadConfig, fileName);
+      }
+    } catch (err) {
+      console.log("Error organizing campaign media file:", err);
+      throw new AppError("ERR_SAVING_MEDIA");
+    }
+
+    // Atualizar campanha com novo caminho
+    campaign.mediaPath = mediaPath;
     campaign.mediaName = file.originalname;
     await campaign.save();
-    return res.send({ mensagem: "Mensagem enviada" });
+
+    return res.send({ 
+      mensagem: "Arquivo anexado com sucesso",
+      mediaPath: mediaPath,
+      mediaName: file.originalname
+    });
   } catch (err: any) {
     throw new AppError(err.message);
   }
@@ -196,16 +237,123 @@ export const deleteMedia = async (
 
   try {
     const campaign = await Campaign.findByPk(id);
-    const filePath = path.resolve("public", campaign.mediaPath);
-    const fileExists = fs.existsSync(filePath);
-    if (fileExists) {
-      fs.unlinkSync(filePath);
+    if (!campaign) {
+      throw new AppError("Campaign not found");
+    }
+
+    // Remover arquivo se existir
+    if (campaign.mediaPath) {
+      UploadHelper.deleteFile(campaign.mediaPath);
     }
 
     campaign.mediaPath = null;
     campaign.mediaName = null;
     await campaign.save();
-    return res.send({ mensagem: "Arquivo excluído" });
+    return res.send({ mensagem: "Arquivo excluído com sucesso" });
+  } catch (err: any) {
+    throw new AppError(err.message);
+  }
+};
+
+export const processPending = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    await ProcessPendingCampaigns();
+    return res.status(200).json({ message: "Pending campaigns processed successfully" });
+  } catch (err: any) {
+    throw new AppError(err.message);
+  }
+};
+
+export const testMedia = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { id } = req.params;
+    const { number } = req.body;
+
+    if (!number) {
+      throw new AppError("Number is required");
+    }
+
+    // Buscar campanha
+    const campaign = await Campaign.findByPk(id);
+    if (!campaign) {
+      throw new AppError("Campaign not found");
+    }
+
+    if (!campaign.mediaPath || !campaign.mediaName) {
+      throw new AppError("Campaign has no media attached");
+    }
+
+    // Testar envio
+    const result = await TestMediaSend({
+      whatsappId: campaign.whatsappId || 1, // usar WhatsApp padrão se não definido
+      number: number,
+      mediaPath: campaign.mediaPath,
+      mediaName: campaign.mediaName,
+      message: campaign.message1 || "Teste de mídia"
+    });
+
+    return res.status(200).json(result);
+  } catch (err: any) {
+    throw new AppError(err.message);
+  }
+};
+
+export const processConfirmation = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { campaignId, contactNumber, responseMessage } = req.body;
+    const { companyId } = req.user;
+
+    if (!campaignId || !contactNumber || !responseMessage) {
+      throw new AppError("Campaign ID, contact number and response message are required");
+    }
+
+    const result = await ProcessCampaignConfirmation({
+      campaignId: parseInt(campaignId),
+      contactNumber: contactNumber,
+      responseMessage: responseMessage,
+      companyId: companyId
+    });
+
+    return res.status(200).json({
+      success: result,
+      message: result ? "Confirmation processed successfully" : "Confirmation not processed"
+    });
+  } catch (err: any) {
+    throw new AppError(err.message);
+  }
+};
+
+export const previewMessage = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      throw new AppError("Message is required");
+    }
+
+    const preview = MessageVariables.generatePreview(message);
+    const variables = MessageVariables.extractVariables(message);
+
+    return res.status(200).json({
+      original: message,
+      preview: preview,
+      variables: variables,
+      availableVariables: [
+        'nome', 'numero', 'email'
+      ]
+    });
   } catch (err: any) {
     throw new AppError(err.message);
   }

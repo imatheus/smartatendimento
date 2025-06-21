@@ -19,6 +19,8 @@ routes.post("/contact-list-items", isAuth, ContactListItemController.store);
 
 routes.put("/contact-list-items/:id", isAuth, ContactListItemController.update);
 
+routes.post("/contact-list-items/:contactListId/import-contacts", isAuth, ContactListItemController.importContacts);
+
 routes.delete(
   "/contact-list-items/:id",
   isAuth,

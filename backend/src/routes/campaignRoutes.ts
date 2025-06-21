@@ -25,6 +25,14 @@ routes.post("/campaigns/:id/cancel", isAuth, CampaignController.cancel);
 
 routes.post("/campaigns/:id/restart", isAuth, CampaignController.restart);
 
+routes.post("/campaigns/process-pending", isAuth, CampaignController.processPending);
+
+routes.post("/campaigns/:id/test-media", isAuth, CampaignController.testMedia);
+
+routes.post("/campaigns/process-confirmation", isAuth, CampaignController.processConfirmation);
+
+routes.post("/campaigns/preview-message", isAuth, CampaignController.previewMessage);
+
 routes.post(
   "/campaigns/:id/media-upload",
   isAuth,

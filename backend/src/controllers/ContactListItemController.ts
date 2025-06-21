@@ -8,6 +8,7 @@ import ShowService from "../services/ContactListItemService/ShowService";
 import UpdateService from "../services/ContactListItemService/UpdateService";
 import DeleteService from "../services/ContactListItemService/DeleteService";
 import FindService from "../services/ContactListItemService/FindService";
+import ImportContactsService from "../services/ContactListItemService/ImportContactsService";
 
 import ContactListItem from "../models/ContactListItem";
 
@@ -142,4 +143,33 @@ export const findList = async (
   const records: ContactListItem[] = await FindService(params);
 
   return res.status(200).json(records);
+};
+
+export const importContacts = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { contactListId } = req.params;
+  const { companyId } = req.user;
+  const { contactIds } = req.body; // Array de IDs ou vazio para importar todos
+
+  try {
+    const result = await ImportContactsService({
+      contactListId: parseInt(contactListId),
+      companyId: companyId,
+      contactIds: contactIds
+    });
+
+    const io = getIO();
+    io.emit(`company-${companyId}-ContactListItem-${contactListId}`, {
+      action: "reload"
+    });
+
+    return res.status(200).json({
+      message: "Importação concluída",
+      result: result
+    });
+  } catch (err: any) {
+    throw new AppError(err.message);
+  }
 };
