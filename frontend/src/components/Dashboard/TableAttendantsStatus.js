@@ -8,6 +8,8 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Skeleton from "@material-ui/lab/Skeleton";
+import Avatar from "@material-ui/core/Avatar";
+import Box from "@material-ui/core/Box";
 
 import { makeStyles } from "@material-ui/core/styles";
 import { green, red } from '@material-ui/core/colors';
@@ -30,6 +32,16 @@ const useStyles = makeStyles(theme => ({
 	},
     pointer: {
         cursor: "pointer"
+    },
+    userInfo: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: theme.spacing(1)
+    },
+    avatar: {
+        width: theme.spacing(4),
+        height: theme.spacing(4),
+        fontSize: '0.875rem'
     }
 }));
 
@@ -69,9 +81,31 @@ export default function TableAttendantsStatus(props) {
             // Use real-time status from socket, fallback to initial data
             const isOnline = getUserStatus(a.id) !== undefined ? getUserStatus(a.id) : a.online;
             
+            // Generate initials from name for avatar fallback
+            const getInitials = (name) => {
+                if (!name) return '?';
+                return name
+                    .split(' ')
+                    .map(word => word.charAt(0))
+                    .join('')
+                    .toUpperCase()
+                    .substring(0, 2);
+            };
+            
             return (
                 <TableRow key={k}>
-                    <TableCell>{a.name || 'Nome não disponível'}</TableCell>
+                    <TableCell>
+                        <Box className={classes.userInfo}>
+                            <Avatar 
+                                className={classes.avatar}
+                                src={a.profileImage}
+                                alt={a.name}
+                            >
+                                {getInitials(a.name)}
+                            </Avatar>
+                            {a.name || 'Nome não disponível'}
+                        </Box>
+                    </TableCell>
                     <TableCell align="center" title="1 - Insatisfeito, 2 - Satisfeito, 3 - Muito Satisfeito" className={classes.pointer}>
                         <RatingBox rating={a.rating} />
                     </TableCell>
@@ -92,7 +126,7 @@ export default function TableAttendantsStatus(props) {
 	}
 
     return ( !loading ?
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} style={{ borderRadius: '12px' }}>
             <Table>
                 <TableHead>
                     <TableRow>

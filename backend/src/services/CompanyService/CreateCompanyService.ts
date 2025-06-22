@@ -3,6 +3,7 @@ import AppError from "../../errors/AppError";
 import Company from "../../models/Company";
 import User from "../../models/User";
 import Setting from "../../models/Setting";
+import CreateCompanyPlanService from "../CompanyPlanService/CreateCompanyPlanService";
 
 interface CompanyData {
   name: string;
@@ -13,6 +14,7 @@ interface CompanyData {
   document?: string;
   status?: boolean;
   planId?: number;
+  users?: number; // Número de licenças/usuários
   campaignsEnabled?: boolean;
   dueDate?: string;
   recurrence?: string;
@@ -28,6 +30,7 @@ const CreateCompanyService = async (
     email,
     status,
     planId,
+    users = 1, // Default para 1 usuário
     password,
     fullName,
     document,
@@ -94,6 +97,21 @@ const CreateCompanyService = async (
     recurrence,
     trialExpiration: trialExpiration ? new Date(trialExpiration) : undefined
   });
+
+  // Criar o plano personalizado da empresa
+  if (planId) {
+    try {
+      await CreateCompanyPlanService({
+        companyId: company.id,
+        basePlanId: planId,
+        users
+      });
+    } catch (error) {
+      console.error("Erro ao criar plano da empresa:", error);
+      // Não falha a criação da empresa se houver erro no plano
+    }
+  }
+
   const [user, created] = await User.findOrCreate({
     where: { name, email },
     defaults: {

@@ -13,6 +13,7 @@ import {
 } from "sequelize-typescript";
 import Contact from "./Contact";
 import Message from "./Message";
+import CompanyPlan from "./CompanyPlan";
 
 import Plan from "./Plan";
 import Queue from "./Queue";
@@ -68,6 +69,13 @@ class Company extends Model<Company> {
 
   @BelongsTo(() => Plan)
   plan: Plan;
+
+  @HasMany(() => CompanyPlan, {
+    onUpdate: "CASCADE",
+    onDelete: "CASCADE",
+    hooks: true
+  })
+  companyPlans: CompanyPlan[];
 
   @CreatedAt
   createdAt: Date;

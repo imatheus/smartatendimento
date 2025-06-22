@@ -7,6 +7,9 @@ import { makeStyles } from "@material-ui/core/styles";
 import { grey } from '@material-ui/core/colors';
 
 const useStyles = makeStyles(theme => ({
+	card: {
+		borderRadius: '12px'
+	},
 	cardAvatar: {
 		fontSize: '55px',
 		color: grey[500],
@@ -29,7 +32,7 @@ export default function CardCounter(props) {
 	const classes = useStyles();
     
     return ( !loading ? 
-        <Card>
+        <Card className={classes.card}>
             <CardHeader
                 avatar={
                     <Avatar className={classes.cardAvatar}>

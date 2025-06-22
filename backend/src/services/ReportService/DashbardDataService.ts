@@ -101,6 +101,7 @@ export default async function DashboardDataService(
         u.id,
         u.name,
         u.online,
+        u."profileImage",
         COALESCE(stats.tickets, 0) as tickets,
         COALESCE(stats.rating, 0) as rating,
         COALESCE(stats."avgSupportTime", 0) as "avgSupportTime"
@@ -160,6 +161,7 @@ export default async function DashboardDataService(
           id: attendant.id,
           name: attendant.name || 'Nome não disponível',
           online: Boolean(attendant.online),
+          profileImage: attendant.profileImage || null,
           tickets: Number(attendant.tickets) || 0,
           rating: attendant.rating !== null && attendant.rating !== undefined 
             ? Number(attendant.rating) 

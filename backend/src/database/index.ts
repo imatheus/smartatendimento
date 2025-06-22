@@ -31,6 +31,7 @@ import ChatUser from "../models/ChatUser";
 import ChatMessage from "../models/ChatMessage";
 import Invoices from "../models/Invoices";
 import Subscriptions from "../models/Subscriptions";
+import CompanyPlan from "../models/CompanyPlan";
 
 // eslint-disable-next-line
 const dbConfig = require("../config/database");
@@ -70,7 +71,8 @@ const models = [
   ChatUser,
   ChatMessage,
   Invoices,
-  Subscriptions
+  Subscriptions,
+  CompanyPlan
 ];
 
 sequelize.addModels(models);

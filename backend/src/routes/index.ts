@@ -25,6 +25,7 @@ import campaignSettingRoutes from "./campaignSettingRoutes";
 import chatRoutes from "./chatRoutes";
 import invoiceRoutes from "./invoicesRoutes";
 import subscriptionRoutes from "./subScriptionRoutes";
+import companyPlanRoutes from "./companyPlanRoutes";
 import webHookMetaRoutes from "./WebHookMetaRoutes";
 import webChatRoutes from "./webChatRoutes";
 
@@ -55,6 +56,7 @@ routes.use(campaignRoutes);
 routes.use(campaignSettingRoutes);
 routes.use(chatRoutes);
 routes.use(subscriptionRoutes);
+routes.use(companyPlanRoutes);
 routes.use(invoiceRoutes);
 routes.use("/webhook/meta", webHookMetaRoutes);
 routes.use(webChatRoutes);

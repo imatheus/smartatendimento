@@ -5,6 +5,7 @@ import { SerializeUser } from "../../helpers/SerializeUser";
 import User from "../../models/User";
 import Plan from "../../models/Plan";
 import Company from "../../models/Company";
+import GetCompanyActivePlanService from "../CompanyService/GetCompanyActivePlanService";
 
 interface Request {
   email: string;
@@ -34,25 +35,19 @@ const CreateUserService = async ({
   profileImage
 }: Request): Promise<Response> => {
   if (companyId !== undefined) {
-    const company = await Company.findOne({
+    // Usar o novo serviço para obter os limites do plano ativo
+    const planLimits = await GetCompanyActivePlanService({ companyId });
+
+    const usersCount = await User.count({
       where: {
-        id: companyId
-      },
-      include: [{ model: Plan, as: "plan" }]
+        companyId
+      }
     });
 
-    if (company !== null) {
-      const usersCount = await User.count({
-        where: {
-          companyId
-        }
-      });
-
-      if (usersCount >= company.plan.users) {
-        throw new AppError(
-          `Número máximo de usuários já alcançado: ${usersCount}`
-        );
-      }
+    if (usersCount >= planLimits.users) {
+      throw new AppError(
+        `Número máximo de usuários já alcançado: ${usersCount}`
+      );
     }
   }
 

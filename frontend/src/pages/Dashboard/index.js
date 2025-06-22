@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 
 import Paper from "@material-ui/core/Paper";
 import Container from "@material-ui/core/Container";
@@ -14,7 +14,6 @@ import SpeedIcon from "@material-ui/icons/Speed";
 import GroupIcon from "@material-ui/icons/Group";
 import AssignmentIcon from "@material-ui/icons/Assignment";
 import PersonIcon from "@material-ui/icons/Person";
-import TodayIcon from '@material-ui/icons/Today';
 
 import { makeStyles } from "@material-ui/core/styles";
 import { grey, blue } from "@material-ui/core/colors";
@@ -28,7 +27,6 @@ import TableAttendantsStatus from "../../components/Dashboard/TableAttendantsSta
 import { isArray } from "lodash";
 
 import useDashboard from "../../hooks/useDashboard";
-import useCompanies from "../../hooks/useCompanies";
 
 import { isEmpty } from "lodash";
 import moment from "moment";
@@ -44,6 +42,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "column",
     height: 240,
     overflowY: "auto",
+    borderRadius: "12px",
     ...theme.scrollbarStyles,
   },
   cardAvatar: {
@@ -71,6 +70,22 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     textAlign: "left",
   },
+    filterField: {
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: "#ffffff",
+      borderRadius: "8px",
+      "&:hover": {
+        backgroundColor: "#ffffff",
+      },
+      "&.Mui-focused": {
+        backgroundColor: "#ffffff",
+      },
+    },
+    "& .MuiSelect-root": {
+      backgroundColor: "#ffffff",
+      borderRadius: "8px",
+    },
+  },
 }));
 
 const Dashboard = () => {
@@ -86,15 +101,12 @@ const Dashboard = () => {
   const [attendants, setAttendants] = useState([]);
   const [filterType, setFilterType] = useState(1);
   const [period, setPeriod] = useState(0);
-  const [companyDueDate, setCompanyDueDate] = useState(null);
   const [dateFrom, setDateFrom] = useState(
     moment("1", "D").format("YYYY-MM-DD")
   );
   const [dateTo, setDateTo] = useState(moment().format("YYYY-MM-DD"));
   const [loading, setLoading] = useState(false);
-  const [companiesLoading, setCompaniesLoading] = useState(true);
   const { find } = useDashboard();
-  const { finding } = useCompanies();
 
   useEffect(() => {
     async function firstLoad() {
@@ -240,33 +252,7 @@ const Dashboard = () => {
     setLoading(false);
   }
 
-  const loadCompanies = useCallback(async () => {
-    const companyId = localStorage.getItem("companyId");
-    
-    if (!companyId) {
-      setCompaniesLoading(false);
-      return;
-    }
-    
-    try {
-      const companiesList = await finding(companyId);
-      if (companiesList && companiesList.dueDate) {
-        setCompanyDueDate(moment(companiesList.dueDate).format("DD/MM/yyyy"));
-      } else {
-        setCompanyDueDate("N/A");
-      }
-    } catch (e) {
-      console.error("Error loading company data:", e);
-      setCompanyDueDate("Erro");
-    } finally {
-      setCompaniesLoading(false);
-    }
-  }, [finding]);
-
-  useEffect(() => {
-    loadCompanies();
-  }, [loadCompanies])
-
+  
   function formatTime(minutes) {
     return moment()
       .startOf("day")
@@ -284,7 +270,8 @@ const Dashboard = () => {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className={classes.fullWidth}
+              className={`${classes.fullWidth} ${classes.filterField}`}
+              variant="outlined"
               InputLabelProps={{
                 shrink: true,
               }}
@@ -296,7 +283,8 @@ const Dashboard = () => {
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className={classes.fullWidth}
+              className={`${classes.fullWidth} ${classes.filterField}`}
+              variant="outlined"
               InputLabelProps={{
                 shrink: true,
               }}
@@ -307,7 +295,7 @@ const Dashboard = () => {
     } else {
       return (
         <Grid item xs={12} sm={6} md={4}>
-          <FormControl className={classes.selectContainer}>
+          <FormControl className={`${classes.selectContainer} ${classes.filterField}`} variant="outlined">
             <InputLabel id="period-selector-label">Período</InputLabel>
             <Select
               labelId="period-selector-label"
@@ -334,13 +322,8 @@ const Dashboard = () => {
     <div>
       <Container maxWidth="lg" className={classes.container}>
         <Grid container spacing={3} justifyContent="flex-end">
-                    <Grid item xs={12}>
-            <Paper className={classes.fixedHeightPaper}>
-              <Chart />
-            </Paper>
-          </Grid>
           <Grid item xs={12} sm={6} md={4}>
-            <FormControl className={classes.selectContainer}>
+            <FormControl className={`${classes.selectContainer} ${classes.filterField}`} variant="outlined">
               <InputLabel id="period-selector-label">Tipo de Filtro</InputLabel>
               <Select
                 labelId="period-selector-label"
@@ -414,6 +397,15 @@ const Dashboard = () => {
               loading={loading}
             />
           </Grid>
+          
+          {/* Gráfico de Atendimentos de Hoje - movido para cima da tabela de avaliações */}
+          <Grid item xs={12}>
+            <Paper className={classes.fixedHeightPaper}>
+              <Chart />
+            </Paper>
+          </Grid>
+          
+          {/* Tabela de Avaliações */}
           <Grid item xs={12}>
             {attendants.length ? (
               <TableAttendantsStatus

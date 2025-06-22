@@ -4,6 +4,7 @@ import AppError from "../../errors/AppError";
 import Whatsapp from "../../models/Whatsapp";
 import Company from "../../models/Company";
 import Plan from "../../models/Plan";
+import GetCompanyActivePlanService from "../CompanyService/GetCompanyActivePlanService";
 import AssociateWhatsappQueue from "./AssociateWhatsappQueue";
 
 interface Request {
@@ -48,26 +49,20 @@ const CreateWhatsAppService = async ({
   tokenMeta,
   channel = "whatsapp"
 }: Request): Promise<Response> => {
-  const company = await Company.findOne({
+  // Usar o novo serviço para obter os limites do plano ativo
+  const planLimits = await GetCompanyActivePlanService({ companyId });
+
+  const whatsappCount = await Whatsapp.count({
     where: {
-      id: companyId,
-    },
-    include: [{ model: Plan, as: "plan" }]
+      companyId,
+      channel: channel
+    }
   });
 
-  if (company !== null) {
-    const whatsappCount = await Whatsapp.count({
-      where: {
-        companyId,
-        channel: channel
-      }
-    });
-
-    if (whatsappCount >= company.plan.connections) {
-      throw new AppError(
-        `Número máximo de conexões já alcançado: ${whatsappCount}`
-      );
-    }
+  if (whatsappCount >= planLimits.connections) {
+    throw new AppError(
+      `Número máximo de conexões já alcançado: ${whatsappCount}`
+    );
   }
 
   const schema = Yup.object().shape({
@@ -97,8 +92,6 @@ const CreateWhatsAppService = async ({
   const whatsappFound = await Whatsapp.findOne({ where: { companyId} });
 
   isDefault = channel === "whatsapp" ? !whatsappFound : false
-
-
 
   let oldDefaultWhatsapp: Whatsapp | null = null;
 

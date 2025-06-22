@@ -40,18 +40,6 @@ import toastError from "../../errors/toastError";
 import moment from "moment";
 import logo from "../../assets/logologin.png";
 import { documentMask, phoneMask, isValidDocument, isValidCPF, isValidCNPJ, removeMask } from "../../utils/masks";
-// const Copyright = () => {
-// 	return (
-// 		<Typography variant="body2" color="textSecondary" align="center">
-// 			{"Copyleft "}
-// 			<Link color="inherit" href="https://github.com/canove">
-// 				Canove
-// 			</Link>{" "}
-// 			{new Date().getFullYear()}
-// 			{"."}
-// 		</Typography>
-// 	);
-// };
 
 const useStyles = makeStyles(theme => ({
 	paper: {
@@ -106,6 +94,13 @@ const useStyles = makeStyles(theme => ({
 		border: "1px solid #e9ecef",
 		marginTop: theme.spacing(1),
 	},
+	planSummary: {
+		backgroundColor: "#f8f9fa",
+		borderRadius: "8px",
+		padding: theme.spacing(2),
+		marginTop: theme.spacing(2),
+		border: "1px solid #dee2e6",
+	},
 }));
 
 const UserSchema = Yup.object().shape({
@@ -145,15 +140,15 @@ const UserSchema = Yup.object().shape({
 		.required("Telefone é obrigatório"),
 	documentType: Yup.string()
 		.required("Tipo de documento é obrigatório"),
+	users: Yup.number()
+		.min(1, "Mínimo de 1 usuário")
+		.max(100, "Máximo de 100 usuários")
+		.required("Número de usuários é obrigatório"),
 });
 
 const SignUp = () => {
 	const classes = useStyles();
 	const history = useHistory();
-	// Parâmetros da URL podem ser usados futuramente se necessário
-	// import qs from 'query-string'
-	// const params = qs.parse(window.location.search)
-	// const companyId = params.companyId !== undefined ? params.companyId : null;
 
 	const initialState = { 
 		name: "", 
@@ -161,6 +156,7 @@ const SignUp = () => {
 		password: "", 
 		confirmPassword: "",
 		planId: "", 
+		users: 1, // Número de licenças/usuários
 		fullName: "",
 		document: "",
 		phone: "",
@@ -240,6 +236,7 @@ const SignUp = () => {
 		} else if (step === 1) {
 			// Validações da segunda etapa
 			if (!values.planId) errors.planId = "Plano é obrigatório";
+			if (!values.users || values.users < 1) errors.users = "Número de usuários é obrigatório";
 		}
 		
 		return errors;
@@ -278,7 +275,6 @@ const SignUp = () => {
 		}
 		fetchData();
 	}, [listPlans]);
-
 
 	return (
 		<Container component="main" maxWidth="sm">
@@ -520,10 +516,14 @@ const SignUp = () => {
 								<Grid container spacing={2}>
 									<Grid item xs={12}>
 										<Typography variant="h6" style={{ marginBottom: 16, textAlign: "center", color: "#495057" }}>
-											Escolha seu Plano
+											Escolha seu Plano e Licenças
 										</Typography>
+									</Grid>
+									
+									{/* Seleção do Plano */}
+									<Grid item xs={12} md={6}>
 										<div className={classes.planContainer}>
-											<InputLabel htmlFor="plan-selection" style={{ marginBottom: 8 }}>Plano</InputLabel>
+											<InputLabel htmlFor="plan-selection" style={{ marginBottom: 8 }}>Plano Base</InputLabel>
 											<Field
 												as={Select}
 												variant="outlined"
@@ -537,7 +537,7 @@ const SignUp = () => {
 											>
 												{plans.map((plan, key) => (
 													<MenuItem key={key} value={plan.id}>
-														{plan.name} - Atendentes: {plan.users} - WhatsApp: {plan.connections} - Filas: {plan.queues} - R$ {plan.value}
+														{plan.name} - R$ {plan.value.toFixed(2)}/usuário
 													</MenuItem>
 												))}
 											</Field>
@@ -548,6 +548,97 @@ const SignUp = () => {
 											)}
 										</div>
 									</Grid>
+
+									{/* Número de Usuários */}
+									<Grid item xs={12} md={6}>
+										<div className={classes.planContainer}>
+											<Field
+												as={TextField}
+												variant="outlined"
+												fullWidth
+												label="Número de Licenças/Usuários"
+												name="users"
+												type="number"
+												error={touched.users && Boolean(errors.users)}
+												helperText={touched.users && errors.users || "Mínimo: 1, Máximo: 100"}
+												inputProps={{ min: 1, max: 100 }}
+												required
+											/>
+										</div>
+									</Grid>
+
+									{/* Resumo do Plano */}
+									{values.planId && (
+										<Grid item xs={12}>
+											<div className={classes.planSummary}>
+												<Typography variant="h6" gutterBottom>
+													Resumo do Plano
+												</Typography>
+												{(() => {
+													const selectedPlan = plans.find(p => p.id === parseInt(values.planId));
+													if (selectedPlan) {
+														const users = parseInt(values.users) || 1;
+														const totalPrice = selectedPlan.value * users;
+														return (
+															<Grid container spacing={2}>
+																<Grid item xs={12} sm={6} md={3}>
+																	<Typography variant="body2" color="textSecondary">
+																		Plano
+																	</Typography>
+																	<Typography variant="body1">
+																		<strong>{selectedPlan.name}</strong>
+																	</Typography>
+																</Grid>
+																<Grid item xs={12} sm={6} md={3}>
+																	<Typography variant="body2" color="textSecondary">
+																		Usuários
+																	</Typography>
+																	<Typography variant="body1">
+																		<strong>{users}</strong>
+																	</Typography>
+																</Grid>
+																<Grid item xs={12} sm={6} md={3}>
+																	<Typography variant="body2" color="textSecondary">
+																		Conexões WhatsApp
+																	</Typography>
+																	<Typography variant="body1">
+																		<strong>{selectedPlan.connections * users}</strong>
+																	</Typography>
+																</Grid>
+																<Grid item xs={12} sm={6} md={3}>
+																	<Typography variant="body2" color="textSecondary">
+																		Filas
+																	</Typography>
+																	<Typography variant="body1">
+																		<strong>{selectedPlan.queues * users}</strong>
+																	</Typography>
+																</Grid>
+																<Grid item xs={12}>
+																	<Typography variant="body2" color="textSecondary">
+																		Recursos Inclusos
+																	</Typography>
+																	<Typography variant="body1">
+																		{[
+																			selectedPlan.useWhatsapp && 'WhatsApp',
+																			selectedPlan.useFacebook && 'Facebook',
+																			selectedPlan.useInstagram && 'Instagram',
+																			selectedPlan.useCampaigns && 'Campanhas'
+																		].filter(Boolean).join(', ')}
+																	</Typography>
+																</Grid>
+																<Grid item xs={12}>
+																	<Typography variant="h5" style={{ color: "#1976d2", textAlign: "center", marginTop: 16 }}>
+																		<strong>Total: R$ {totalPrice.toFixed(2)}/mês</strong>
+																	</Typography>
+																</Grid>
+															</Grid>
+														);
+													}
+													return null;
+												})()}
+											</div>
+										</Grid>
+									)}
 								</Grid>
 							)}
 

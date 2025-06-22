@@ -4,6 +4,7 @@ import Queue from "../../models/Queue";
 import Company from "../../models/Company";
 import Plan from "../../models/Plan";
 import Whatsapp from "../../models/Whatsapp";
+import GetCompanyActivePlanService from "../CompanyService/GetCompanyActivePlanService";
 
 interface QueueData {
   name: string;
@@ -17,23 +18,17 @@ interface QueueData {
 const CreateQueueService = async (queueData: QueueData): Promise<Queue> => {
   const { color, name, companyId } = queueData;
 
-  const company = await Company.findOne({
+  // Usar o novo serviço para obter os limites do plano ativo
+  const planLimits = await GetCompanyActivePlanService({ companyId });
+
+  const queuesCount = await Queue.count({
     where: {
-      id: companyId
-    },
-    include: [{ model: Plan, as: "plan" }]
+      companyId
+    }
   });
 
-  if (company !== null) {
-    const queuesCount = await Queue.count({
-      where: {
-        companyId
-      }
-    });
-
-    if (queuesCount >= company.plan.queues) {
-      throw new AppError(`Número máximo de filas já alcançado: ${queuesCount}`);
-    }
+  if (queuesCount >= planLimits.queues) {
+    throw new AppError(`Número máximo de filas já alcançado: ${queuesCount}`);
   }
 
   const queueSchema = Yup.object().shape({

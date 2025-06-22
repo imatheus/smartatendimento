@@ -33,7 +33,8 @@ const useDashboard = () => {
                     ...attendant,
                     rating: attendant.rating !== null ? Number(attendant.rating) : null,
                     avgSupportTime: Number(attendant.avgSupportTime) || 0,
-                    online: Boolean(attendant.online)
+                    online: Boolean(attendant.online),
+                    profileImage: attendant.profileImage || null
                 }))
             };
         } catch (error) {
