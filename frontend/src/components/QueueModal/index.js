@@ -18,14 +18,10 @@ import { i18n } from "../../translate/i18n";
 
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
-import ColorPicker from "../ColorPicker";
 import { generateRandomColor } from "../../utils/colorGenerator";
 import {
-  IconButton,
-  InputAdornment,
   Paper,
 } from "@material-ui/core";
-import { Colorize } from "@material-ui/icons";
 import { QueueOptions } from "../QueueOptions";
 
 const useStyles = makeStyles((theme) => ({
@@ -54,10 +50,6 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(1),
     minWidth: 120,
   },
-  colorAdorment: {
-    width: 20,
-    height: 20,
-  },
 }));
 
 const QueueSchema = Yup.object().shape({
@@ -79,7 +71,6 @@ const QueueModal = ({ open, onClose, queueId }) => {
     outOfHoursMessage: "",
   };
 
-  const [colorPickerModalOpen, setColorPickerModalOpen] = useState(false);
   const [queue, setQueue] = useState(initialState);
   const greetingRef = useRef();
 
@@ -181,50 +172,7 @@ const QueueModal = ({ open, onClose, queueId }) => {
                     margin="dense"
                     className={classes.textField}
                   />
-                  <Field
-                    as={TextField}
-                    label={i18n.t("queueModal.form.color")}
-                    name="color"
-                    id="color"
-                    onFocus={() => {
-                      setColorPickerModalOpen(true);
-                      greetingRef.current.focus();
-                    }}
-                    error={touched.color && Boolean(errors.color)}
-                    helperText={touched.color && errors.color}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <div
-                            style={{ backgroundColor: values.color }}
-                            className={classes.colorAdorment}
-                          ></div>
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <IconButton
-                          size="small"
-                          color="default"
-                          onClick={() => setColorPickerModalOpen(true)}
-                        >
-                          <Colorize />
-                        </IconButton>
-                      ),
-                    }}
-                    variant="outlined"
-                    margin="dense"
-                    className={classes.textField}
-                  />
-                  <ColorPicker
-                    open={colorPickerModalOpen}
-                    handleClose={() => setColorPickerModalOpen(false)}
-                    onChange={(color) => {
-                      values.color = color;
-                      setQueue(() => {
-                        return { ...values, color };
-                      });
-                    }}
-                  />
+                  {/* Campo de cor removido - cor será gerada automaticamente */}
                   <div style={{ marginTop: 5 }}>
                         <Field
                           as={TextField}

@@ -21,6 +21,11 @@ import {
 	StepLabel,
 	InputAdornment,
 	IconButton,
+	FormControl,
+	FormLabel,
+	RadioGroup,
+	FormControlLabel,
+	Radio,
 } from "@material-ui/core";
 import Visibility from "@material-ui/icons/Visibility";
 import VisibilityOff from "@material-ui/icons/VisibilityOff";
@@ -34,7 +39,7 @@ import { openApi } from "../../services/api";
 import toastError from "../../errors/toastError";
 import moment from "moment";
 import logo from "../../assets/logologin.png";
-import { documentMask, phoneMask, isValidDocument, removeMask } from "../../utils/masks";
+import { documentMask, phoneMask, isValidDocument, isValidCPF, isValidCNPJ, removeMask } from "../../utils/masks";
 // const Copyright = () => {
 // 	return (
 // 		<Typography variant="body2" color="textSecondary" align="center">
@@ -125,13 +130,21 @@ const UserSchema = Yup.object().shape({
 		.required("Nome completo é obrigatório"),
 	document: Yup.string()
 		.required("Documento é obrigatório")
-		.test("document-validation", "CPF ou CNPJ inválido", function(value) {
+		.test("document-validation", "Documento inválido", function(value) {
 			if (!value) return false;
+			const { documentType } = this.parent;
+			if (documentType === "cpf") {
+				return isValidCPF(value);
+			} else if (documentType === "cnpj") {
+				return isValidCNPJ(value);
+			}
 			return isValidDocument(value);
 		}),
 	phone: Yup.string()
 		.min(10, "Telefone muito curto!")
 		.required("Telefone é obrigatório"),
+	documentType: Yup.string()
+		.required("Tipo de documento é obrigatório"),
 });
 
 const SignUp = () => {
@@ -150,7 +163,8 @@ const SignUp = () => {
 		planId: "", 
 		fullName: "",
 		document: "",
-		phone: ""
+		phone: "",
+		documentType: "cpf"
 	};
 
 	const [user] = useState(initialState);
@@ -199,8 +213,17 @@ const SignUp = () => {
 				errors.email = "E-mail inválido";
 			}
 			
-			if (values.document && !isValidDocument(values.document)) {
-				errors.document = "CPF ou CNPJ inválido";
+			if (values.document) {
+				const cleanDocument = values.document.replace(/\D/g, "");
+				if (values.documentType === "cpf") {
+					if (!isValidCPF(values.document)) {
+						errors.document = "CPF inválido";
+					}
+				} else if (values.documentType === "cnpj") {
+					if (!isValidCNPJ(values.document)) {
+						errors.document = "CNPJ inválido";
+					}
+				}
 			}
 			
 			if (values.password) {
@@ -349,7 +372,36 @@ const SignUp = () => {
 										/>
 									</Grid>
 
-									{/* CPF/CNPJ - Telefone */}
+									{/* Seleção de tipo de documento */}
+									<Grid item xs={12}>
+										<FormControl component="fieldset">
+											<FormLabel component="legend" style={{ marginBottom: 8, color: "#495057" }}>
+												Tipo de Documento
+											</FormLabel>
+											<RadioGroup
+												row
+												name="documentType"
+												value={values.documentType}
+												onChange={(e) => {
+													setFieldValue("documentType", e.target.value);
+													setFieldValue("document", ""); // Limpa o campo quando muda o tipo
+												}}
+											>
+												<FormControlLabel 
+													value="cpf" 
+													control={<Radio color="primary" />} 
+													label="CPF" 
+												/>
+												<FormControlLabel 
+													value="cnpj" 
+													control={<Radio color="primary" />} 
+													label="CNPJ" 
+												/>
+											</RadioGroup>
+										</FormControl>
+									</Grid>
+
+									{/* Campo de documento baseado na seleção - Telefone */}
 									<Grid item xs={12} sm={6}>
 										<Field name="document">
 											{({ field }) => (
@@ -357,17 +409,17 @@ const SignUp = () => {
 													{...field}
 													variant="outlined"
 													fullWidth
-													label="CPF/CNPJ"
+													label={values.documentType === "cpf" ? "CPF" : "CNPJ"}
 													error={touched.document && Boolean(errors.document)}
 													helperText={touched.document && errors.document}
-													placeholder="000.000.000-00 ou 00.000.000/0000-00"
+													placeholder={values.documentType === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"}
 													value={field.value}
 													onChange={(e) => {
 														const maskedValue = documentMask(e.target.value);
 														setFieldValue("document", maskedValue);
 													}}
 													inputProps={{
-														maxLength: 18
+														maxLength: values.documentType === "cpf" ? 14 : 18
 													}}
 													required
 												/>

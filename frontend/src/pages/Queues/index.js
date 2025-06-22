@@ -26,6 +26,7 @@ import QueueModal from "../../components/QueueModal";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { socketConnection } from "../../services/socket";
+import { getContrastColor } from "../../utils/colorGenerator";
 
 const useStyles = makeStyles((theme) => ({
   mainPaper: {
@@ -38,6 +39,16 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+  },
+  queueNameChip: {
+    padding: theme.spacing(0.5, 1.5),
+    borderRadius: "16px",
+    color: "#ffffff",
+    fontWeight: "500",
+    fontSize: "0.875rem",
+    display: "inline-block",
+    textAlign: "center",
+    minWidth: "120px",
   },
 }));
 
@@ -198,9 +209,6 @@ const Queues = () => {
                 {i18n.t("queues.table.name")}
               </TableCell>
               <TableCell align="center">
-                {i18n.t("queues.table.color")}
-              </TableCell>
-              <TableCell align="center">
                 {i18n.t("queues.table.greeting")}
               </TableCell>
               <TableCell align="center">
@@ -212,18 +220,16 @@ const Queues = () => {
             <>
               {queues.map((queue) => (
                 <TableRow key={queue.id}>
-                  <TableCell align="center">{queue.name}</TableCell>
                   <TableCell align="center">
-                    <div className={classes.customTableCell}>
-                      <span
-                        style={{
-                          backgroundColor: queue.color,
-                          width: 60,
-                          height: 20,
-                          alignSelf: "center",
-                        }}
-                      />
-                    </div>
+                    <span
+                      className={classes.queueNameChip}
+                      style={{
+                        backgroundColor: queue.color,
+                        color: getContrastColor(queue.color),
+                      }}
+                    >
+                      {queue.name}
+                    </span>
                   </TableCell>
                   <TableCell align="center">
                     <div className={classes.customTableCell}>
@@ -256,7 +262,7 @@ const Queues = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {loading && <TableRowSkeleton columns={4} />}
+              {loading && <TableRowSkeleton columns={3} />}
             </>
           </TableBody>
         </Table>
