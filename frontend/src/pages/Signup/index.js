@@ -34,6 +34,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import Container from "@material-ui/core/Container";
 
 import { i18n } from "../../translate/i18n";
+import PlanSelection from "../../components/PlanSelection";
 
 import { openApi } from "../../services/api";
 import toastError from "../../errors/toastError";
@@ -163,16 +164,18 @@ const SignUp = () => {
 		documentType: "cpf"
 	};
 
-	const [user] = useState(initialState);
 	const [activeStep, setActiveStep] = useState(0);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [formValues, setFormValues] = useState(initialState); // Estado para manter os valores entre etapas
 	const dueDate = moment().add(7, "day").format();
 	const trialExpiration = moment().add(7, "day").format(); // Período de teste de 7 dias
 
 	const steps = ['Cadastro', 'Plano'];
 
-	const handleNext = () => {
+	const handleNext = (values) => {
+		console.log("Salvando valores antes de avançar:", values);
+		setFormValues(values); // Salva os valores antes de avançar
 		setActiveStep((prevActiveStep) => prevActiveStep + 1);
 	};
 
@@ -243,6 +246,8 @@ const SignUp = () => {
 	};
 
 	const handleSignUp = async (values, actions) => {
+		console.log("Valores recebidos no handleSignUp:", values);
+		
 		// Remove máscaras dos campos antes de enviar
 		const processedValues = {
 			...values,
@@ -255,6 +260,9 @@ const SignUp = () => {
 		Object.assign(processedValues, { trialExpiration: trialExpiration });
 		Object.assign(processedValues, { status: "t" });
 		Object.assign(processedValues, { campaignsEnabled: true });
+		
+		console.log("Valores processados para envio:", processedValues);
+		
 		try {
 			await openApi.post("/companies/cadastro", processedValues);
 			toast.success(i18n.t("signup.toasts.success"));
@@ -277,409 +285,331 @@ const SignUp = () => {
 	}, [listPlans]);
 
 	return (
-		<Container component="main" maxWidth="sm">
+		<>
 			<CssBaseline />
-			<div className={classes.paper}>
-				<div>
-					<img style={{ margin: "0 auto", height: "80px", width: "100%" }} src={logo} alt="Whats" />
-				</div>
-				<Typography component="h1" variant="h5">
-					{i18n.t("signup.title")}
-				</Typography>
-				
-				{/* Stepper */}
-				<Stepper activeStep={activeStep} className={classes.stepperContainer} style={{ marginTop: 20, marginBottom: 20 }}>
-					{steps.map((label) => (
-						<Step key={label}>
-							<StepLabel>{label}</StepLabel>
-						</Step>
-					))}
-				</Stepper>
-
-				<div className={classes.formContainer}>
-					<Formik
-					initialValues={user}
-					enableReinitialize={true}
-					validate={(values) => validateStep(values, activeStep)}
-					onSubmit={(values, actions) => {
-						if (activeStep === 0) {
-							// Primeira etapa - validar e ir para próxima
-							const errors = validateStep(values, 0);
-							if (Object.keys(errors).length === 0) {
-								handleNext();
-							}
-							actions.setSubmitting(false);
-						} else {
-							// Segunda etapa - submeter formulário
-							setTimeout(() => {
-								handleSignUp(values, actions);
-								actions.setSubmitting(false);
-							}, 400);
+			<Formik
+				initialValues={formValues}
+				enableReinitialize={true}
+				validate={(values) => validateStep(values, activeStep)}
+				onSubmit={(values, actions) => {
+					console.log("onSubmit chamado com valores:", values);
+					
+					if (activeStep === 0) {
+						// Primeira etapa - validar e ir para próxima
+						const errors = validateStep(values, 0);
+						if (Object.keys(errors).length === 0) {
+							handleNext(values); // Passa os valores para salvar
 						}
-					}}
-				>
-					{({ touched, errors, isSubmitting, values, setFieldValue }) => (
-						<Form className={classes.form}>
-							{activeStep === 0 && (
-								<Grid container spacing={2}>
-									{/* Nome completo - linha toda */}
-									<Grid item xs={12}>
-										<Field
-											as={TextField}
-											variant="outlined"
-											fullWidth
-											name="fullName"
-											error={touched.fullName && Boolean(errors.fullName)}
-											helperText={touched.fullName && errors.fullName}
-											label="Nome Completo"
-											id="fullName"
-											required
-										/>
-									</Grid>
-
-									{/* Nome da empresa - E-mail */}
-									<Grid item xs={12} sm={6}>
-										<Field
-											as={TextField}
-											autoComplete="name"
-											name="name"
-											error={touched.name && Boolean(errors.name)}
-											helperText={touched.name && errors.name}
-											variant="outlined"
-											fullWidth
-											id="name"
-											label="Nome da Empresa"
-											required
-										/>
-									</Grid>
-
-									<Grid item xs={12} sm={6}>
-										<Field
-											as={TextField}
-											variant="outlined"
-											fullWidth
-											id="email"
-											label={i18n.t("signup.form.email")}
-											name="email"
-											error={touched.email && Boolean(errors.email)}
-											helperText={touched.email && errors.email}
-											autoComplete="email"
-											required
-										/>
-									</Grid>
-
-									{/* Seleção de tipo de documento */}
-									<Grid item xs={12}>
-										<FormControl component="fieldset">
-											<FormLabel component="legend" style={{ marginBottom: 8, color: "#495057" }}>
-												Tipo de Documento
-											</FormLabel>
-											<RadioGroup
-												row
-												name="documentType"
-												value={values.documentType}
-												onChange={(e) => {
-													setFieldValue("documentType", e.target.value);
-													setFieldValue("document", ""); // Limpa o campo quando muda o tipo
-												}}
-											>
-												<FormControlLabel 
-													value="cpf" 
-													control={<Radio color="primary" />} 
-													label="CPF" 
-												/>
-												<FormControlLabel 
-													value="cnpj" 
-													control={<Radio color="primary" />} 
-													label="CNPJ" 
-												/>
-											</RadioGroup>
-										</FormControl>
-									</Grid>
-
-									{/* Campo de documento baseado na seleção - Telefone */}
-									<Grid item xs={12} sm={6}>
-										<Field name="document">
-											{({ field }) => (
-												<TextField
-													{...field}
-													variant="outlined"
-													fullWidth
-													label={values.documentType === "cpf" ? "CPF" : "CNPJ"}
-													error={touched.document && Boolean(errors.document)}
-													helperText={touched.document && errors.document}
-													placeholder={values.documentType === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"}
-													value={field.value}
-													onChange={(e) => {
-														const maskedValue = documentMask(e.target.value);
-														setFieldValue("document", maskedValue);
-													}}
-													inputProps={{
-														maxLength: values.documentType === "cpf" ? 14 : 18
-													}}
-													required
-												/>
-											)}
-										</Field>
-									</Grid>
-
-									<Grid item xs={12} sm={6}>
-										<Field name="phone">
-											{({ field }) => (
-												<TextField
-													{...field}
-													variant="outlined"
-													fullWidth
-													label="Telefone"
-													error={touched.phone && Boolean(errors.phone)}
-													helperText={touched.phone && errors.phone}
-													placeholder="(11) 99999-9999"
-													value={field.value}
-													onChange={(e) => {
-														const maskedValue = phoneMask(e.target.value);
-														setFieldValue("phone", maskedValue);
-													}}
-													inputProps={{
-														maxLength: 15
-													}}
-													required
-												/>
-											)}
-										</Field>
-									</Grid>
-
-									{/* Senha */}
-									<Grid item xs={12} sm={6}>
-									<Field
-									as={TextField}
-									variant="outlined"
-									fullWidth
-									name="password"
-									error={touched.password && Boolean(errors.password)}
-									helperText={touched.password && errors.password}
-									label={i18n.t("signup.form.password")}
-									type={showPassword ? 'text' : 'password'}
-									id="password"
-									autoComplete="new-password"
-									required
-									InputProps={{
-									endAdornment: (
-									<InputAdornment position="end">
-									<IconButton
-									aria-label="toggle password visibility"
-									onClick={handleClickShowPassword}
-									onMouseDown={handleMouseDownPassword}
-									edge="end"
-									>
-									{showPassword ? <VisibilityOff /> : <Visibility />}
-									</IconButton>
-									</InputAdornment>
-									),
-									}}
-									/>
-									</Grid>
+						actions.setSubmitting(false);
+					} else {
+						// Segunda etapa - submeter formulário
+						setFormValues(values); // Salva os valores finais
+						setTimeout(() => {
+							handleSignUp(values, actions);
+							actions.setSubmitting(false);
+						}, 400);
+					}
+				}}
+			>
+				{({ touched, errors, isSubmitting, values, setFieldValue }) => (
+					<Form>
+						{activeStep === 0 ? (
+							// Primeira etapa - Layout tradicional
+							<Container component="main" maxWidth="sm">
+								<div className={classes.paper}>
+									<div>
+										<img style={{ margin: "0 auto", height: "80px", width: "100%" }} src={logo} alt="Whats" />
+									</div>
+									<Typography component="h1" variant="h5">
+										{i18n.t("signup.title")}
+									</Typography>
 									
-									{/* Confirmação de Senha */}
-									<Grid item xs={12} sm={6}>
-									<Field
-									as={TextField}
-									variant="outlined"
-									fullWidth
-									name="confirmPassword"
-									error={touched.confirmPassword && Boolean(errors.confirmPassword)}
-									helperText={touched.confirmPassword && errors.confirmPassword}
-									label="Confirmar Senha"
-									type={showConfirmPassword ? 'text' : 'password'}
-									id="confirmPassword"
-									autoComplete="new-password"
-									required
-									InputProps={{
-									endAdornment: (
-									<InputAdornment position="end">
-									<IconButton
-									aria-label="toggle confirm password visibility"
-									onClick={handleClickShowConfirmPassword}
-									onMouseDown={handleMouseDownPassword}
-									edge="end"
-									>
-									{showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-									</IconButton>
-									</InputAdornment>
-									),
-									}}
-									/>
-									</Grid>
-								</Grid>
-							)}
+									{/* Stepper */}
+									<Stepper activeStep={activeStep} className={classes.stepperContainer} style={{ marginTop: 20, marginBottom: 20 }}>
+										{steps.map((label) => (
+											<Step key={label}>
+												<StepLabel>{label}</StepLabel>
+											</Step>
+										))}
+									</Stepper>
 
-							{activeStep === 1 && (
-								<Grid container spacing={2}>
-									<Grid item xs={12}>
-										<Typography variant="h6" style={{ marginBottom: 16, textAlign: "center", color: "#495057" }}>
-											Escolha seu Plano e Licenças
-										</Typography>
-									</Grid>
-									
-									{/* Seleção do Plano */}
-									<Grid item xs={12} md={6}>
-										<div className={classes.planContainer}>
-											<InputLabel htmlFor="plan-selection" style={{ marginBottom: 8 }}>Plano Base</InputLabel>
-											<Field
-												as={Select}
-												variant="outlined"
-												fullWidth
-												id="plan-selection"
-												label="Plano"
-												name="planId"
-												error={touched.planId && Boolean(errors.planId)}
-												required
-												style={{ borderRadius: "12px" }}
-											>
-												{plans.map((plan, key) => (
-													<MenuItem key={key} value={plan.id}>
-														{plan.name} - R$ {plan.value.toFixed(2)}/usuário
-													</MenuItem>
-												))}
-											</Field>
-											{touched.planId && errors.planId && (
-												<Typography variant="caption" color="error" style={{ marginLeft: 14, marginTop: 8, display: "block" }}>
-													{errors.planId}
-												</Typography>
-											)}
-										</div>
-									</Grid>
+									<div className={classes.formContainer}>
+										<div className={classes.form}>
+											<Grid container spacing={2}>
+												{/* Nome completo - linha toda */}
+												<Grid item xs={12}>
+													<Field
+														as={TextField}
+														variant="outlined"
+														fullWidth
+														name="fullName"
+														error={touched.fullName && Boolean(errors.fullName)}
+														helperText={touched.fullName && errors.fullName}
+														label="Nome Completo"
+														id="fullName"
+														required
+													/>
+												</Grid>
 
-									{/* Número de Usuários */}
-									<Grid item xs={12} md={6}>
-										<div className={classes.planContainer}>
-											<Field
-												as={TextField}
-												variant="outlined"
-												fullWidth
-												label="Número de Licenças/Usuários"
-												name="users"
-												type="number"
-												error={touched.users && Boolean(errors.users)}
-												helperText={touched.users && errors.users || "Mínimo: 1, Máximo: 100"}
-												inputProps={{ min: 1, max: 100 }}
-												required
-											/>
-										</div>
-									</Grid>
+												{/* Nome da empresa - E-mail */}
+												<Grid item xs={12} sm={6}>
+													<Field
+														as={TextField}
+														autoComplete="name"
+														name="name"
+														error={touched.name && Boolean(errors.name)}
+														helperText={touched.name && errors.name}
+														variant="outlined"
+														fullWidth
+														id="name"
+														label="Nome da Empresa"
+														required
+													/>
+												</Grid>
 
-									{/* Resumo do Plano */}
-									{values.planId && (
-										<Grid item xs={12}>
-											<div className={classes.planSummary}>
-												<Typography variant="h6" gutterBottom>
-													Resumo do Plano
-												</Typography>
-												{(() => {
-													const selectedPlan = plans.find(p => p.id === parseInt(values.planId));
-													if (selectedPlan) {
-														const users = parseInt(values.users) || 1;
-														const totalPrice = selectedPlan.value * users;
-														return (
-															<Grid container spacing={2}>
-																<Grid item xs={12} sm={6} md={3}>
-																	<Typography variant="body2" color="textSecondary">
-																		Plano
-																	</Typography>
-																	<Typography variant="body1">
-																		<strong>{selectedPlan.name}</strong>
-																	</Typography>
-																</Grid>
-																<Grid item xs={12} sm={6} md={3}>
-																	<Typography variant="body2" color="textSecondary">
-																		Usuários
-																	</Typography>
-																	<Typography variant="body1">
-																		<strong>{users}</strong>
-																	</Typography>
-																</Grid>
-																<Grid item xs={12} sm={6} md={3}>
-																	<Typography variant="body2" color="textSecondary">
-																		Conexões WhatsApp
-																	</Typography>
-																	<Typography variant="body1">
-																		<strong>{selectedPlan.connections * users}</strong>
-																	</Typography>
-																</Grid>
-																<Grid item xs={12} sm={6} md={3}>
-																	<Typography variant="body2" color="textSecondary">
-																		Filas
-																	</Typography>
-																	<Typography variant="body1">
-																		<strong>{selectedPlan.queues * users}</strong>
-																	</Typography>
-																</Grid>
-																<Grid item xs={12}>
-																	<Typography variant="body2" color="textSecondary">
-																		Recursos Inclusos
-																	</Typography>
-																	<Typography variant="body1">
-																		{[
-																			selectedPlan.useWhatsapp && 'WhatsApp',
-																			selectedPlan.useFacebook && 'Facebook',
-																			selectedPlan.useInstagram && 'Instagram',
-																			selectedPlan.useCampaigns && 'Campanhas'
-																		].filter(Boolean).join(', ')}
-																	</Typography>
-																</Grid>
-																<Grid item xs={12}>
-																	<Typography variant="h5" style={{ color: "#1976d2", textAlign: "center", marginTop: 16 }}>
-																		<strong>Total: R$ {totalPrice.toFixed(2)}/mês</strong>
-																	</Typography>
-																</Grid>
-															</Grid>
-														);
-													}
-													return null;
-												})()}
+												<Grid item xs={12} sm={6}>
+													<Field
+														as={TextField}
+														variant="outlined"
+														fullWidth
+														id="email"
+														label={i18n.t("signup.form.email")}
+														name="email"
+														error={touched.email && Boolean(errors.email)}
+														helperText={touched.email && errors.email}
+														autoComplete="email"
+														required
+													/>
+												</Grid>
+
+												{/* Seleção de tipo de documento */}
+												<Grid item xs={12}>
+													<FormControl component="fieldset">
+														<FormLabel component="legend" style={{ marginBottom: 8, color: "#495057" }}>
+															Tipo de Documento
+														</FormLabel>
+														<RadioGroup
+															row
+															name="documentType"
+															value={values.documentType}
+															onChange={(e) => {
+																setFieldValue("documentType", e.target.value);
+																setFieldValue("document", ""); // Limpa o campo quando muda o tipo
+															}}
+														>
+															<FormControlLabel 
+																value="cpf" 
+																control={<Radio color="primary" />} 
+																label="CPF" 
+															/>
+															<FormControlLabel 
+																value="cnpj" 
+																control={<Radio color="primary" />} 
+																label="CNPJ" 
+															/>
+														</RadioGroup>
+													</FormControl>
+												</Grid>
+
+												{/* Campo de documento baseado na seleção - Telefone */}
+												<Grid item xs={12} sm={6}>
+													<Field name="document">
+														{({ field }) => (
+															<TextField
+																{...field}
+																variant="outlined"
+																fullWidth
+																label={values.documentType === "cpf" ? "CPF" : "CNPJ"}
+																error={touched.document && Boolean(errors.document)}
+																helperText={touched.document && errors.document}
+																placeholder={values.documentType === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"}
+																value={field.value}
+																onChange={(e) => {
+																	const maskedValue = documentMask(e.target.value);
+																	setFieldValue("document", maskedValue);
+																}}
+																inputProps={{
+																	maxLength: values.documentType === "cpf" ? 14 : 18
+																}}
+																required
+															/>
+														)}
+													</Field>
+												</Grid>
+
+												<Grid item xs={12} sm={6}>
+													<Field name="phone">
+														{({ field }) => (
+															<TextField
+																{...field}
+																variant="outlined"
+																fullWidth
+																label="Telefone"
+																error={touched.phone && Boolean(errors.phone)}
+																helperText={touched.phone && errors.phone}
+																placeholder="(11) 99999-9999"
+																value={field.value}
+																onChange={(e) => {
+																	const maskedValue = phoneMask(e.target.value);
+																	setFieldValue("phone", maskedValue);
+																}}
+																inputProps={{
+																	maxLength: 15
+																}}
+																required
+															/>
+														)}
+													</Field>
+												</Grid>
+
+												{/* Senha */}
+												<Grid item xs={12} sm={6}>
+													<Field
+														as={TextField}
+														variant="outlined"
+														fullWidth
+														name="password"
+														error={touched.password && Boolean(errors.password)}
+														helperText={touched.password && errors.password}
+														label={i18n.t("signup.form.password")}
+														type={showPassword ? 'text' : 'password'}
+														id="password"
+														autoComplete="new-password"
+														required
+														InputProps={{
+															endAdornment: (
+																<InputAdornment position="end">
+																	<IconButton
+																		aria-label="toggle password visibility"
+																		onClick={handleClickShowPassword}
+																		onMouseDown={handleMouseDownPassword}
+																		edge="end"
+																	>
+																		{showPassword ? <VisibilityOff /> : <Visibility />}
+																	</IconButton>
+																</InputAdornment>
+															),
+														}}
+													/>
+												</Grid>
+												
+												{/* Confirmação de Senha */}
+												<Grid item xs={12} sm={6}>
+													<Field
+														as={TextField}
+														variant="outlined"
+														fullWidth
+														name="confirmPassword"
+														error={touched.confirmPassword && Boolean(errors.confirmPassword)}
+														helperText={touched.confirmPassword && errors.confirmPassword}
+														label="Confirmar Senha"
+														type={showConfirmPassword ? 'text' : 'password'}
+														id="confirmPassword"
+														autoComplete="new-password"
+														required
+														InputProps={{
+															endAdornment: (
+																<InputAdornment position="end">
+																	<IconButton
+																		aria-label="toggle confirm password visibility"
+																		onClick={handleClickShowConfirmPassword}
+																		onMouseDown={handleMouseDownPassword}
+																		edge="end"
+																	>
+																		{showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+																	</IconButton>
+																</InputAdornment>
+															),
+														}}
+													/>
+												</Grid>
+											</Grid>
+
+											<div style={{ marginTop: 20 }}>
+												<Button
+													type="submit"
+													variant="contained"
+													color="primary"
+													disabled={isSubmitting}
+												>
+													Próximo
+												</Button>
 											</div>
-										</Grid>
-									)}
-								</Grid>
-							)}
 
-							<div style={{ marginTop: 20 }}>
-								{activeStep !== 0 && (
-									<Button
-										onClick={handleBack}
-										style={{ marginRight: 8 }}
-									>
-										Voltar
-									</Button>
-								)}
-								<Button
-									type="submit"
-									variant="contained"
-									color="primary"
-									disabled={isSubmitting}
-								>
-									{activeStep === steps.length - 1 ? i18n.t("signup.buttons.submit") : "Próximo"}
-								</Button>
+											<Grid container justify="flex-end" style={{ marginTop: 16 }}>
+												<Grid item>
+													<Link
+														href="#"
+														variant="body2"
+														component={RouterLink}
+														to="/login"
+													>
+														{i18n.t("signup.buttons.login")}
+													</Link>
+												</Grid>
+											</Grid>
+										</div>
+									</div>
+								</div>
+								<Box mt={5}>{/* <Copyright /> */}</Box>
+							</Container>
+						) : (
+							// Segunda etapa - Layout moderno com PlanSelection
+							<div style={{ minHeight: "100vh", backgroundColor: "#fafafa" }}>
+								{/* Header para a segunda etapa */}
+								<Container maxWidth="sm" style={{ paddingTop: "2rem", paddingBottom: "1rem" }}>
+									<div style={{ textAlign: "center", marginBottom: "1rem" }}>
+										<img style={{ height: "60px", width: "auto" }} src={logo} alt="Whats" />
+									</div>
+									<Typography component="h1" variant="h5" style={{ textAlign: "center", marginBottom: "1rem" }}>
+										{i18n.t("signup.title")}
+									</Typography>
+									
+									{/* Stepper */}
+									<Stepper activeStep={activeStep} className={classes.stepperContainer} style={{ marginBottom: 20 }}>
+										{steps.map((label) => (
+											<Step key={label}>
+												<StepLabel>{label}</StepLabel>
+											</Step>
+										))}
+									</Stepper>
+								</Container>
+
+								<PlanSelection
+									plans={plans}
+									selectedPlanId={values.planId}
+									onPlanSelect={(planId) => setFieldValue("planId", planId)}
+									users={values.users}
+									onUsersChange={(users) => setFieldValue("users", users)}
+									errors={errors}
+									onSubmit={() => {
+										// Submeter formulário quando confirmar no modal
+										console.log("PlanSelection onSubmit - valores atuais:", values);
+										setTimeout(() => {
+											handleSignUp(values, { setSubmitting: () => {} });
+										}, 400);
+									}}
+									onBack={handleBack}
+								/>
+
+								<Container maxWidth="sm" style={{ paddingBottom: "2rem" }}>
+									<div style={{ textAlign: "center", marginTop: "2rem" }}>
+										<Link
+											href="#"
+											variant="body2"
+											component={RouterLink}
+											to="/login"
+										>
+											{i18n.t("signup.buttons.login")}
+										</Link>
+									</div>
+								</Container>
 							</div>
-
-							<Grid container justify="flex-end" style={{ marginTop: 16 }}>
-								<Grid item>
-									<Link
-										href="#"
-										variant="body2"
-										component={RouterLink}
-										to="/login"
-									>
-										{i18n.t("signup.buttons.login")}
-									</Link>
-								</Grid>
-							</Grid>
-						</Form>
-					)}
-					</Formik>
-				</div>
-			</div>
-			<Box mt={5}>{/* <Copyright /> */}</Box>
-		</Container>
+						)}
+					</Form>
+				)}
+			</Formik>
+		</>
 	);
 };
 
