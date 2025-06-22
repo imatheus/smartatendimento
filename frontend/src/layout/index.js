@@ -528,7 +528,7 @@ const LoggedInLayout = ({ children }) => {
       {/* Tarja de Período de Testes */}
       {isInTrialPeriod() && (
         <Box className={classes.trialBanner}>
-          🚨 Período de Testes - {getDaysRemaining()} {getDaysRemaining() === 1 ? 'dia restante' : 'dias restantes'}
+          Avaliação - {getDaysRemaining()} {getDaysRemaining() === 1 ? 'dia restante' : 'dias restantes'}
         </Box>
       )}
       

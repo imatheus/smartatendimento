@@ -73,10 +73,13 @@ const MainListItems = (props) => {
 
   
   useEffect(() => {
-    if (localStorage.getItem("cshow")) {
+    // Verificar se o plano do usuário tem campanhas habilitadas
+    if (user && user.company && user.company.plan && user.company.plan.useCampaigns) {
       setShowCampaigns(true);
+    } else {
+      setShowCampaigns(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {

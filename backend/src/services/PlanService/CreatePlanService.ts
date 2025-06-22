@@ -11,6 +11,7 @@ interface PlanData {
   useWhatsapp?: boolean;
   useFacebook?: boolean;
   useInstagram?: boolean;
+  useCampaigns?: boolean;
 }
 
 const CreatePlanService = async (planData: PlanData): Promise<Plan> => {
@@ -48,7 +49,8 @@ const CreatePlanService = async (planData: PlanData): Promise<Plan> => {
       .required("ERR_PLAN_INVALID_VALUE"),
     useWhatsapp: Yup.boolean(),
     useFacebook: Yup.boolean(),
-    useInstagram: Yup.boolean()
+    useInstagram: Yup.boolean(),
+    useCampaigns: Yup.boolean()
   });
 
   try {

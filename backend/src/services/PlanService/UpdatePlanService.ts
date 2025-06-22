@@ -11,10 +11,11 @@ interface PlanData {
   useWhatsapp?: boolean;
   useFacebook?: boolean;
   useInstagram?: boolean;
+  useCampaigns?: boolean;
 }
 
 const UpdatePlanService = async (planData: PlanData): Promise<Plan> => {
-  const { id, name, users, connections, queues, value, useWhatsapp, useFacebook, useInstagram } = planData;
+  const { id, name, users, connections, queues, value, useWhatsapp, useFacebook, useInstagram, useCampaigns } = planData;
 
   const plan = await Plan.findByPk(id);
 
@@ -55,7 +56,8 @@ const UpdatePlanService = async (planData: PlanData): Promise<Plan> => {
     value,
     useWhatsapp,
     useFacebook,
-    useInstagram
+    useInstagram,
+    useCampaigns
   });
 
   return plan;

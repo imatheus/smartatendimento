@@ -492,9 +492,6 @@ const Campaigns = () => {
                 {i18n.t("campaigns.table.completedAt")}
               </TableCell>
               <TableCell align="center">
-                {i18n.t("campaigns.table.confirmation")}
-              </TableCell>
-              <TableCell align="center">
                 {i18n.t("campaigns.table.actions")}
               </TableCell>
             </TableRow>
@@ -535,9 +532,6 @@ const Campaigns = () => {
                   </TableCell>
                   <TableCell align="center">
                     {renderCompletedStatus(campaign.completedAt)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {campaign.confirmation ? "Habilitada" : "Desabilitada"}
                   </TableCell>
                   <TableCell align="center">
                     {campaign.status === "EM_ANDAMENTO" && (
@@ -586,7 +580,7 @@ const Campaigns = () => {
                 </TableRow>
                 );
               })}
-              {loading && <TableRowSkeleton columns={8} />}
+              {loading && <TableRowSkeleton columns={7} />}
             </>
           </TableBody>
         </Table>

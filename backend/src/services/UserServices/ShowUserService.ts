@@ -26,7 +26,7 @@ const ShowUserService = async (id: string | number): Promise<User> => {
           { 
             model: Plan, 
             as: "plan", 
-            attributes: ["id", "name", "users", "connections", "queues", "value", "useWhatsapp", "useFacebook", "useInstagram"] 
+            attributes: ["id", "name", "users", "connections", "queues", "value", "useWhatsapp", "useFacebook", "useInstagram", "useCampaigns"] 
           }
         ]
       }

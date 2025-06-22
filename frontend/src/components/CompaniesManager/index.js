@@ -81,7 +81,6 @@ export function CompanyForm(props) {
     phone: "",
     planId: "",
     status: true,
-    campaignsEnabled: false,
     dueDate: "",
     recurrence: "",
     ...initialValue,
@@ -267,22 +266,6 @@ export function CompanyForm(props) {
                 </FormControl>
               </Grid>
               <Grid xs={12} sm={6} md={2} item>
-                <FormControl margin="dense" variant="outlined" fullWidth>
-                  <InputLabel htmlFor="status-selection">Campanhas</InputLabel>
-                  <Field
-                    as={Select}
-                    id="campaigns-selection"
-                    label="Campanhas"
-                    labelId="campaigns-selection-label"
-                    name="campaignsEnabled"
-                    margin="dense"
-                  >
-                    <MenuItem value={true}>Habilitadas</MenuItem>
-                    <MenuItem value={false}>Desabilitadas</MenuItem>
-                  </Field>
-                </FormControl>
-              </Grid>
-              <Grid xs={12} sm={6} md={2} item>
                 <FormControl variant="outlined" fullWidth>
                   <Field
                     as={TextField}
@@ -408,15 +391,9 @@ export function CompaniesManagerGrid(props) {
   };
 
   const renderCampaignsStatus = (row) => {
-    if (
-      has(row, "settings") &&
-      isArray(row.settings) &&
-      row.settings.length > 0
-    ) {
-      const setting = row.settings.find((s) => s.key === "campaignsEnabled");
-      if (setting) {
-        return setting.value === "true" ? "Habilitadas" : "Desabilitadas";
-      }
+    // Agora verifica se o plano da empresa tem campanhas habilitadas
+    if (row.plan && row.plan.useCampaigns) {
+      return "Habilitadas";
     }
     return "Desabilitadas";
   };
@@ -502,7 +479,6 @@ export default function CompaniesManager() {
     phone: "",
     planId: "",
     status: true,
-    campaignsEnabled: false,
     dueDate: "",
     recurrence: "",
   });
@@ -567,23 +543,12 @@ export default function CompaniesManager() {
       phone: "",
       planId: "",
       status: true,
-      campaignsEnabled: false,
       dueDate: "",
       recurrence: "",
     }));
   };
 
   const handleSelect = (data) => {
-    let campaignsEnabled = false;
-
-    const setting = data.settings.find(
-      (s) => s.key.indexOf("campaignsEnabled") > -1
-    );
-    if (setting) {
-      campaignsEnabled =
-        setting.value === "true" || setting.value === "enabled";
-    }
-
     setRecord((prev) => ({
       ...prev,
       id: data.id,
@@ -592,7 +557,6 @@ export default function CompaniesManager() {
       email: data.email || "",
       planId: data.planId || "",
       status: data.status === false ? false : true,
-      campaignsEnabled,
       dueDate: data.dueDate || "",
       recurrence: data.recurrence || "",
     }));

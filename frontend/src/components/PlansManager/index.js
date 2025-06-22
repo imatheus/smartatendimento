@@ -74,7 +74,8 @@ export function PlanManagerForm(props) {
         value: 0,
         useWhatsapp: true,
         useFacebook: false,
-        useInstagram: false
+        useInstagram: false,
+        useCampaigns: false
     });
 
     useEffect(() => {
@@ -120,8 +121,6 @@ export function PlanManagerForm(props) {
                                 margin="dense"
                                 type="text"
                             />
-
-
                         </Grid>
                         <Grid xs={12} sm={6} md={4} item>
                             <Field
@@ -159,11 +158,23 @@ export function PlanManagerForm(props) {
                         <Grid xs={12} item>
                             <Box mt={2} mb={1}>
                                 <Typography variant="h6" color="textSecondary">
-                                    Canais Permitidos
+                                    Funções Permitidas
                                 </Typography>
                             </Box>
                         </Grid>
-                        <Grid xs={12} sm={4} md={4} item>
+                        <Grid xs={12} sm={3} md={3} item>
+                            <Field name="useCampaigns">
+                                {({ field }) => (
+                                    <StandardToggleSwitch
+                                        label="Campanhas"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        name={field.name}
+                                    />
+                                )}
+                            </Field>
+                        </Grid>
+                        <Grid xs={12} sm={3} md={3} item>
                             <Field name="useWhatsapp">
                                 {({ field }) => (
                                     <StandardToggleSwitch
@@ -175,7 +186,7 @@ export function PlanManagerForm(props) {
                                 )}
                             </Field>
                         </Grid>
-                        <Grid xs={12} sm={4} md={4} item>
+                        <Grid xs={12} sm={3} md={3} item>
                             <Field name="useFacebook">
                                 {({ field }) => (
                                     <StandardToggleSwitch
@@ -187,7 +198,7 @@ export function PlanManagerForm(props) {
                                 )}
                             </Field>
                         </Grid>
-                        <Grid xs={12} sm={4} md={4} item>
+                        <Grid xs={12} sm={3} md={3} item>
                             <Field name="useInstagram">
                                 {({ field }) => (
                                     <StandardToggleSwitch
@@ -243,6 +254,7 @@ export function PlansManagerGrid(props) {
                         <TableCell align="center">Conexões</TableCell>
                         <TableCell align="center">Filas</TableCell>
                         <TableCell align="center">Canais</TableCell>
+                        <TableCell align="center">Campanhas</TableCell>
                         <TableCell align="center">Valor</TableCell>
                     </TableRow>
                 </TableHead>
@@ -265,6 +277,7 @@ export function PlansManagerGrid(props) {
                                     row.useInstagram && 'Instagram'
                                 ].filter(Boolean).join(', ') || '-'}
                             </TableCell>
+                            <TableCell align="center">{row.useCampaigns ? 'Sim' : 'Não'}</TableCell>
                             <TableCell align="center">{row.value.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }) || '-'}</TableCell>
                         </TableRow>
                     ))}
@@ -290,7 +303,8 @@ export default function PlansManager() {
         value: 0,
         useWhatsapp: true,
         useFacebook: false,
-        useInstagram: false
+        useInstagram: false,
+        useCampaigns: false
     })
 
     useEffect(() => {
@@ -342,6 +356,7 @@ export default function PlansManager() {
         const useWhatsapp = data.useWhatsapp !== undefined ? data.useWhatsapp : true;
         const useFacebook = data.useFacebook !== undefined ? data.useFacebook : false;
         const useInstagram = data.useInstagram !== undefined ? data.useInstagram : false;
+        const useCampaigns = data.useCampaigns !== undefined ? data.useCampaigns : false;
 
         if (!useWhatsapp && !useFacebook && !useInstagram) {
             toast.error('Pelo menos um canal deve estar habilitado no plano');
@@ -357,7 +372,8 @@ export default function PlansManager() {
             value: value,
             useWhatsapp: useWhatsapp,
             useFacebook: useFacebook,
-            useInstagram: useInstagram
+            useInstagram: useInstagram,
+            useCampaigns: useCampaigns
         }
         setLoading(true)
         try {
@@ -437,7 +453,8 @@ export default function PlansManager() {
             value: 0,
             useWhatsapp: true,
             useFacebook: false,
-            useInstagram: false
+            useInstagram: false,
+            useCampaigns: false
         })
     }
 
@@ -451,7 +468,8 @@ export default function PlansManager() {
             value: data.value.toLocaleString('pt-br', { minimumFractionDigits: 2 }) || 0,
             useWhatsapp: data.useWhatsapp !== undefined ? data.useWhatsapp : true,
             useFacebook: data.useFacebook !== undefined ? data.useFacebook : false,
-            useInstagram: data.useInstagram !== undefined ? data.useInstagram : false
+            useInstagram: data.useInstagram !== undefined ? data.useInstagram : false,
+            useCampaigns: data.useCampaigns !== undefined ? data.useCampaigns : false
         })
     }
 

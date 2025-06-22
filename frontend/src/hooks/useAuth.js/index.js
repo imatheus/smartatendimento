@@ -97,13 +97,11 @@ const useAuth = () => {
         user: { companyId, id, company },
       } = data;
 
-      if (has(company, "settings") && isArray(company.settings)) {
-        const setting = company.settings.find(
-          (s) => s.key === "campaignsEnabled"
-        );
-        if (setting && setting.value === "true") {
-          localStorage.setItem("cshow", null); //regra pra exibir campanhas
-        }
+      // Verificar se o plano da empresa tem campanhas habilitadas
+      if (has(company, "plan") && company.plan && company.plan.useCampaigns) {
+        localStorage.setItem("cshow", null); //regra pra exibir campanhas
+      } else {
+        localStorage.removeItem("cshow"); // Remove se não tiver campanhas habilitadas
       }
 
       moment.locale('pt-br');

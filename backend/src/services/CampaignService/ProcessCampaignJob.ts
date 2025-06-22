@@ -98,10 +98,7 @@ const ProcessCampaignJob = async (job: Job<ProcessCampaignData>): Promise<void> 
           },
           defaults: {
             number: contact.number,
-            message: message,
-            confirmation: campaign.confirmation || false,
-            confirmationMessage: campaign.confirmation ? 
-              MessageVariables.processVariables(campaign.confirmationMessage1 || "", contactData) : ""
+            message: message
           }
         });
 
@@ -139,9 +136,7 @@ const ProcessCampaignJob = async (job: Job<ProcessCampaignData>): Promise<void> 
           },
           defaults: {
             number: contact.number,
-            message: campaign.message1 || "Mensagem de campanha",
-            confirmation: false,
-            confirmationMessage: ""
+            message: campaign.message1 || "Mensagem de campanha"
           }
         });
       }

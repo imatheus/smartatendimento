@@ -46,6 +46,10 @@ class Plan extends Model<Plan> {
   @Column
   useInstagram: boolean;
 
+  @AllowNull(false)
+  @Column
+  useCampaigns: boolean;
+
   @CreatedAt
   createdAt: Date;
 
