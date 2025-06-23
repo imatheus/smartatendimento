@@ -227,6 +227,28 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: "rgba(25, 118, 210, 0.1)",
     },
   },
+  expiredBanner: {
+    backgroundColor: "#f44336",
+    color: "#fff",
+    padding: theme.spacing(3),
+    textAlign: "center",
+    borderRadius: "16px",
+    marginBottom: theme.spacing(3),
+    boxShadow: "0 4px 12px rgba(244, 67, 54, 0.3)",
+  },
+  expiredTitle: {
+    fontSize: "1.5rem",
+    fontWeight: "bold",
+    marginBottom: theme.spacing(1),
+  },
+  expiredMessage: {
+    fontSize: "1rem",
+    marginBottom: theme.spacing(2),
+  },
+  expiredContact: {
+    fontSize: "0.9rem",
+    fontStyle: "italic",
+  },
 }));
 
 const Invoices = () => {
@@ -441,6 +463,48 @@ const Invoices = () => {
     return status === "paid" || status === "CONFIRMED" || status === "RECEIVED" || status === "RECEIVED_IN_CASH";
   }
 
+  const isInTrialPeriod = () => {
+    // Se a empresa tem uma data de vencimento definida, não está mais em período de trial
+    if (user?.company?.dueDate) return false;
+    
+    // Se não tem trialExpiration, não está em trial
+    if (!user?.company?.trialExpiration) return false;
+    
+    // Verificar se o período de teste ainda não expirou
+    const trialExpiration = moment(user.company.trialExpiration);
+    const now = moment();
+    const isTrialActive = now.isBefore(trialExpiration);
+    
+    return isTrialActive;
+  };
+
+  const isTrialExpired = () => {
+    // Se a empresa tem uma data de vencimento definida, não está mais em período de trial
+    if (user?.company?.dueDate) return false;
+    
+    // Se não tem trialExpiration, não está em trial
+    if (!user?.company?.trialExpiration) return false;
+    
+    const trialExpiration = moment(user.company.trialExpiration);
+    const now = moment();
+    
+    return now.isAfter(trialExpiration);
+  };
+
+  const getDaysRemaining = () => {
+    if (!user?.company?.trialExpiration) return 0;
+    const trialExpiration = moment(user.company.trialExpiration);
+    const now = moment();
+    return Math.ceil(trialExpiration.diff(now, 'days', true));
+  };
+
+  const getDaysExpired = () => {
+    if (!user?.company?.trialExpiration) return 0;
+    const trialExpiration = moment(user.company.trialExpiration);
+    const now = moment();
+    return Math.ceil(now.diff(trialExpiration, 'days', true));
+  };
+
   return (
     <MainContainer>
       <SubscriptionModal
@@ -454,6 +518,22 @@ const Invoices = () => {
       <MainHeader>
         <Title>Financeiro</Title>
       </MainHeader>
+      
+      {/* Mensagem de Trial Expirado */}
+      {isTrialExpired() && (
+        <Paper className={classes.expiredBanner} elevation={0}>
+          <Typography className={classes.expiredTitle}>
+            🚫 Período de Teste Expirado
+          </Typography>
+          <Typography className={classes.expiredMessage}>
+            Seu período de teste de 7 dias expirou há {getDaysExpired()} {getDaysExpired() === 1 ? 'dia' : 'dias'}.
+            Para continuar usando o sistema, é necessário efetuar o pagamento de uma das faturas abaixo.
+          </Typography>
+          <Typography className={classes.expiredContact}>
+            Todas as funcionalidades do sistema estão bloqueadas até a regularização do pagamento.
+          </Typography>
+        </Paper>
+      )}
       
       {/* Two Column Layout */}
       <div className={classes.mainContainer}>

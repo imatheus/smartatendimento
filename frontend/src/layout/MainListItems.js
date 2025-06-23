@@ -29,33 +29,49 @@ import { i18n } from "../translate/i18n";
 import { WhatsAppsContext } from "../context/WhatsApp/WhatsAppsContext";
 import { AuthContext } from "../context/Auth/AuthContext";
 import { Can } from "../components/Can";
+import moment from "moment";
 
 function ListItemLink(props) {
-  const { icon, primary, to, className, drawerCollapsed } = props;
+  const { icon, primary, to, className, drawerCollapsed, disabled = false } = props;
 
   const renderLink = React.useMemo(
     () =>
       React.forwardRef((itemProps, ref) => (
-        <RouterLink to={to} ref={ref} {...itemProps} />
+        <RouterLink to={disabled ? "#" : to} ref={ref} {...itemProps} />
       )),
-    [to]
+    [to, disabled]
   );
+
+  const handleClick = (e) => {
+    if (disabled) {
+      e.preventDefault();
+    }
+  };
 
   return (
     <li>
       <ListItem 
         button 
-        component={renderLink} 
+        component={disabled ? "div" : renderLink} 
         className={className}
-        title={drawerCollapsed ? primary : ""}
+        title={drawerCollapsed ? (disabled ? `${primary} (Bloqueado)` : primary) : ""}
+        onClick={handleClick}
         style={{ 
           justifyContent: drawerCollapsed ? 'center' : 'flex-start',
           paddingLeft: drawerCollapsed ? 16 : 16,
-          paddingRight: drawerCollapsed ? 16 : 16
+          paddingRight: drawerCollapsed ? 16 : 16,
+          opacity: disabled ? 0.5 : 1,
+          cursor: disabled ? 'not-allowed' : 'pointer'
         }}
       >
-        {icon ? <ListItemIcon style={{ minWidth: drawerCollapsed ? 'auto' : '40px' }}>{icon}</ListItemIcon> : null}
-        {!drawerCollapsed && <ListItemText primary={primary} />}
+        {icon ? <ListItemIcon style={{ 
+          minWidth: drawerCollapsed ? 'auto' : '40px',
+          opacity: disabled ? 0.5 : 1 
+        }}>{icon}</ListItemIcon> : null}
+        {!drawerCollapsed && <ListItemText 
+          primary={disabled ? `${primary} (Bloqueado)` : primary} 
+          style={{ opacity: disabled ? 0.5 : 1 }}
+        />}
       </ListItem>
     </li>
   );
@@ -71,6 +87,19 @@ const MainListItems = (props) => {
   const [showCampaigns, setShowCampaigns] = useState(false);
   const [campaignPopoverAnchor, setCampaignPopoverAnchor] = useState(null);
   const history = useHistory();
+
+  const isTrialExpired = () => {
+    // Se a empresa tem uma data de vencimento definida, não está mais em período de trial
+    if (user?.company?.dueDate) return false;
+    
+    // Se não tem trialExpiration, não está em trial
+    if (!user?.company?.trialExpiration) return false;
+    
+    const trialExpiration = moment(user.company.trialExpiration);
+    const now = moment();
+    
+    return now.isAfter(trialExpiration);
+  };
 
   
   useEffect(() => {
@@ -119,6 +148,7 @@ const MainListItems = (props) => {
             primary="Dashboard"
             icon={<DashboardOutlinedIcon />}
             drawerCollapsed={drawerCollapsed}
+            disabled={isTrialExpired()}
           />
         )}
       />
@@ -128,6 +158,7 @@ const MainListItems = (props) => {
         primary={i18n.t("mainDrawer.listItems.tickets")}
         icon={<ChatOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
+        disabled={isTrialExpired()}
       />
 
       <ListItemLink
@@ -135,6 +166,7 @@ const MainListItems = (props) => {
         primary={i18n.t("mainDrawer.listItems.quickMessages")}
         icon={<OfflineBoltOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
+        disabled={isTrialExpired()}
       />
 
       <ListItemLink
@@ -142,6 +174,7 @@ const MainListItems = (props) => {
         primary={i18n.t("mainDrawer.listItems.contacts")}
         icon={<ContactPhoneOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
+        disabled={isTrialExpired()}
       />
 
       <ListItemLink
@@ -149,6 +182,7 @@ const MainListItems = (props) => {
         primary={i18n.t("mainDrawer.listItems.tags")}
         icon={<LocalOfferOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
+        disabled={isTrialExpired()}
       />
 
       
@@ -167,50 +201,79 @@ const MainListItems = (props) => {
               <>
                 <ListItem
                   button
-                  onClick={() => setOpenCampaignSubmenu((prev) => !prev)}
+                  onClick={() => !isTrialExpired() && setOpenCampaignSubmenu((prev) => !prev)}
+                  style={{
+                    opacity: isTrialExpired() ? 0.5 : 1,
+                    cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  <ListItemIcon>
+                  <ListItemIcon style={{ opacity: isTrialExpired() ? 0.5 : 1 }}>
                     <VolumeUpOutlinedIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={i18n.t("mainDrawer.listItems.campaigns")}
+                    primary={isTrialExpired() ? `${i18n.t("mainDrawer.listItems.campaigns")} (Bloqueado)` : i18n.t("mainDrawer.listItems.campaigns")}
+                    style={{ opacity: isTrialExpired() ? 0.5 : 1 }}
                   />
-                  {openCampaignSubmenu ? (
+                  {!isTrialExpired() && (openCampaignSubmenu ? (
                     <ExpandLessIcon />
                   ) : (
                     <ExpandMoreIcon />
-                  )}
+                  ))}
                 </ListItem>
                 <Collapse
                   style={{ paddingLeft: 15 }}
-                  in={openCampaignSubmenu}
+                  in={openCampaignSubmenu && !isTrialExpired()}
                   timeout="auto"
                   unmountOnExit
                 >
                   <List component="div" disablePadding>
-                    <ListItem onClick={() => history.push("/campaigns")} button>
-                      <ListItemIcon>
+                    <ListItem 
+                      onClick={() => !isTrialExpired() && history.push("/campaigns")} 
+                      button
+                      style={{
+                        opacity: isTrialExpired() ? 0.5 : 1,
+                        cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      <ListItemIcon style={{ opacity: isTrialExpired() ? 0.5 : 1 }}>
                         <ListIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Listagem" />
+                      <ListItemText 
+                        primary={isTrialExpired() ? "Listagem (Bloqueado)" : "Listagem"}
+                        style={{ opacity: isTrialExpired() ? 0.5 : 1 }}
+                      />
                     </ListItem>
                     <ListItem
-                      onClick={() => history.push("/contact-lists")}
+                      onClick={() => !isTrialExpired() && history.push("/contact-lists")}
                       button
+                      style={{
+                        opacity: isTrialExpired() ? 0.5 : 1,
+                        cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
+                      }}
                     >
-                      <ListItemIcon>
+                      <ListItemIcon style={{ opacity: isTrialExpired() ? 0.5 : 1 }}>
                         <PeopleIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Listas de Contatos" />
+                      <ListItemText 
+                        primary={isTrialExpired() ? "Listas de Contatos (Bloqueado)" : "Listas de Contatos"}
+                        style={{ opacity: isTrialExpired() ? 0.5 : 1 }}
+                      />
                     </ListItem>
                     <ListItem
-                      onClick={() => history.push("/campaigns-config")}
+                      onClick={() => !isTrialExpired() && history.push("/campaigns-config")}
                       button
+                      style={{
+                        opacity: isTrialExpired() ? 0.5 : 1,
+                        cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
+                      }}
                     >
-                      <ListItemIcon>
+                      <ListItemIcon style={{ opacity: isTrialExpired() ? 0.5 : 1 }}>
                         <SettingsOutlinedIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Configurações" />
+                      <ListItemText 
+                        primary={isTrialExpired() ? "Configurações (Bloqueado)" : "Configurações"}
+                        style={{ opacity: isTrialExpired() ? 0.5 : 1 }}
+                      />
                     </ListItem>
                   </List>
                 </Collapse>
@@ -220,20 +283,25 @@ const MainListItems = (props) => {
               <>
                 <ListItem
                   button
-                  onClick={(event) => setCampaignPopoverAnchor(event.currentTarget)}
-                  title={i18n.t("mainDrawer.listItems.campaigns")}
+                  onClick={(event) => !isTrialExpired() && setCampaignPopoverAnchor(event.currentTarget)}
+                  title={isTrialExpired() ? `${i18n.t("mainDrawer.listItems.campaigns")} (Bloqueado)` : i18n.t("mainDrawer.listItems.campaigns")}
                   style={{ 
                     justifyContent: 'center',
                     paddingLeft: 16,
-                    paddingRight: 16
+                    paddingRight: 16,
+                    opacity: isTrialExpired() ? 0.5 : 1,
+                    cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  <ListItemIcon style={{ minWidth: 'auto' }}>
+                  <ListItemIcon style={{ 
+                    minWidth: 'auto',
+                    opacity: isTrialExpired() ? 0.5 : 1 
+                  }}>
                     <VolumeUpOutlinedIcon />
                   </ListItemIcon>
                 </ListItem>
                 <Popover
-                  open={Boolean(campaignPopoverAnchor)}
+                  open={Boolean(campaignPopoverAnchor) && !isTrialExpired()}
                   anchorEl={campaignPopoverAnchor}
                   onClose={handleCampaignPopoverClose}
                   anchorOrigin={{
@@ -252,8 +320,10 @@ const MainListItems = (props) => {
                 >
                   <MenuList>
                     <MenuItem onClick={() => {
-                      history.push("/campaigns");
-                      handleCampaignPopoverClose();
+                      if (!isTrialExpired()) {
+                        history.push("/campaigns");
+                        handleCampaignPopoverClose();
+                      }
                     }}>
                       <ListItemIcon>
                         <ListIcon />
@@ -261,8 +331,10 @@ const MainListItems = (props) => {
                       <ListItemText primary="Listagem" />
                     </MenuItem>
                     <MenuItem onClick={() => {
-                      history.push("/contact-lists");
-                      handleCampaignPopoverClose();
+                      if (!isTrialExpired()) {
+                        history.push("/contact-lists");
+                        handleCampaignPopoverClose();
+                      }
                     }}>
                       <ListItemIcon>
                         <PeopleIcon />
@@ -270,8 +342,10 @@ const MainListItems = (props) => {
                       <ListItemText primary="Listas de Contatos" />
                     </MenuItem>
                     <MenuItem onClick={() => {
-                      history.push("/campaigns-config");
-                      handleCampaignPopoverClose();
+                      if (!isTrialExpired()) {
+                        history.push("/campaigns-config");
+                        handleCampaignPopoverClose();
+                      }
                     }}>
                       <ListItemIcon>
                         <SettingsOutlinedIcon />
@@ -291,24 +365,28 @@ const MainListItems = (props) => {
                 </Badge>
               }
               drawerCollapsed={drawerCollapsed}
+              disabled={isTrialExpired()}
             />
             <ListItemLink
               to="/queues"
               primary={i18n.t("mainDrawer.listItems.queues")}
               icon={<AndroidOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
+              disabled={isTrialExpired()}
             />
             <ListItemLink
               to="/users"
               primary={i18n.t("mainDrawer.listItems.users")}
               icon={<PeopleAltOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
+              disabled={isTrialExpired()}
             />
             <ListItemLink
               to="/integrations"
               primary={i18n.t("mainDrawer.listItems.integrations")}
               icon={<PowerOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
+              disabled={isTrialExpired()}
             />
              <ListItemLink
                 to="/financeiro"
@@ -322,6 +400,7 @@ const MainListItems = (props) => {
               primary={i18n.t("mainDrawer.listItems.settings")}
               icon={<SettingsOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
+              disabled={isTrialExpired()}
             />
           </>
         )}

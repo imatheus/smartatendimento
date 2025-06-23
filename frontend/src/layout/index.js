@@ -502,6 +502,10 @@ const LoggedInLayout = ({ children }) => {
 
   // Verificar se está em período de teste
   const isInTrialPeriod = () => {
+    // Se a empresa tem uma data de vencimento definida, não está mais em período de trial
+    if (user?.company?.dueDate) return false;
+    
+    // Se não tem trialExpiration, não está em trial
     if (!user?.company?.trialExpiration) return false;
     
     // Verificar se o período de teste ainda não expirou

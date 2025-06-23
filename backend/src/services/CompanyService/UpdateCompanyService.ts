@@ -35,16 +35,26 @@ const UpdateCompanyService = async (
     throw new AppError("ERR_NO_COMPANY_FOUND", 404);
   }
 
-  await company.update({
+  // Se uma dueDate está sendo definida, remover o trialExpiration
+  const updateData: any = {
     name,
     phone,
     email,
     status,
     planId,
     dueDate,
-    recurrence,
-    trialExpiration: trialExpiration ? new Date(trialExpiration) : undefined
-  });
+    recurrence
+  };
+
+  // Se está definindo uma dueDate, remover o período de trial
+  if (dueDate) {
+    updateData.trialExpiration = null;
+  } else if (trialExpiration !== undefined) {
+    // Só atualizar trialExpiration se não estiver definindo dueDate
+    updateData.trialExpiration = trialExpiration ? new Date(trialExpiration) : null;
+  }
+
+  await company.update(updateData);
 
   if (companyData.campaignsEnabled !== undefined) {
     const [setting, created] = await Setting.findOrCreate({
