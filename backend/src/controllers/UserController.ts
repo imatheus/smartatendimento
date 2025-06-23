@@ -20,7 +20,7 @@ type ListQueryParams = {
   companyId: string;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { searchParam, pageNumber } = req.query as IndexQuery;
   const { companyId, profile } = req.user;
 
@@ -31,10 +31,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     profile
   });
 
-  return res.json({ users, count, hasMore });
+  res.json({ users, count, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const {
     email,
     password,
@@ -76,21 +76,21 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     user
   });
 
-  return res.status(200).json(user);
+  res.status(200).json(user);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { userId } = req.params;
 
   const user = await ShowUserService(userId);
 
-  return res.status(200).json(user);
+  res.status(200).json(user);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   if (req.user.profile !== "admin") {
     throw new AppError("ERR_NO_PERMISSION", 403);
   }
@@ -112,13 +112,13 @@ export const update = async (
     user
   });
 
-  return res.status(200).json(user);
+  res.status(200).json(user);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { userId } = req.params;
   const { companyId } = req.user;
 
@@ -134,10 +134,10 @@ export const remove = async (
     userId
   });
 
-  return res.status(200).json({ message: "User deleted" });
+  res.status(200).json({ message: "User deleted" });
 };
 
-export const list = async (req: Request, res: Response): Promise<Response> => {
+export const list = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.query;
   const { companyId: userCompanyId } = req.user;
 
@@ -145,5 +145,5 @@ export const list = async (req: Request, res: Response): Promise<Response> => {
     companyId: companyId ? +companyId : userCompanyId
   });
 
-  return res.status(200).json(users);
+  res.status(200).json(users);
 };

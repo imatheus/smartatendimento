@@ -29,14 +29,17 @@ app.use("/uploads", express.static(join(__dirname, "..", "uploads")));
 
 app.use(routes);
 
-app.use(async (err: Error, req: Request, res: Response, _: NextFunction) => {
+const errorHandler: express.ErrorRequestHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof AppError) {
     logger.warn(err);
-    return res.status(err.statusCode).json({ error: err.message });
+    res.status(err.statusCode).json({ error: err.message });
+    return;
   }
 
   logger.error(err);
-  return res.status(500).json({ error: "Internal server error" });
-});
+  res.status(500).json({ error: "Internal server error" });
+};
+
+app.use(errorHandler);
 
 export default app;

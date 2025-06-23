@@ -33,7 +33,7 @@ type MessageData = {
   number?: string;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { ticketId } = req.params;
   const { pageNumber } = req.query as IndexQuery;
   const { companyId, profile } = req.user;
@@ -59,10 +59,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     SetTicketMessagesAsRead(ticket);
   }
 
-  return res.json({ count, messages, ticket, hasMore });
+  res.json({ count, messages, ticket, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { ticketId } = req.params;
   const { body, quotedMsg }: MessageData = req.body;
   const medias = req.files as Express.Multer.File[];
@@ -103,13 +103,13 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     }
   }
 
-  return res.send();
+  res.send();
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { messageId } = req.params;
   const { companyId } = req.user;
 
@@ -132,10 +132,10 @@ export const remove = async (
     message: deletedMessage
   });
 
-  return res.send();
+  res.send();
 };
 
-export const send = async (req: Request, res: Response): Promise<Response> => {
+export const send = async (req: Request, res: Response): Promise<void> => {
   const { whatsappId } = req.params as unknown as { whatsappId: number };
   const messageData: MessageData = req.body;
   const medias = req.files as Express.Multer.File[];
@@ -183,7 +183,7 @@ export const send = async (req: Request, res: Response): Promise<Response> => {
         });
       }
 
-      return res.send({ mensagem: "Mensagem enviada com sucesso" });
+      res.send({ mensagem: "Mensagem enviada com sucesso" });
     } catch (checkError: any) {
       if (checkError.message === "ERR_CHECK_NUMBER") {
         throw new AppError("Número não possui WhatsApp ativo", 400);

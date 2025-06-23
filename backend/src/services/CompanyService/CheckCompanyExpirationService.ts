@@ -2,6 +2,7 @@ import moment from "moment";
 import { Op } from "sequelize";
 import Company from "../../models/Company";
 import { logger } from "../../utils/logger";
+import { getIO } from "../../libs/socket";
 
 interface Response {
   totalChecked: number;
@@ -149,6 +150,38 @@ const CheckCompanyExpirationService = async (): Promise<Response> => {
         if (shouldUpdate) {
           await company.update({ status: newStatus });
           logger.info(`Status da empresa ${company.name} atualizado para ${newStatus ? 'ativa' : 'inativa'}`);
+          
+          // Emitir evento Socket.IO para notificar mudança de status
+          try {
+            const io = getIO();
+            if (statusType === 'expired') {
+              // Empresa foi bloqueada
+              io.emit(`company-${company.id}-status-updated`, {
+                action: "company_blocked",
+                company: {
+                  id: company.id,
+                  status: false,
+                  isExpired: true,
+                  reason: "automatic_expiration_check"
+                }
+              });
+              logger.info(`Socket.IO event emitted for company ${company.id} - blocked`);
+            } else if (statusType === 'activated' || statusType === 'trial') {
+              // Empresa foi reativada
+              io.emit(`company-${company.id}-status-updated`, {
+                action: "company_reactivated",
+                company: {
+                  id: company.id,
+                  status: true,
+                  isExpired: false,
+                  isInTrial: statusType === 'trial'
+                }
+              });
+              logger.info(`Socket.IO event emitted for company ${company.id} - reactivated`);
+            }
+          } catch (socketError) {
+            logger.warn(`Failed to emit Socket.IO event for company ${company.id}:`, socketError);
+          }
         }
 
         result.details.push({

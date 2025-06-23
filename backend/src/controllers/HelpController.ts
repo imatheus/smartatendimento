@@ -25,17 +25,17 @@ type StoreData = {
   link?: string;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { searchParam, pageNumber } = req.query as IndexQuery;
 
   const { records, count, hasMore } = await ListService({
     searchParam,
     pageNumber
   });
-  return res.json({ records, count, hasMore });
+  res.json({ records, count, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
   const data = req.body as StoreData;
 
@@ -59,21 +59,21 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     record
   });
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   const record = await ShowService(id);
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const data = req.body as StoreData;
   const { companyId } = req.user;
 
@@ -100,13 +100,13 @@ export const update = async (
     record
   });
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
   const { companyId } = req.user;
 
@@ -118,14 +118,14 @@ export const remove = async (
     id
   });
 
-  return res.status(200).json({ message: "Help deleted" });
+  res.status(200).json({ message: "Help deleted" });
 };
 
 export const findList = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const records: Help[] = await FindService();
 
-  return res.status(200).json(records);
+  res.status(200).json(records);
 };

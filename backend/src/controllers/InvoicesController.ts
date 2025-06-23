@@ -42,7 +42,7 @@ type CreateInvoiceData = {
   dueDate?: string;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { searchParam, pageNumber } = req.query as IndexQuery;
 
   const { invoices, count, hasMore } = await ListInvoicesServices({
@@ -50,29 +50,29 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     pageNumber
   });
 
-  return res.json({ invoices, count, hasMore });
+  res.json({ invoices, count, hasMore });
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { Invoiceid } = req.params;
 
   const invoice = await ShowInvoceService(Invoiceid);
 
-  return res.status(200).json(invoice);
+  res.status(200).json(invoice);
 };
 
 
-export const list = async (req: Request, res: Response): Promise<Response> => {
+export const list = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
   const invoice: Invoices[] = await FindAllInvoiceService(companyId);
 
-  return res.status(200).json(invoice);
+  res.status(200).json(invoice);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const InvoiceData: UpdateInvoiceData = req.body;
 
   const schema = Yup.object().shape({
@@ -99,9 +99,9 @@ export const update = async (
   //   plan
   // });
 
-  return res.status(200).json(plan);
+  res.status(200).json(plan);
 };
-/* export const store = async (req: Request, res: Response): Promise<Response> => {
+/* export const store = async (req: Request, res: Response): Promise<void> => {
   const newPlan: StorePlanData = req.body;
 
   const schema = Yup.object().shape({
@@ -122,21 +122,21 @@ export const update = async (
   //   plan
   // });
 
-  return res.status(200).json(plan);
+  res.status(200).json(plan);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   const plan = await ShowPlanService(id);
 
-  return res.status(200).json(plan);
+  res.status(200).json(plan);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const planData: UpdateInvoiceData = req.body;
 
   const schema = Yup.object().shape({
@@ -166,16 +166,16 @@ export const update = async (
   //   plan
   // });
 
-  return res.status(200).json(plan);
+  res.status(200).json(plan);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
 
   const plan = await DeletePlanService(id);
 
-  return res.status(200).json(plan);
+  res.status(200).json(plan);
 }; */

@@ -42,7 +42,7 @@ type SchedulesData = {
 };
 
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { searchParam, pageNumber } = req.query as IndexQuery;
 
   const { companies, count, hasMore } = await ListCompaniesService({
@@ -50,10 +50,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     pageNumber
   });
 
-  return res.json({ companies, count, hasMore });
+  res.json({ companies, count, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const newCompany: CompanyData = req.body;
 
   const schema = Yup.object().shape({
@@ -68,27 +68,27 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
 
   const company = await CreateCompanyService(newCompany);
 
-  return res.status(200).json(company);
+  res.status(200).json(company);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   const company = await ShowCompanyService(id);
 
-  return res.status(200).json(company);
+  res.status(200).json(company);
 };
 
-export const list = async (req: Request, res: Response): Promise<Response> => {
+export const list = async (req: Request, res: Response): Promise<void> => {
   const companies: Company[] = await FindAllCompaniesService();
 
-  return res.status(200).json(companies);
+  res.status(200).json(companies);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const companyData: CompanyData = req.body;
 
   const schema = Yup.object().shape({
@@ -105,13 +105,13 @@ export const update = async (
 
   const company = await UpdateCompanyService({ id, ...companyData });
 
-  return res.status(200).json(company);
+  res.status(200).json(company);
 };
 
 export const updateSchedules = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { schedules }: SchedulesData = req.body;
   const { id } = req.params;
 
@@ -120,24 +120,24 @@ export const updateSchedules = async (
     schedules
   });
 
-  return res.status(200).json(company);
+  res.status(200).json(company);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
 
   const company = await DeleteCompanyService(id);
 
-  return res.status(200).json(company);
+  res.status(200).json(company);
 };
 
 export const syncDueDate = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
   const { dueDate, updateAsaas = true, updateTrialExpiration = true } = req.body;
 
@@ -158,18 +158,18 @@ export const syncDueDate = async (
     updateTrialExpiration
   });
 
-  return res.status(200).json(result);
+  res.status(200).json(result);
 };
 
 export const checkExpiration = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const result = await CheckCompanyExpirationService();
-  return res.status(200).json(result);
+  res.status(200).json(result);
 };
 
-export const storeWithTrial = async (req: Request, res: Response): Promise<Response> => {
+export const storeWithTrial = async (req: Request, res: Response): Promise<void> => {
   const newCompany: CompanyData = req.body;
 
   const schema = Yup.object().shape({
@@ -186,5 +186,5 @@ export const storeWithTrial = async (req: Request, res: Response): Promise<Respo
 
   const result = await CreateCompanyWithTrialService(newCompany);
 
-  return res.status(200).json(result);
+  res.status(200).json(result);
 };

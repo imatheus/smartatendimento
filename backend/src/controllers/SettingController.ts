@@ -6,7 +6,7 @@ import AppError from "../errors/AppError";
 import UpdateSettingService from "../services/SettingServices/UpdateSettingService";
 import ListSettingsService from "../services/SettingServices/ListSettingsService";
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
 
   if (req.user.profile !== "admin") {
@@ -15,13 +15,13 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 
   const settings = await ListSettingsService({ companyId });
 
-  return res.status(200).json(settings);
+  res.status(200).json(settings);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   if (req.user.profile !== "admin") {
     throw new AppError("ERR_NO_PERMISSION", 403);
   }
@@ -41,5 +41,5 @@ export const update = async (
     setting
   });
 
-  return res.status(200).json(setting);
+  res.status(200).json(setting);
 };

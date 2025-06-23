@@ -102,10 +102,10 @@ const AuthUserService = async ({
   const serializedUser = await SerializeUser(user);
   
   // Sobrescrever informações da empresa com status atualizado
-  serializedUser.company = companyStatus;
+  (serializedUser as any).company = companyStatus;
 
   return {
-    serializedUser,
+    serializedUser: serializedUser as any,
     token,
     refreshToken
   };

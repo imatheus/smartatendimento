@@ -91,7 +91,7 @@ const useAuth = () => {
       }
     });
 
-    // Listener para reativação da empresa
+    // Listener para mudanças de status da empresa
     socket.on(`company-${companyId}-status-updated`, (data) => {
       if (data.action === "company_reactivated") {
         // Mostrar notificação de reativação
@@ -112,6 +112,21 @@ const useAuth = () => {
             }, 2000);
           }
         });
+      } else if (data.action === "company_blocked") {
+        // Empresa foi bloqueada por vencimento
+        // Verificar se não é super admin antes de bloquear
+        if (user.profile !== 'super' && !user.super) {
+          toast.error(`🚫 Empresa bloqueada por falta de pagamento. Redirecionando para o financeiro...`);
+          
+          // Recarregar dados do usuário
+          refreshUserData().then(() => {
+            // Redirecionar para financeiro após bloqueio
+            setTimeout(() => {
+              history.push('/financeiro');
+              window.location.reload();
+            }, 2000);
+          });
+        }
       }
     });
 

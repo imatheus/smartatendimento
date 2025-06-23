@@ -8,17 +8,17 @@ interface StoreData {
   settings: any;
 }
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
 
   const records = await ListService({
     companyId
   });
 
-  return res.json(records);
+  res.json(records);
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
   const data = req.body as StoreData;
 
@@ -30,5 +30,5 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     record
   });
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };

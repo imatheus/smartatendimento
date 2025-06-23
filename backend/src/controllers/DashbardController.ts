@@ -5,7 +5,7 @@ import DashboardDataService, {
   Params
 } from "../services/ReportService/DashbardDataService";
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   try {
     const params: Params = req.query;
     const { companyId } = req.user;
@@ -15,12 +15,12 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
       params
     );
     
-    return res.status(200).json(dashboardData);
+    res.status(200).json(dashboardData);
   } catch (error) {
     console.error('Dashboard controller error:', error);
     
     // Return default data in case of error
-    return res.status(200).json({
+    res.status(200).json({
       counters: {
         supportHappening: 0,
         supportPending: 0,

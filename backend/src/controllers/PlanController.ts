@@ -42,7 +42,7 @@ type UpdatePlanData = {
   useCampaigns?: boolean;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { searchParam, pageNumber } = req.query as IndexQuery;
 
   const { plans, count, hasMore } = await ListPlansService({
@@ -50,16 +50,16 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     pageNumber
   });
 
-  return res.json({ plans, count, hasMore });
+  res.json({ plans, count, hasMore });
 };
 
-export const list = async (req: Request, res: Response): Promise<Response> => {
+export const list = async (req: Request, res: Response): Promise<void> => {
   const plans: Plan[] = await FindAllPlanService();
 
-  return res.status(200).json(plans);
+  res.status(200).json(plans);
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const newPlan: StorePlanData = req.body;
 
   const schema = Yup.object().shape({
@@ -80,21 +80,21 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   //   plan
   // });
 
-  return res.status(200).json(plan);
+  res.status(200).json(plan);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   const plan = await ShowPlanService(id);
 
-  return res.status(200).json(plan);
+  res.status(200).json(plan);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const planData: UpdatePlanData = req.body;
 
   const schema = Yup.object().shape({
@@ -128,16 +128,16 @@ export const update = async (
   //   plan
   // });
 
-  return res.status(200).json(plan);
+  res.status(200).json(plan);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
 
   const plan = await DeletePlanService(id);
 
-  return res.status(200).json(plan);
+  res.status(200).json(plan);
 };

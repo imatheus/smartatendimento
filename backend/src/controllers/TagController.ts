@@ -16,7 +16,7 @@ type IndexQuery = {
   pageNumber?: string | number;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { pageNumber, searchParam } = req.query as IndexQuery;
   const { companyId } = req.user;
 
@@ -26,10 +26,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     companyId
   });
 
-  return res.json({ tags, count, hasMore });
+  res.json({ tags, count, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { name, color } = req.body;
   const { companyId } = req.user;
 
@@ -45,21 +45,21 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     tag
   });
 
-  return res.status(200).json(tag);
+  res.status(200).json(tag);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { tagId } = req.params;
 
   const tag = await ShowService(tagId);
 
-  return res.status(200).json(tag);
+  res.status(200).json(tag);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   if (req.user.profile !== "admin") {
     throw new AppError("ERR_NO_PERMISSION", 403);
   }
@@ -75,13 +75,13 @@ export const update = async (
     tag
   });
 
-  return res.status(200).json(tag);
+  res.status(200).json(tag);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { tagId } = req.params;
 
   await DeleteService(tagId);
@@ -92,26 +92,26 @@ export const remove = async (
     tagId
   });
 
-  return res.status(200).json({ message: "Tag deleted" });
+  res.status(200).json({ message: "Tag deleted" });
 };
 
-export const list = async (req: Request, res: Response): Promise<Response> => {
+export const list = async (req: Request, res: Response): Promise<void> => {
   const { searchParam } = req.query as IndexQuery;
   const { companyId } = req.user;
 
   const tags = await SimpleListService({ searchParam, companyId });
 
-  return res.json(tags);
+  res.json(tags);
 };
 
 export const syncTags = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const data = req.body;
   const { companyId } = req.user;
 
   const tags = await SyncTagService({ ...data, companyId });
 
-  return res.json(tags);
+  res.json(tags);
 };

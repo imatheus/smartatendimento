@@ -30,7 +30,7 @@ type FindParams = {
   companyId: string;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { searchParam, pageNumber } = req.query as IndexQuery;
   const { companyId } = req.user;
 
@@ -40,10 +40,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     companyId
   });
 
-  return res.json({ records, count, hasMore });
+  res.json({ records, count, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
   const data = req.body as StoreData;
 
@@ -68,21 +68,21 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     record
   });
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   const record = await ShowService(id);
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const data = req.body as StoreData;
   const { companyId } = req.user;
 
@@ -109,13 +109,13 @@ export const update = async (
     record
   });
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
   const { companyId } = req.user;
 
@@ -127,17 +127,17 @@ export const remove = async (
     id
   });
 
-  return res.status(200).json({ message: "Contact list deleted" });
+  res.status(200).json({ message: "Contact list deleted" });
 };
 
 export const findList = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const params = req.query as FindParams;
   const records: ContactList[] = await FindService(params);
 
-  return res.status(200).json(records);
+  res.status(200).json(records);
 };
 
 export const upload = async (req: Request, res: Response) => {
@@ -155,5 +155,5 @@ export const upload = async (req: Request, res: Response) => {
     records: response
   });
 
-  return res.status(200).json(response);
+  res.status(200).json(response);
 };

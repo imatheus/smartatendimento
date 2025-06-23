@@ -7,17 +7,17 @@ import DeleteBaileysService from "../services/BaileysServices/DeleteBaileysServi
 import DeleteWhatsAppService from "../services/WhatsappService/DeleteWhatsAppService";
 import { cacheLayer } from "../libs/cache";
 
-const store = async (req: Request, res: Response): Promise<Response> => {
+const store = async (req: Request, res: Response): Promise<void> => {
   const { whatsappId } = req.params;
   const { companyId } = req.user;
 
   const whatsapp = await ShowWhatsAppService(whatsappId, companyId);
   await StartWhatsAppSession(whatsapp);
 
-  return res.status(200).json({ message: "Starting session." });
+  res.status(200).json({ message: "Starting session." });
 };
 
-const update = async (req: Request, res: Response): Promise<Response> => {
+const update = async (req: Request, res: Response): Promise<void> => {
   const { whatsappId } = req.params;
   const { companyId } = req.user;
 
@@ -31,10 +31,10 @@ const update = async (req: Request, res: Response): Promise<Response> => {
     await StartWhatsAppSession(whatsapp);
   }
 
-  return res.status(200).json({ message: "Starting session." });
+  res.status(200).json({ message: "Starting session." });
 };
 
-const remove = async (req: Request, res: Response): Promise<Response> => {
+const remove = async (req: Request, res: Response): Promise<void> => {
   console.log("remove");
   const { whatsappId } = req.params;
   const { companyId } = req.user;
@@ -51,7 +51,7 @@ const remove = async (req: Request, res: Response): Promise<Response> => {
     whatsapp.destroy();
   }
 
-  return res.status(200).json({ message: "Session disconnected." });
+  res.status(200).json({ message: "Session disconnected." });
 };
 
 export default { store, remove, update };

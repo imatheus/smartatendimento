@@ -30,7 +30,7 @@ type FindParams = {
   ownerId?: number;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { pageNumber } = req.query as unknown as IndexQuery;
   const ownerId = +req.user.id;
 
@@ -39,10 +39,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     pageNumber
   });
 
-  return res.json({ records, count, hasMore });
+  res.json({ records, count, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
   const ownerId = +req.user.id;
   const data = req.body as StoreData;
@@ -62,13 +62,13 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     });
   });
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { companyId } = req.user;
   const data = req.body;
   const { id } = req.params;
@@ -87,21 +87,21 @@ export const update = async (
     });
   });
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   const record = await ShowFromUuidService(id);
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
   const { companyId } = req.user;
 
@@ -113,13 +113,13 @@ export const remove = async (
     id
   });
 
-  return res.status(200).json({ message: "Chat deleted" });
+  res.status(200).json({ message: "Chat deleted" });
 };
 
 export const saveMessage = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { companyId } = req.user;
   const { message } = req.body;
   const { id } = req.params;
@@ -152,13 +152,13 @@ export const saveMessage = async (
     chat
   });
 
-  return res.json(newMessage);
+  res.json(newMessage);
 };
 
 export const checkAsRead = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { companyId } = req.user;
   const { userId } = req.body;
   const { id } = req.params;
@@ -184,13 +184,13 @@ export const checkAsRead = async (
     chat
   });
 
-  return res.json(chat);
+  res.json(chat);
 };
 
 export const messages = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { pageNumber } = req.query as unknown as IndexQuery;
   const { id: chatId } = req.params;
   const ownerId = +req.user.id;
@@ -201,5 +201,5 @@ export const messages = async (
     pageNumber
   });
 
-  return res.json({ records, count, hasMore });
+  res.json({ records, count, hasMore });
 };

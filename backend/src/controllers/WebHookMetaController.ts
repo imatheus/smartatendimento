@@ -3,7 +3,7 @@ import Whatsapp from "../models/Whatsapp";
 import { handleMessage } from "../services/FacebookServices/facebookMessageListener";
 // import { handleMessage } from "../services/FacebookServices/facebookMessageListener";
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "whaticket";
 
   const mode = req.query["hub.mode"];
@@ -12,11 +12,11 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 
   if (mode && token) {
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      return res.status(200).send(challenge);
+      res.status(200).send(challenge);
     }
   }
 
-  return res.status(403).json({
+  res.status(403).json({
     message: "Forbidden"
   });
 };
@@ -24,7 +24,7 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 export const webHook = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
  try {
   const { body } = req;
   if (body.object === "page" || body.object === "instagram") {
@@ -53,16 +53,16 @@ export const webHook = async (
       }
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "EVENT_RECEIVED"
     });
   }
 
-  return res.status(404).json({
+  res.status(404).json({
     message: body
   });
  } catch (error) {
-  return res.status(500).json({
+  res.status(500).json({
     message: error
   });
  }

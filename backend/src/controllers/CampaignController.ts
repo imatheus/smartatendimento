@@ -42,7 +42,7 @@ type FindParams = {
   companyId: string;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { searchParam, pageNumber } = req.query as IndexQuery;
   const { companyId } = req.user;
 
@@ -52,10 +52,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     companyId
   });
 
-  return res.json({ records, count, hasMore });
+  res.json({ records, count, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
   const data = req.body as StoreData;
 
@@ -80,21 +80,21 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     record
   });
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   const record = await ShowService(id);
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const data = req.body as StoreData;
   const { companyId } = req.user;
 
@@ -121,35 +121,35 @@ export const update = async (
     record
   });
 
-  return res.status(200).json(record);
+  res.status(200).json(record);
 };
 
 export const cancel = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
 
   await CancelService(+id);
 
-  return res.status(204).json({ message: "Cancelamento realizado" });
+  res.status(204).json({ message: "Cancelamento realizado" });
 };
 
 export const restart = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
 
   await RestartService(+id);
 
-  return res.status(204).json({ message: "Reinício dos disparos" });
+  res.status(204).json({ message: "Reinício dos disparos" });
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
   const { companyId } = req.user;
 
@@ -161,23 +161,23 @@ export const remove = async (
     id
   });
 
-  return res.status(200).json({ message: "Campaign deleted" });
+  res.status(200).json({ message: "Campaign deleted" });
 };
 
 export const findList = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const params = req.query as FindParams;
   const records: Campaign[] = await FindService(params);
 
-  return res.status(200).json(records);
+  res.status(200).json(records);
 };
 
 export const mediaUpload = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
   const { companyId } = req.user;
   const files = req.files as Express.Multer.File[];
@@ -219,7 +219,7 @@ export const mediaUpload = async (
     campaign.mediaName = file.originalname;
     await campaign.save();
 
-    return res.send({ 
+    res.send({ 
       mensagem: "Arquivo anexado com sucesso",
       mediaPath: mediaPath,
       mediaName: file.originalname
@@ -232,7 +232,7 @@ export const mediaUpload = async (
 export const deleteMedia = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
 
   try {
@@ -249,7 +249,7 @@ export const deleteMedia = async (
     campaign.mediaPath = null;
     campaign.mediaName = null;
     await campaign.save();
-    return res.send({ mensagem: "Arquivo excluído com sucesso" });
+    res.send({ mensagem: "Arquivo excluído com sucesso" });
   } catch (err: any) {
     throw new AppError(err.message);
   }
@@ -258,10 +258,10 @@ export const deleteMedia = async (
 export const processPending = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   try {
     await ProcessPendingCampaigns();
-    return res.status(200).json({ message: "Pending campaigns processed successfully" });
+    res.status(200).json({ message: "Pending campaigns processed successfully" });
   } catch (err: any) {
     throw new AppError(err.message);
   }
@@ -270,7 +270,7 @@ export const processPending = async (
 export const testMedia = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { number } = req.body;
@@ -298,7 +298,7 @@ export const testMedia = async (
       message: campaign.message1 || "Teste de mídia"
     });
 
-    return res.status(200).json(result);
+    res.status(200).json(result);
   } catch (err: any) {
     throw new AppError(err.message);
   }
@@ -307,7 +307,7 @@ export const testMedia = async (
 export const processConfirmation = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   try {
     const { campaignId, contactNumber, responseMessage } = req.body;
     const { companyId } = req.user;
@@ -323,7 +323,7 @@ export const processConfirmation = async (
       companyId: companyId
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       success: result,
       message: result ? "Confirmation processed successfully" : "Confirmation not processed"
     });
@@ -335,7 +335,7 @@ export const processConfirmation = async (
 export const previewMessage = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   try {
     const { message } = req.body;
 
@@ -346,7 +346,7 @@ export const previewMessage = async (
     const preview = MessageVariables.generatePreview(message);
     const variables = MessageVariables.extractVariables(message);
 
-    return res.status(200).json({
+    res.status(200).json({
       original: message,
       preview: preview,
       variables: variables,

@@ -37,7 +37,7 @@ type QueryFilteredNotes = {
   ticketId: number | string;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { searchParam, pageNumber } = req.query as IndexQuery;
 
   const { ticketNotes, count, hasMore } = await ListTicketNotesService({
@@ -45,16 +45,16 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     pageNumber
   });
 
-  return res.json({ ticketNotes, count, hasMore });
+  res.json({ ticketNotes, count, hasMore });
 };
 
-export const list = async (req: Request, res: Response): Promise<Response> => {
+export const list = async (req: Request, res: Response): Promise<void> => {
   const ticketNotes: TicketNote[] = await FindAllTicketNotesService();
 
-  return res.status(200).json(ticketNotes);
+  res.status(200).json(ticketNotes);
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const newTicketNote: StoreTicketNoteData = req.body;
   const { id: userId } = req.user;
 
@@ -73,21 +73,21 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     userId
   });
 
-  return res.status(200).json(ticketNote);
+  res.status(200).json(ticketNote);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   const ticketNote = await ShowTicketNoteService(id);
 
-  return res.status(200).json(ticketNote);
+  res.status(200).json(ticketNote);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const ticketNote: UpdateTicketNoteData = req.body;
 
   const schema = Yup.object().shape({
@@ -102,13 +102,13 @@ export const update = async (
 
   const recordUpdated = await UpdateTicketNoteService(ticketNote);
 
-  return res.status(200).json(recordUpdated);
+  res.status(200).json(recordUpdated);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { id } = req.params;
 
   if (req.user.profile !== "admin") {
@@ -117,13 +117,13 @@ export const remove = async (
 
   await DeleteTicketNoteService(id);
 
-  return res.status(200).json({ message: "Observação removida" });
+  res.status(200).json({ message: "Observação removida" });
 };
 
 export const findFilteredList = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   try {
     const { contactId, ticketId } = req.query as QueryFilteredNotes;
     const notes: TicketNote[] = await FindNotesByContactIdAndTicketId({
@@ -131,8 +131,8 @@ export const findFilteredList = async (
       ticketId
     });
 
-    return res.status(200).json(notes);
+    res.status(200).json(notes);
   } catch (e) {
-    return res.status(500).json({ message: e });
+    res.status(500).json({ message: e });
   }
 };

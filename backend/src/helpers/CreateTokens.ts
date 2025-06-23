@@ -14,7 +14,7 @@ export const createAccessToken = (user: User): string => {
     },
     secret,
     {
-      expiresIn
+      expiresIn: expiresIn as any
     }
   );
 };
@@ -23,10 +23,14 @@ export const createRefreshToken = (user: User): string => {
   const { refreshSecret, refreshExpiresIn } = authConfig;
 
   return sign(
-    { id: user.id, tokenVersion: user.tokenVersion, companyId: user.companyId },
+    { 
+      id: user.id, 
+      tokenVersion: user.tokenVersion, 
+      companyId: user.companyId 
+    },
     refreshSecret,
     {
-      expiresIn: refreshExpiresIn
+      expiresIn: refreshExpiresIn as any
     }
   );
 };

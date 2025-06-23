@@ -315,12 +315,14 @@ const handlePaymentConfirmed = async (payload: WebhookPayload, asaasConfig: Asaa
     });
 
     // Atualizar status da empresa e data de vencimento
+    let newDueDate: string | null = null;
+    
     if (invoice.companyId) {
       const company = await Company.findByPk(invoice.companyId);
       
       if (company) {
         // Calcular nova data de vencimento (próximo mês a partir de hoje)
-        const newDueDate = moment().add(1, 'month').format('YYYY-MM-DD');
+        newDueDate = moment().add(1, 'month').format('YYYY-MM-DD');
         
         try {
           // Usar o serviço de sincronização para atualizar a data de vencimento

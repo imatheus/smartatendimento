@@ -31,7 +31,7 @@ interface TicketData {
   justClose: boolean;
 }
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const {
     pageNumber,
     status,
@@ -79,10 +79,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     companyId
   });
 
-  return res.status(200).json({ tickets, count, hasMore });
+  res.status(200).json({ tickets, count, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { contactId, status, userId, queueId }: TicketData = req.body;
   const { companyId } = req.user;
 
@@ -100,33 +100,33 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     ticket
   });
 
-  return res.status(200).json(ticket);
+  res.status(200).json(ticket);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { ticketId } = req.params;
   const { companyId } = req.user;
 
   const contact = await ShowTicketService(ticketId, companyId);
 
-  return res.status(200).json(contact);
+  res.status(200).json(contact);
 };
 
 export const showFromUUID = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { uuid } = req.params;
 
   const ticket: Ticket = await ShowTicketUUIDService(uuid);
 
-  return res.status(200).json(ticket);
+  res.status(200).json(ticket);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   try {
     const { ticketId } = req.params;
     const ticketData: TicketData = req.body;
@@ -140,23 +140,23 @@ export const update = async (
 
     // Check if result exists and has ticket property
     if (!result || !result.ticket) {
-      return res.status(400).json({ error: "Failed to update ticket" });
+      res.status(400).json({ error: "Failed to update ticket" });
     }
 
     const { ticket } = result;
-    return res.status(200).json(ticket);
+    res.status(200).json(ticket);
   } catch (error) {
     console.error("Error updating ticket:", error);
     
     // Handle AppError instances with their specific status code and message
     if (error instanceof AppError) {
-      return res.status(error.statusCode).json({ 
+      res.status(error.statusCode).json({ 
         error: error.message
       });
     }
     
     // Handle other errors as internal server errors
-    return res.status(500).json({ 
+    res.status(500).json({ 
       error: "Internal server error", 
       message: error.message || "Failed to update ticket"
     });
@@ -166,7 +166,7 @@ export const update = async (
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { ticketId } = req.params;
   const { companyId } = req.user;
 
@@ -183,5 +183,5 @@ export const remove = async (
       ticketId: +ticketId
     });
 
-  return res.status(200).json({ message: "ticket deleted" });
+  res.status(200).json({ message: "ticket deleted" });
 };

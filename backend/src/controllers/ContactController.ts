@@ -39,7 +39,7 @@ interface ContactData {
   extraInfo?: ExtraInfo[];
 }
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { searchParam, pageNumber } = req.query as IndexQuery;
   const { companyId } = req.user;
 
@@ -49,13 +49,13 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     companyId
   });
 
-  return res.json({ contacts, count, hasMore });
+  res.json({ contacts, count, hasMore });
 };
 
 export const getContact = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { name, number } = req.body as IndexGetContactQuery;
   const { companyId } = req.user;
 
@@ -65,10 +65,10 @@ export const getContact = async (
     companyId
   });
 
-  return res.status(200).json(contact);
+  res.status(200).json(contact);
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
   const newContact: ContactData = req.body;
   newContact.number = newContact.number.replace("-", "").replace(" ", "");
@@ -108,22 +108,22 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     contact
   });
 
-  return res.status(200).json(contact);
+  res.status(200).json(contact);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { contactId } = req.params;
   const { companyId } = req.user;
 
   const contact = await ShowContactService(contactId, companyId);
 
-  return res.status(200).json(contact);
+  res.status(200).json(contact);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const contactData: ContactData = req.body;
   const { companyId } = req.user;
 
@@ -160,13 +160,13 @@ export const update = async (
     contact
   });
 
-  return res.status(200).json(contact);
+  res.status(200).json(contact);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { contactId } = req.params;
   const { companyId } = req.user;
 
@@ -180,14 +180,14 @@ export const remove = async (
     contactId
   });
 
-  return res.status(200).json({ message: "Contact deleted" });
+  res.status(200).json({ message: "Contact deleted" });
 };
 
-export const list = async (req: Request, res: Response): Promise<Response> => {
+export const list = async (req: Request, res: Response): Promise<void> => {
   const { name } = req.query as unknown as SearchContactParams;
   const { companyId } = req.user;
 
   const contacts = await SimpleListService({ name, companyId });
 
-  return res.json(contacts);
+  res.json(contacts);
 };

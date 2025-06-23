@@ -9,7 +9,7 @@ import FindOrCreateTicketService from "../services/TicketServices/FindOrCreateTi
 import CreateMessageService from "../services/MessageServices/CreateMessageService";
 import CreateWhatsAppService from "../services/WhatsappService/CreateWhatsAppService";
 
-export const receiveMessage = async (req: Request, res: Response): Promise<Response> => {
+export const receiveMessage = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log("📨 Recebendo mensagem do webchat:", req.body);
     
@@ -17,7 +17,7 @@ export const receiveMessage = async (req: Request, res: Response): Promise<Respo
 
     if (!message || !chatId) {
       console.log("❌ Dados obrigatórios não fornecidos");
-      return res.status(400).json({ error: "Message and chatId are required" });
+      res.status(400).json({ error: "Message and chatId are required" });
     }
 
     // Buscar conexão webchat (usar a primeira encontrada)
@@ -67,7 +67,7 @@ export const receiveMessage = async (req: Request, res: Response): Promise<Respo
         
       } catch (createError) {
         console.error("❌ Erro ao criar conexão webchat:", createError);
-        return res.status(500).json({ error: "Failed to create webchat connection" });
+        res.status(500).json({ error: "Failed to create webchat connection" });
       }
     }
 
@@ -155,7 +155,7 @@ export const receiveMessage = async (req: Request, res: Response): Promise<Respo
 
     console.log("🎉 Processamento concluído com sucesso");
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       reply: autoReply,
       ticketId: ticket.id,
@@ -170,7 +170,7 @@ export const receiveMessage = async (req: Request, res: Response): Promise<Respo
 
   } catch (error) {
     console.error("❌ Erro ao processar mensagem do webchat:", error);
-    return res.status(500).json({
+    res.status(500).json({
       error: "Internal server error",
       details: error.message,
       stack: error.stack

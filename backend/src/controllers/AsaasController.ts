@@ -8,11 +8,11 @@ import AppError from "../errors/AppError";
 import { logger } from "../utils/logger";
 
 // Listar configuração do Asaas
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const asaasConfig = await AsaasConfig.findOne();
 
   if (!asaasConfig) {
-    return res.json({});
+    res.json({});
   }
 
   // Retornar dados sem expor a API Key, mas indicando se ela existe
@@ -25,11 +25,11 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     apiKey: asaasConfig.apiKey ? '***' : '' // Mascarar a API Key
   };
 
-  return res.json(response);
+  res.json(response);
 };
 
 // Criar ou atualizar configuração do Asaas
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { apiKey, webhookUrl, environment = 'sandbox', enabled = true } = req.body;
 
   if (!apiKey) {
@@ -66,11 +66,11 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     apiKey: asaasConfig.apiKey ? '***' : '' // Mascarar a API Key
   };
 
-  return res.json(response);
+  res.json(response);
 };
 
 // Atualizar configuração do Asaas
-export const update = async (req: Request, res: Response): Promise<Response> => {
+export const update = async (req: Request, res: Response): Promise<void> => {
   const { apiKey, webhookUrl, environment, enabled } = req.body;
 
   const asaasConfig = await AsaasConfig.findOne();
@@ -96,12 +96,12 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     apiKey: asaasConfig.apiKey ? '***' : '' // Mascarar a API Key
   };
 
-  return res.json(response);
+  res.json(response);
 };
 
 
 // Webhook do Asaas
-export const webhook = async (req: Request, res: Response): Promise<Response> => {
+export const webhook = async (req: Request, res: Response): Promise<void> => {
   try {
     const payload = req.body;
     const signature = req.headers['asaas-signature'] as string;
@@ -119,7 +119,7 @@ export const webhook = async (req: Request, res: Response): Promise<Response> =>
       signature
     });
 
-    return res.status(200).json({ success: true });
+    res.status(200).json({ success: true });
   } catch (error: any) {
     logger.error('Error processing Asaas webhook:', {
       error: error.message,
@@ -134,7 +134,7 @@ export const webhook = async (req: Request, res: Response): Promise<Response> =>
       error.message.includes('Could not identify')
     )) {
       logger.warn('Returning 200 for data inconsistency error to prevent retry');
-      return res.status(200).json({ 
+      res.status(200).json({ 
         success: false,
         error: "Data inconsistency - webhook processed but not applied",
         details: error.message
@@ -142,14 +142,14 @@ export const webhook = async (req: Request, res: Response): Promise<Response> =>
     }
 
     // Para outros erros, retornar 400 para que o Asaas tente novamente
-    return res.status(400).json({ 
+    res.status(400).json({ 
       error: error.message || "Erro ao processar webhook do Asaas" 
     });
   }
 };
 
 // Testar conexão com Asaas
-export const testConnection = async (req: Request, res: Response): Promise<Response> => {
+export const testConnection = async (req: Request, res: Response): Promise<void> => {
   try {
     const asaasConfig = await AsaasConfig.findOne();
 
@@ -160,7 +160,7 @@ export const testConnection = async (req: Request, res: Response): Promise<Respo
     // Aqui você pode implementar um teste simples da API
     // Por exemplo, listar os primeiros clientes
     
-    return res.json({ 
+    res.json({ 
       success: true, 
       message: "Conexão com Asaas testada com sucesso" 
     });
@@ -171,7 +171,7 @@ export const testConnection = async (req: Request, res: Response): Promise<Respo
 };
 
 // Criar empresa específica no Asaas
-export const createCompanyInAsaas = async (req: Request, res: Response): Promise<Response> => {
+export const createCompanyInAsaas = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.body;
 
   if (!companyId) {
@@ -180,7 +180,7 @@ export const createCompanyInAsaas = async (req: Request, res: Response): Promise
 
   try {
     const result = await CreateAsaasCustomerForCompanyService({ companyId });
-    return res.json(result);
+    res.json(result);
   } catch (error: any) {
     logger.error('Error creating company in Asaas:', error);
     throw new AppError(error.message || "Erro ao criar empresa no Asaas");
@@ -188,10 +188,10 @@ export const createCompanyInAsaas = async (req: Request, res: Response): Promise
 };
 
 // Sincronizar todas as empresas com Asaas
-export const syncAllCompanies = async (req: Request, res: Response): Promise<Response> => {
+export const syncAllCompanies = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await SyncAllCompaniesWithAsaasService();
-    return res.json(result);
+    res.json(result);
   } catch (error: any) {
     logger.error('Error syncing all companies with Asaas:', error);
     throw new AppError(error.message || "Erro ao sincronizar empresas com Asaas");
@@ -199,7 +199,7 @@ export const syncAllCompanies = async (req: Request, res: Response): Promise<Res
 };
 
 // Sincronizar faturas do Asaas
-export const syncInvoices = async (req: Request, res: Response): Promise<Response> => {
+export const syncInvoices = async (req: Request, res: Response): Promise<void> => {
   const { companyId, limit, offset } = req.query;
 
   try {
@@ -209,7 +209,7 @@ export const syncInvoices = async (req: Request, res: Response): Promise<Respons
       offset: offset ? parseInt(offset as string) : undefined
     });
     
-    return res.json(result);
+    res.json(result);
   } catch (error: any) {
     logger.error('Error syncing Asaas invoices:', error);
     throw new AppError(error.message || "Erro ao sincronizar faturas do Asaas");

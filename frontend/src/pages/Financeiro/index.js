@@ -377,13 +377,21 @@ const Invoices = () => {
         }
       });
 
-      // Listener para reativação da empresa
+      // Listener para mudanças de status da empresa
       socket.on(`company-${user.companyId}-status-updated`, (data) => {
         if (data.action === "company_reactivated") {
           // Mostrar notificação de reativação
           toast.success(`✅ Empresa reativada! Todas as funcionalidades foram liberadas.`);
           
           // Recarregar a página após 2 segundos para aplicar as mudanças
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else if (data.action === "company_blocked") {
+          // Empresa foi bloqueada por vencimento
+          toast.error(`🚫 Empresa bloqueada por falta de pagamento. Fatura vencida!`);
+          
+          // Recarregar a página para mostrar o status atualizado
           setTimeout(() => {
             window.location.reload();
           }, 2000);

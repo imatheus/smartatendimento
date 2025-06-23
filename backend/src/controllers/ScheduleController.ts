@@ -16,7 +16,7 @@ type IndexQuery = {
   pageNumber?: string | number;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { contactId, userId, pageNumber, searchParam } = req.query as IndexQuery;
   const { companyId } = req.user;
 
@@ -28,10 +28,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     companyId
   });
 
-  return res.json({ schedules, count, hasMore });
+  res.json({ schedules, count, hasMore });
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log("📝 Creating schedule - Request received:", req.body);
     
@@ -69,28 +69,28 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
 
     console.log("📝 Creating schedule - WebSocket event emitted");
 
-    return res.status(200).json(schedule);
+    res.status(200).json(schedule);
   } catch (error) {
     console.error("❌ Error creating schedule:", error);
-    return res.status(400).json({ 
+    res.status(400).json({ 
       error: error.message || "Erro ao criar agendamento" 
     });
   }
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { scheduleId } = req.params;
   const { companyId } = req.user;
 
   const schedule = await ShowService(scheduleId, companyId);
 
-  return res.status(200).json(schedule);
+  res.status(200).json(schedule);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   try {
     console.log("✏️ Updating schedule - Request received:", { scheduleId: req.params.scheduleId, body: req.body });
     
@@ -112,10 +112,10 @@ export const update = async (
 
     console.log("✏️ Updating schedule - WebSocket event emitted");
 
-    return res.status(200).json(schedule);
+    res.status(200).json(schedule);
   } catch (error) {
     console.error("❌ Error updating schedule:", error);
-    return res.status(400).json({ 
+    res.status(400).json({ 
       error: error.message || "Erro ao atualizar agendamento" 
     });
   }
@@ -124,7 +124,7 @@ export const update = async (
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   try {
     console.log("🗑️ Deleting schedule - Request received:", { scheduleId: req.params.scheduleId });
     
@@ -145,10 +145,10 @@ export const remove = async (
 
     console.log("🗑️ Deleting schedule - WebSocket event emitted");
 
-    return res.status(200).json({ message: "Schedule deleted" });
+    res.status(200).json({ message: "Schedule deleted" });
   } catch (error) {
     console.error("❌ Error deleting schedule:", error);
-    return res.status(400).json({ 
+    res.status(400).json({ 
       error: error.message || "Erro ao excluir agendamento" 
     });
   }

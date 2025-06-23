@@ -12,49 +12,49 @@ type FilterList = {
   parentId: string | number | boolean;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { queueId, queueOptionId, parentId } = req.query as FilterList;
 
   const queueOptions = await ListService({ queueId, queueOptionId, parentId });
 
-  return res.json(queueOptions);
+  res.json(queueOptions);
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const queueOptionData = req.body;
 
   const queueOption = await CreateService(queueOptionData);
 
-  return res.status(200).json(queueOption);
+  res.status(200).json(queueOption);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { queueOptionId } = req.params;
 
   const queueOption = await ShowService(queueOptionId);
 
-  return res.status(200).json(queueOption);
+  res.status(200).json(queueOption);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { queueOptionId } = req.params
   const queueOptionData = req.body;
 
   const queueOption = await UpdateService(queueOptionId, queueOptionData);
 
-  return res.status(200).json(queueOption);
+  res.status(200).json(queueOption);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { queueOptionId } = req.params
 
   await DeleteService(queueOptionId);
 
-  return res.status(200).json({ message: "Option Delected" });
+  res.status(200).json({ message: "Option Delected" });
 };

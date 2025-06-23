@@ -14,15 +14,15 @@ import UpdateUserService from "../services/UserServices/UpdateUserService";
 const app = express();
 
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const gerencianet = new Gerencianet(options);
-  return res.json(gerencianet.getSubscriptions());
+  res.json(gerencianet.getSubscriptions());
 };
 
 export const createSubscription = async (
   req: Request,
   res: Response
-  ): Promise<Response> => {
+  ): Promise<void> => {
     const gerencianet = new Gerencianet(options);
     const { companyId } = req.user;
 
@@ -99,7 +99,7 @@ export const createSubscription = async (
         }); */
 
 
-    return res.json({
+    res.json({
       ...pix,
       qrcode,
 
@@ -113,7 +113,7 @@ export const createSubscription = async (
 export const createWebhook = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const schema = Yup.object().shape({
     chave: Yup.string().required(),
     url: Yup.string().required()
@@ -136,7 +136,7 @@ export const createWebhook = async (
   try {
     const gerencianet = new Gerencianet(options);
     const create = await gerencianet.pixConfigWebhook(params, body);
-    return res.json(create);
+    res.json(create);
   } catch (error) {
     console.log(error);
   }
@@ -145,11 +145,11 @@ export const createWebhook = async (
 export const webhook = async (
   req: Request,
   res: Response
-  ): Promise<Response> => {
+  ): Promise<void> => {
   const { type } = req.params;
   const { evento } = req.body;
   if (evento === "teste_webhook") {
-    return res.json({ ok: true });
+    res.json({ ok: true });
   }
   if (req.body.pix) {
     const gerencianet = new Gerencianet(options);
@@ -197,5 +197,5 @@ export const webhook = async (
 
   }
 
-  return res.json({ ok: true });
+  res.json({ ok: true });
 };

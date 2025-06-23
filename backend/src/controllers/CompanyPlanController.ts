@@ -6,7 +6,7 @@ import CreateCompanyPlanService from "../services/CompanyPlanService/CreateCompa
 import FindCompanyPlanService from "../services/CompanyPlanService/FindCompanyPlanService";
 import UpdateCompanyPlanService from "../services/CompanyPlanService/UpdateCompanyPlanService";
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
 
   const schema = Yup.object().shape({
@@ -30,18 +30,18 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     queues
   });
 
-  return res.status(200).json(companyPlan);
+  res.status(200).json(companyPlan);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
 
   const companyPlan = await FindCompanyPlanService({ companyId });
 
-  return res.status(200).json(companyPlan);
+  res.status(200).json(companyPlan);
 };
 
-export const update = async (req: Request, res: Response): Promise<Response> => {
+export const update = async (req: Request, res: Response): Promise<void> => {
   const { companyPlanId } = req.params;
 
   const schema = Yup.object().shape({
@@ -63,5 +63,5 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     queues
   });
 
-  return res.status(200).json(companyPlan);
+  res.status(200).json(companyPlan);
 };

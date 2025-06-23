@@ -45,15 +45,15 @@ interface Root {
   id: string;
 }
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { companyId } = req.user;
   const { session } = req.query as QueryParams;
   const whatsapps = await ListWhatsAppsService({ companyId, session });
 
-  return res.status(200).json(whatsapps);
+  res.status(200).json(whatsapps);
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const {
     name,
     status,
@@ -93,13 +93,13 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     });
   }
 
-  return res.status(200).json(whatsapp);
+  res.status(200).json(whatsapp);
 };
 
 export const storeFacebook = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const {
     facebookUserId,
     facebookUserToken,
@@ -116,7 +116,7 @@ export const storeFacebook = async (
   const { data } = await getPageProfile(facebookUserId, facebookUserToken);
 
   if (data.length === 0) {
-    return res.status(400).json({
+    res.status(400).json({
       error: "Facebook page not found"
     });
   }
@@ -247,7 +247,7 @@ export const storeFacebook = async (
     }
   }
   
-  return res.status(200).json({ 
+  res.status(200).json({ 
     message: "Connections created successfully",
     count: pages.length 
   });
@@ -256,7 +256,7 @@ export const storeFacebook = async (
 export const storeWebChat = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const {
     name,
     welcomeMessage,
@@ -300,32 +300,32 @@ export const storeWebChat = async (
       whatsapp
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "WebChat connection created successfully",
       whatsapp
     });
   } catch (error) {
     console.error("Error creating WebChat:", error);
-    return res.status(500).json({
+    res.status(500).json({
       error: "Failed to create WebChat connection"
     });
   }
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { whatsappId } = req.params;
   const { companyId } = req.user;
   const { session } = req.query;
 
   const whatsapp = await ShowWhatsAppService(whatsappId, companyId, session);
 
-  return res.status(200).json(whatsapp);
+  res.status(200).json(whatsapp);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { whatsappId } = req.params;
   const whatsappData = req.body;
   const { companyId } = req.user;
@@ -349,13 +349,13 @@ export const update = async (
     });
   }
 
-  return res.status(200).json(whatsapp);
+  res.status(200).json(whatsapp);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { whatsappId } = req.params;
   const { companyId } = req.user;
   const io = getIO();
@@ -383,5 +383,5 @@ export const remove = async (
     });
   }
 
-  return res.status(200).json({ message: "Session disconnected." });
+  res.status(200).json({ message: "Session disconnected." });
 };

@@ -11,7 +11,7 @@ type QueueFilter = {
   companyId: number;
 };
 
-export const index = async (req: Request, res: Response): Promise<Response> => {
+export const index = async (req: Request, res: Response): Promise<void> => {
   const { companyId: userCompanyId } = req.user;
   const { companyId: queryCompanyId } = req.query as unknown as QueueFilter;
   let companyId = userCompanyId;
@@ -22,10 +22,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 
   const queues = await ListQueuesService({ companyId });
 
-  return res.status(200).json(queues);
+  res.status(200).json(queues);
 };
 
-export const store = async (req: Request, res: Response): Promise<Response> => {
+export const store = async (req: Request, res: Response): Promise<void> => {
   const { name, color, greetingMessage, outOfHoursMessage, schedules } =
     req.body;
   const { companyId } = req.user;
@@ -45,22 +45,22 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     queue
   });
 
-  return res.status(200).json(queue);
+  res.status(200).json(queue);
 };
 
-export const show = async (req: Request, res: Response): Promise<Response> => {
+export const show = async (req: Request, res: Response): Promise<void> => {
   const { queueId } = req.params;
   const { companyId } = req.user;
 
   const queue = await ShowQueueService(queueId, companyId);
 
-  return res.status(200).json(queue);
+  res.status(200).json(queue);
 };
 
 export const update = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { queueId } = req.params;
   const { companyId } = req.user;
 
@@ -72,13 +72,13 @@ export const update = async (
     queue
   });
 
-  return res.status(201).json(queue);
+  res.status(201).json(queue);
 };
 
 export const remove = async (
   req: Request,
   res: Response
-): Promise<Response> => {
+): Promise<void> => {
   const { queueId } = req.params;
   const { companyId } = req.user;
 
@@ -90,5 +90,5 @@ export const remove = async (
     queueId: +queueId
   });
 
-  return res.status(200).send();
+  res.status(200).send();
 };
