@@ -184,6 +184,28 @@ const useCompanyStatus = () => {
         setTimeout(() => {
           window.location.reload();
         }, 2000);
+      } else if (data.action === "company_due_date_updated") {
+        console.log('Data de vencimento da empresa atualizada:', data.company.dueDate);
+        
+        // Atualizar dados do usuário e sincronizar status
+        await refreshUserData();
+        await syncStatusWithBackend();
+        
+        // Mostrar notificação sobre a mudança
+        toast.info(`📅 Data de vencimento atualizada para ${moment(data.company.dueDate).format('DD/MM/YYYY')}`);
+      } else if (data.action === "subscription_updated") {
+        console.log('Assinatura da empresa atualizada:', data);
+        
+        // Atualizar dados do usuário e sincronizar status
+        await refreshUserData();
+        await syncStatusWithBackend();
+        
+        // Mostrar notificação sobre a mudança na assinatura
+        if (data.company.dueDate) {
+          toast.info(`📅 Assinatura atualizada - Nova data de vencimento: ${moment(data.company.dueDate).format('DD/MM/YYYY')}`);
+        } else {
+          toast.info(`📋 Assinatura atualizada`);
+        }
       }
     });
 

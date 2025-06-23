@@ -27,7 +27,7 @@ const CreateInvoiceService = async (data: InvoiceData): Promise<Invoice> => {
   }
 
   // Definir valores padrão se não fornecidos
-  const invoiceDetail = detail || `Mensalidade ${company.plan.name} - ${company.name}`;
+  const invoiceDetail = detail || `Mensalidade Plano ${company.plan.name}`;
   const invoiceValue = value || company.plan.value;
   const invoiceDueDate = dueDate || company.dueDate;
 

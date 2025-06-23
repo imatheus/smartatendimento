@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   makeStyles,
   Paper,
@@ -28,6 +28,8 @@ import ModalUsers from "../ModalUsers";
 import api from "../../services/api";
 import { head, isArray, has } from "lodash";
 import { useDate } from "../../hooks/useDate";
+import { AuthContext } from "../../context/Auth/AuthContext";
+import { socketConnection } from "../../services/socket";
 
 import moment from "moment";
 
@@ -469,6 +471,7 @@ export function CompaniesManagerGrid(props) {
 export default function CompaniesManager() {
   const classes = useStyles();
   const { list, save, update, remove } = useCompanies();
+  const { user } = useContext(AuthContext);
 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -487,6 +490,46 @@ export default function CompaniesManager() {
     loadPlans();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Socket listener para atualizações de data de vencimento
+  useEffect(() => {
+    if (!user?.companyId) return;
+
+    const socket = socketConnection({ companyId: user.companyId });
+
+    // Listener global para atualizações de data de vencimento de qualquer empresa
+    socket.on('company-due-date-updated', (data) => {
+      console.log('Data de vencimento atualizada via socket:', data);
+      
+      // Atualizar a lista de empresas para refletir a mudança
+      loadPlans();
+      
+      // Mostrar notificação
+      toast.info(`📅 Data de vencimento da empresa atualizada`);
+    });
+
+    // Listener específico para atualizações de status de empresa
+    socket.on('company-status-updated', (data) => {
+      if (data.action === "company_due_date_updated") {
+        console.log('Data de vencimento da empresa atualizada:', data.company.dueDate);
+        
+        // Atualizar a lista de empresas
+        loadPlans();
+      } else if (data.action === "subscription_updated") {
+        console.log('Assinatura da empresa atualizada:', data);
+        
+        // Atualizar a lista de empresas
+        loadPlans();
+        
+        // Mostrar notificação
+        toast.info(`📋 Assinatura da empresa atualizada`);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user?.companyId]);
 
   const loadPlans = async () => {
     setLoading(true);
