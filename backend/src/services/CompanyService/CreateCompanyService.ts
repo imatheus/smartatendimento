@@ -103,13 +103,18 @@ const CreateCompanyService = async (
 
   // Se uma dueDate foi fornecida, usar o serviço de sincronização
   if (dueDate) {
-    await SyncCompanyDueDateService({
-      companyId: company.id,
-      dueDate,
-      updateAsaas: false, // Não atualizar Asaas ainda pois a empresa ainda não tem assinatura
-      updateTrialExpiration: !trialExpiration // Só atualizar trial se não foi fornecido explicitamente
-    });
-    await company.reload(); // Recarregar dados atualizados
+    try {
+      await SyncCompanyDueDateService({
+        companyId: company.id,
+        dueDate,
+        updateAsaas: false, // Não atualizar Asaas ainda pois a empresa ainda não tem assinatura
+        updateTrialExpiration: !trialExpiration // Só atualizar trial se não foi fornecido explicitamente
+      });
+      await company.reload(); // Recarregar dados atualizados
+    } catch (error: any) {
+      console.error(`Erro ao sincronizar data de vencimento para empresa ${company.id}:`, error);
+      throw new AppError(`Erro ao configurar período de avaliação: ${error.message}`);
+    }
   }
 
   // Criar o plano personalizado da empresa

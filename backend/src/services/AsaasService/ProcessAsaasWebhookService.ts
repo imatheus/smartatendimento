@@ -319,28 +319,37 @@ const handlePaymentConfirmed = async (payload: WebhookPayload, asaasConfig: Asaa
       const company = await Company.findByPk(invoice.companyId);
       
       if (company) {
-        // Calcular nova data de vencimento (próximo mês)
-        const currentDueDate = company.dueDate ? moment(company.dueDate) : moment();
-        const newDueDate = currentDueDate.add(1, 'month').format('YYYY-MM-DD');
+        // Calcular nova data de vencimento (próximo mês a partir de hoje)
+        const newDueDate = moment().add(1, 'month').format('YYYY-MM-DD');
         
         try {
           // Usar o serviço de sincronização para atualizar a data de vencimento
           await SyncCompanyDueDateService({
             companyId: invoice.companyId,
             dueDate: newDueDate,
-            updateAsaas: true,
+            updateAsaas: false, // Não atualizar Asaas pois o pagamento já foi processado
             updateTrialExpiration: false // Não alterar trial quando pagamento é confirmado
           });
           
           logger.info(`Company ${company.name} due date updated to ${newDueDate} after payment confirmation`);
         } catch (error: any) {
           logger.error(`Error updating company due date after payment: ${error.message}`);
-          // Fallback: apenas ativar a empresa
+          
+          // Fallback robusto: ativar empresa e limpar trial
           await Company.update(
-            { status: true },
+            { 
+              status: true,
+              dueDate: newDueDate,
+              trialExpiration: null // Remover período de trial
+            },
             { where: { id: invoice.companyId } }
           );
+          
+          logger.info(`Company ${invoice.companyId} activated via fallback after payment confirmation`);
         }
+        
+        // Recarregar empresa para pegar dados atualizados
+        await company.reload();
       }
 
       // Emitir evento via Socket.IO para atualizar a interface em tempo real
@@ -357,7 +366,20 @@ const handlePaymentConfirmed = async (payload: WebhookPayload, asaasConfig: Asaa
         company: {
           id: invoice.companyId,
           status: true,
-          newDueDate: moment().add(1, 'month').format('YYYY-MM-DD')
+          newDueDate: newDueDate,
+          trialExpiration: null
+        }
+      });
+      
+      // Emitir evento específico para recarregar dados da empresa no frontend
+      io.emit(`company-${invoice.companyId}-status-updated`, {
+        action: "company_reactivated",
+        company: {
+          id: invoice.companyId,
+          status: true,
+          dueDate: newDueDate,
+          isExpired: false,
+          isInTrial: false
         }
       });
     }
@@ -380,7 +402,8 @@ const handlePaymentOverdue = async (payload: WebhookPayload, asaasConfig: AsaasC
 
     // Buscar fatura existente
     const invoice = await Invoices.findOne({
-      where: { asaasInvoiceId: payload.payment.id }
+      where: { asaasInvoiceId: payload.payment.id },
+      include: [{ model: Company, as: 'company' }]
     });
 
     if (!invoice) {
@@ -392,6 +415,37 @@ const handlePaymentOverdue = async (payload: WebhookPayload, asaasConfig: AsaasC
     await invoice.update({
       status: payload.payment.status
     });
+
+    // Bloquear a empresa quando a fatura vence
+    if (invoice.companyId && invoice.company) {
+      const company = await Company.findByPk(invoice.companyId);
+      
+      if (company) {
+        // Desativar a empresa
+        await company.update({
+          status: false // Bloquear empresa
+        });
+        
+        logger.info(`Company ${company.name} (ID: ${company.id}) blocked due to overdue payment ${payload.payment.id}`);
+        
+        // Emitir evento via Socket.IO para notificar o frontend sobre o bloqueio
+        const io = getIO();
+        io.emit(`company-${invoice.companyId}-status-updated`, {
+          action: "company_blocked",
+          company: {
+            id: invoice.companyId,
+            status: false,
+            isExpired: true,
+            reason: "payment_overdue"
+          },
+          invoice: {
+            id: invoice.id,
+            status: payload.payment.status,
+            asaasInvoiceId: payload.payment.id
+          }
+        });
+      }
+    }
 
     // Emitir evento via Socket.IO para atualizar a interface em tempo real
     if (invoice.companyId) {
@@ -406,7 +460,7 @@ const handlePaymentOverdue = async (payload: WebhookPayload, asaasConfig: AsaasC
       });
     }
 
-    logger.info(`Payment overdue for invoice ${invoice.id}`);
+    logger.info(`Payment overdue for invoice ${invoice.id} - Company blocked`);
 
   } catch (error: any) {
     logger.error('Error handling payment overdue:', error);

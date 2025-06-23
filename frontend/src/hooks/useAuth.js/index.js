@@ -91,6 +91,30 @@ const useAuth = () => {
       }
     });
 
+    // Listener para reativação da empresa
+    socket.on(`company-${companyId}-status-updated`, (data) => {
+      if (data.action === "company_reactivated") {
+        // Mostrar notificação de reativação
+        toast.success(`✅ Empresa reativada! Todas as funcionalidades foram liberadas.`);
+        
+        // Recarregar dados do usuário
+        refreshUserData().then(() => {
+          // Redirecionar para dashboard após reativação se estiver no financeiro
+          if (history.location.pathname === '/financeiro') {
+            setTimeout(() => {
+              history.push('/');
+              window.location.reload();
+            }, 2000);
+          } else {
+            // Se não estiver no financeiro, apenas recarregar a página
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          }
+        });
+      }
+    });
+
     return () => {
       socket.disconnect();
     };

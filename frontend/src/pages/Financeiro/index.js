@@ -373,7 +373,20 @@ const Invoices = () => {
           });
 
           // Mostrar notificação de sucesso
-          toast.success(`🎉 Pagamento confirmado! Fatura #${data.invoice.id} foi paga com sucesso.`);
+          toast.success(`🎉 Pagamento confirmado! Fatura #${data.invoice.id} foi paga com sucesso. Sistema reativado!`);
+        }
+      });
+
+      // Listener para reativação da empresa
+      socket.on(`company-${user.companyId}-status-updated`, (data) => {
+        if (data.action === "company_reactivated") {
+          // Mostrar notificação de reativação
+          toast.success(`✅ Empresa reativada! Todas as funcionalidades foram liberadas.`);
+          
+          // Recarregar a página após 2 segundos para aplicar as mudanças
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
         }
       });
 

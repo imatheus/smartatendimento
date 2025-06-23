@@ -16,5 +16,5 @@ companyRoutes.put("/companies/:id", isAuthWithExpiredAccess, CompanyController.u
 companyRoutes.put("/companies/:id/schedules", isAuthWithExpiredAccess, CompanyController.updateSchedules);
 companyRoutes.put("/companies/:id/sync-due-date", isAuthWithExpiredAccess, CompanyController.syncDueDate);
 companyRoutes.delete("/companies/:id", isAuthWithExpiredAccess, CompanyController.remove);
-companyRoutes.post("/companies/cadastro", CompanyController.store);
+companyRoutes.post("/companies/cadastro", CompanyController.storeWithTrial);
 export default companyRoutes;
