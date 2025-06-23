@@ -47,6 +47,14 @@ const CreateAsaasCustomerForCompanyService = async ({
       };
     }
 
+    // Verificar se a empresa já foi sincronizada com o Asaas
+    if (company.asaasCustomerId && company.asaasSubscriptionId) {
+      return {
+        success: false,
+        message: "Empresa já foi sincronizada com o Asaas"
+      };
+    }
+
     // Criar instância do serviço Asaas
     const asaasService = new AsaasService(asaasConfig.apiKey, asaasConfig.environment);
 
@@ -83,6 +91,13 @@ const CreateAsaasCustomerForCompanyService = async ({
     const asaasSubscription = await asaasService.createSubscription(subscriptionData);
 
     logger.info(`Assinatura Asaas criada: ${asaasSubscription.id} para empresa ${company.name}`);
+
+    // Atualizar a empresa com os IDs do Asaas
+    await company.update({
+      asaasCustomerId: asaasCustomer.id!,
+      asaasSubscriptionId: asaasSubscription.id!,
+      asaasSyncedAt: new Date()
+    });
 
     return {
       success: true,

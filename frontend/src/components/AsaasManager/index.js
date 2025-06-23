@@ -61,9 +61,7 @@ const AsaasManager = () => {
   const classes = useStyles();
   const [loading, setLoading] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
-  const [syncingCompanies, setSyncingCompanies] = useState(false);
-  const [syncingInvoices, setSyncingInvoices] = useState(false);
-  
+    
   const [config, setConfig] = useState({
     apiKey: "",
     webhookUrl: "",
@@ -144,52 +142,7 @@ const AsaasManager = () => {
     }
   };
 
-  const handleSyncAllCompanies = async () => {
-    try {
-      setSyncingCompanies(true);
-      const { data } = await api.post("/asaas/sync-all-companies");
-      
-      toast.success(`Sincronização concluída! ${data.synchronized} empresas criadas no Asaas, ${data.skipped} puladas.`);
-      
-      if (data.errors && data.errors.length > 0) {
-        console.warn("Erros durante sincronização:", data.errors);
-        toast.warning(`${data.errors.length} empresas tiveram erros. Verifique o console para detalhes.`);
-      }
-
-      // Mostrar detalhes no console
-      console.log("Detalhes da sincronização:", data.details);
-      
-    } catch (error) {
-      console.error("Erro ao sincronizar empresas:", error);
-      toast.error(error.response?.data?.error || "Erro ao sincronizar empresas com Asaas");
-    } finally {
-      setSyncingCompanies(false);
-    }
-  };
-
-  const handleSyncInvoices = async () => {
-    try {
-      setSyncingInvoices(true);
-      const { data } = await api.post("/asaas/sync-invoices");
-      
-      toast.success(`Sincronização de faturas concluída! ${data.synchronized} criadas, ${data.updated} atualizadas.`);
-      
-      if (data.errors && data.errors.length > 0) {
-        console.warn("Erros durante sincronização de faturas:", data.errors);
-        toast.warning(`${data.errors.length} faturas tiveram erros. Verifique o console para detalhes.`);
-      }
-
-      // Mostrar detalhes no console
-      console.log("Detalhes da sincronização de faturas:", data.details);
-      
-    } catch (error) {
-      console.error("Erro ao sincronizar faturas:", error);
-      toast.error(error.response?.data?.error || "Erro ao sincronizar faturas do Asaas");
-    } finally {
-      setSyncingInvoices(false);
-    }
-  };
-
+  
   
   if (loading && !config.apiKey) {
     return (
@@ -288,24 +241,6 @@ const AsaasManager = () => {
           >
             {testingConnection ? <CircularProgress size={24} /> : "Testar Conexão"}
           </Button>
-
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={handleSyncAllCompanies}
-            disabled={syncingCompanies || (!config.apiKey && !config.hasApiKey)}
-          >
-            {syncingCompanies ? <CircularProgress size={24} /> : "Sincronizar Empresas"}
-          </Button>
-
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={handleSyncInvoices}
-            disabled={syncingInvoices || (!config.apiKey && !config.hasApiKey)}
-          >
-            {syncingInvoices ? <CircularProgress size={24} /> : "Sincronizar Faturas"}
-          </Button>
         </Box>
       </Paper>
 
@@ -330,24 +265,24 @@ const AsaasManager = () => {
 
         <Alert severity="success">
           <Typography variant="body2">
-            <strong>Automação Global:</strong> Quando configurado, o sistema criará automaticamente 
-            clientes e assinaturas no Asaas para todas as novas empresas que se cadastrarem no sistema.
+            <strong>Automação Completa:</strong> O sistema agora funciona 100% automaticamente! 
+            Quando configurado, criará clientes e assinaturas no Asaas para novas empresas, 
+            processará pagamentos via webhook e atualizará faturas em tempo real.
           </Typography>
         </Alert>
 
         <Alert severity="info" style={{ marginTop: 16 }}>
           <Typography variant="body2">
-            <strong>Sincronizar Empresas:</strong> Use o botão "Sincronizar Empresas" para criar 
-            clientes e assinaturas no Asaas para todas as empresas já existentes no sistema. 
-            Esta operação é útil quando você configura o Asaas pela primeira vez.
+            <strong>Sincronização Automática:</strong> Não é mais necessário sincronizar manualmente. 
+            O sistema detecta automaticamente novas faturas e pagamentos através dos webhooks do Asaas, 
+            mantendo tudo sempre atualizado.
           </Typography>
         </Alert>
 
-        <Alert severity="warning" style={{ marginTop: 16 }}>
+        <Alert severity="success" style={{ marginTop: 16 }}>
           <Typography variant="body2">
-            <strong>Sincronizar Faturas:</strong> Use o botão "Sincronizar Faturas" para buscar 
-            e importar faturas do Asaas para o módulo "Financeiro > Faturas". As faturas pagas 
-            automaticamente liberam as funções do sistema para as empresas.
+            <strong>Prevenção de Duplicação:</strong> O sistema agora possui validação para evitar 
+            a criação de empresas duplicadas no Asaas, garantindo integridade dos dados.
           </Typography>
         </Alert>
       </Paper>

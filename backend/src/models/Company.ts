@@ -58,6 +58,15 @@ class Company extends Model<Company> {
   @Column
   trialExpiration: Date;
 
+  @Column
+  asaasCustomerId: string;
+
+  @Column
+  asaasSubscriptionId: string;
+
+  @Column
+  asaasSyncedAt: Date;
+
   @Column({
     type: DataType.JSONB
   })

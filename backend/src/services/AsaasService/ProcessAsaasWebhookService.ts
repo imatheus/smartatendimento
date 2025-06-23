@@ -13,7 +13,7 @@ interface WebhookPayload {
   id?: string;
   event: string;
   dateCreated?: string;
-  payment: {
+  payment?: {
     object?: string;
     id: string;
     dateCreated?: string;
@@ -52,6 +52,26 @@ interface WebhookPayload {
     escrow?: any;
     refunds?: any;
   };
+  subscription?: {
+    object?: string;
+    id: string;
+    dateCreated?: string;
+    customer: string;
+    paymentLink?: string;
+    value: number;
+    nextDueDate: string;
+    cycle: string;
+    description: string;
+    billingType: string;
+    deleted?: boolean;
+    status: string;
+    externalReference?: string;
+    checkoutSession?: string;
+    sendPaymentByPostalService?: boolean;
+    fine?: any;
+    interest?: any;
+    split?: any;
+  };
 }
 
 interface Request {
@@ -64,13 +84,14 @@ const ProcessAsaasWebhookService = async ({
   signature
 }: Request): Promise<void> => {
   try {
-    logger.info(`Processing Asaas webhook: ${payload.event} for payment ${payload.payment.id}`);
+    const eventId = payload.payment?.id || payload.subscription?.id || 'unknown';
+    logger.info(`Processing Asaas webhook: ${payload.event} for ${eventId}`);
 
     // Buscar configuração global do Asaas
     const asaasConfig = await AsaasConfig.findOne();
 
     if (!asaasConfig) {
-      logger.warn(`Asaas config not found for payment ${payload.payment.id}`);
+      logger.warn(`Asaas config not found for event ${payload.event}`);
       return;
     }
 
@@ -86,17 +107,30 @@ const ProcessAsaasWebhookService = async ({
     // Processar diferentes eventos
     switch (payload.event) {
       case 'PAYMENT_CREATED':
-        await handlePaymentCreated(payload, asaasConfig);
+        if (payload.payment) {
+          await handlePaymentCreated(payload, asaasConfig);
+        }
         break;
       case 'PAYMENT_CONFIRMED':
       case 'PAYMENT_RECEIVED':
-        await handlePaymentConfirmed(payload, asaasConfig);
+        if (payload.payment) {
+          await handlePaymentConfirmed(payload, asaasConfig);
+        }
         break;
       case 'PAYMENT_OVERDUE':
-        await handlePaymentOverdue(payload, asaasConfig);
+        if (payload.payment) {
+          await handlePaymentOverdue(payload, asaasConfig);
+        }
         break;
       case 'PAYMENT_DELETED':
-        await handlePaymentDeleted(payload, asaasConfig);
+        if (payload.payment) {
+          await handlePaymentDeleted(payload, asaasConfig);
+        }
+        break;
+      case 'SUBSCRIPTION_CREATED':
+        if (payload.subscription) {
+          await handleSubscriptionCreated(payload, asaasConfig);
+        }
         break;
       default:
         logger.info(`Unhandled webhook event: ${payload.event}`);
@@ -108,9 +142,53 @@ const ProcessAsaasWebhookService = async ({
   }
 };
 
+// Lidar com criação de assinatura
+const handleSubscriptionCreated = async (payload: WebhookPayload, asaasConfig: AsaasConfig): Promise<void> => {
+  try {
+    if (!payload.subscription) {
+      logger.warn('Subscription data not found in payload');
+      return;
+    }
+
+    // Tentar identificar a empresa pelo externalReference
+    let targetCompanyId = null;
+    if (payload.subscription.externalReference) {
+      const match = payload.subscription.externalReference.match(/company_(\d+)_/);
+      if (match) {
+        targetCompanyId = parseInt(match[1]);
+      }
+    }
+
+    if (!targetCompanyId) {
+      logger.warn(`Could not identify company for subscription ${payload.subscription.id}`);
+      return;
+    }
+
+    // Atualizar a empresa com o ID da assinatura
+    const company = await Company.findByPk(targetCompanyId);
+    if (company) {
+      await company.update({
+        asaasSubscriptionId: payload.subscription.id,
+        asaasSyncedAt: new Date()
+      });
+      
+      logger.info(`Company ${targetCompanyId} updated with subscription ${payload.subscription.id}`);
+    }
+
+  } catch (error: any) {
+    logger.error('Error handling subscription created:', error);
+    throw error;
+  }
+};
+
 // Lidar com criação de pagamento
 const handlePaymentCreated = async (payload: WebhookPayload, asaasConfig: AsaasConfig): Promise<void> => {
   try {
+    if (!payload.payment) {
+      logger.warn('Payment data not found in payload');
+      return;
+    }
+
     // Verificar se a fatura já existe
     const existingInvoice = await Invoices.findOne({
       where: { asaasInvoiceId: payload.payment.id }
@@ -167,6 +245,11 @@ const handlePaymentCreated = async (payload: WebhookPayload, asaasConfig: AsaasC
 // Lidar com confirmação de pagamento
 const handlePaymentConfirmed = async (payload: WebhookPayload, asaasConfig: AsaasConfig): Promise<void> => {
   try {
+    if (!payload.payment) {
+      logger.warn('Payment data not found in payload');
+      return;
+    }
+
     // Buscar fatura existente
     const invoice = await Invoices.findOne({
       where: { asaasInvoiceId: payload.payment.id }
@@ -219,6 +302,11 @@ const handlePaymentConfirmed = async (payload: WebhookPayload, asaasConfig: Asaa
 // Lidar com pagamento em atraso
 const handlePaymentOverdue = async (payload: WebhookPayload, asaasConfig: AsaasConfig): Promise<void> => {
   try {
+    if (!payload.payment) {
+      logger.warn('Payment data not found in payload');
+      return;
+    }
+
     // Buscar fatura existente
     const invoice = await Invoices.findOne({
       where: { asaasInvoiceId: payload.payment.id }
@@ -234,6 +322,19 @@ const handlePaymentOverdue = async (payload: WebhookPayload, asaasConfig: AsaasC
       status: payload.payment.status
     });
 
+    // Emitir evento via Socket.IO para atualizar a interface em tempo real
+    if (invoice.companyId) {
+      const io = getIO();
+      io.emit(`company-${invoice.companyId}-invoice-updated`, {
+        action: "payment_overdue",
+        invoice: {
+          id: invoice.id,
+          status: payload.payment.status,
+          asaasInvoiceId: payload.payment.id
+        }
+      });
+    }
+
     logger.info(`Payment overdue for invoice ${invoice.id}`);
 
   } catch (error: any) {
@@ -245,6 +346,11 @@ const handlePaymentOverdue = async (payload: WebhookPayload, asaasConfig: AsaasC
 // Lidar com exclusão de pagamento
 const handlePaymentDeleted = async (payload: WebhookPayload, asaasConfig: AsaasConfig): Promise<void> => {
   try {
+    if (!payload.payment) {
+      logger.warn('Payment data not found in payload');
+      return;
+    }
+
     // Buscar fatura existente
     const invoice = await Invoices.findOne({
       where: { asaasInvoiceId: payload.payment.id }

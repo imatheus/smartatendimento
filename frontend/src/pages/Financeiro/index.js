@@ -54,7 +54,9 @@ const reducer = (state, action) => {
     const userIndex = state.findIndex((u) => u.id === user.id);
 
     if (userIndex !== -1) {
-      state[userIndex] = user;
+      // Atualizar apenas os campos fornecidos, mantendo os outros
+      state[userIndex] = { ...state[userIndex], ...user };
+      console.log('Fatura atualizada no reducer:', state[userIndex]);
       return [...state];
     } else {
       return [user, ...state];
@@ -334,6 +336,7 @@ const Invoices = () => {
     if (user?.companyId) {
       const socket = socketConnection({ companyId: user.companyId });
 
+      // Listener para pagamento confirmado
       socket.on(`company-${user.companyId}-invoice-paid`, (data) => {
         if (data.action === "payment_confirmed") {
           // Atualizar a fatura na lista
@@ -349,6 +352,23 @@ const Invoices = () => {
 
           // Mostrar notificação de sucesso
           toast.success(`🎉 Pagamento confirmado! Fatura #${data.invoice.id} foi paga com sucesso.`);
+        }
+      });
+
+      // Listener para atualizações de status (vencimento, etc.)
+      socket.on(`company-${user.companyId}-invoice-updated`, (data) => {
+        if (data.action === "payment_overdue") {
+          // Atualizar a fatura na lista
+          dispatch({
+            type: "UPDATE_USERS",
+            payload: { 
+              id: data.invoice.id, 
+              status: data.invoice.status
+            }
+          });
+
+          // Mostrar notificação de vencimento
+          toast.warning(`⚠️ Fatura #${data.invoice.id} está vencida.`);
         }
       });
 
@@ -375,7 +395,10 @@ const Invoices = () => {
     const vencimento = moment(record.dueDate).format("DD/MM/yyyy");
     var diff = moment(vencimento, "DD/MM/yyyy").diff(moment(hoje, "DD/MM/yyyy"));
     var dias = moment.duration(diff).asDays();    
-    if (dias < 0 && record.status !== "paid") {
+    const status = record.status;
+    
+    // Destacar faturas vencidas (por status do Asaas ou por data)
+    if (status === "OVERDUE" || (dias < 0 && status !== "paid" && status !== "CONFIRMED" && status !== "RECEIVED" && status !== "RECEIVED_IN_CASH")) {
       return { backgroundColor: "#ffbcbc9c" };
     }
   };
@@ -387,11 +410,14 @@ const Invoices = () => {
     var dias = moment.duration(diff).asDays();    
     const status = record.status;
     
+    console.log('Status da fatura:', status, 'ID:', record.id, 'Dias:', dias);
+    
     // Verificar diferentes status do Asaas
     if (status === "paid" || status === "CONFIRMED" || status === "RECEIVED" || status === "RECEIVED_IN_CASH") {
       return "Pago";
     }
-    if (dias < 0 && !isPaid(record)) {
+    // Verificar se está vencido pelo status do Asaas ou pela data
+    if (status === "OVERDUE" || (dias < 0 && status !== "paid" && status !== "CONFIRMED" && status !== "RECEIVED" && status !== "RECEIVED_IN_CASH")) {
       return "Vencido";
     } else {
       return "Em Aberto"
@@ -505,7 +531,7 @@ const Invoices = () => {
                     <TableCell align="center">Id</TableCell>
                     <TableCell align="center">Detalhes</TableCell>
                     <TableCell align="center">Valor</TableCell>
-                    <TableCell align="center">Vencimento</TableCell>
+                    <TableCell align="center">Data Venc.</TableCell>
                     <TableCell align="center">Status</TableCell>
                     <TableCell align="center">Ação</TableCell>
                   </TableRow>
