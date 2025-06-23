@@ -14,6 +14,10 @@ import Grid from "@material-ui/core/Grid";
 import Box from "@material-ui/core/Box";
 import CheckIcon from "@material-ui/icons/Check";
 import CloseIcon from "@material-ui/icons/Close";
+import OpenInNewIcon from "@material-ui/icons/OpenInNew";
+import VisibilityIcon from "@material-ui/icons/Visibility";
+import IconButton from "@material-ui/core/IconButton";
+import Tooltip from "@material-ui/core/Tooltip";
 import MainContainer from "../../components/MainContainer";
 import MainHeader from "../../components/MainHeader";
 import Title from "../../components/Title";
@@ -23,6 +27,8 @@ import TableRowSkeleton from "../../components/TableRowSkeleton";
 import { AuthContext } from "../../context/Auth/AuthContext";
 
 import toastError from "../../errors/toastError";
+import { toast } from "react-toastify";
+import { socketConnection } from "../../services/socket";
 
 import moment from "moment";
 
@@ -198,6 +204,27 @@ const useStyles = makeStyles((theme) => ({
     margin: `-${theme.spacing(2)}px -${theme.spacing(2)}px ${theme.spacing(2)}px -${theme.spacing(2)}px`,
     borderRadius: "16px 16px 0 0",
   },
+  paidStatusBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    backgroundColor: "#4caf50",
+    color: "white",
+    padding: theme.spacing(0.5, 1.5),
+    borderRadius: "20px",
+    fontSize: "0.75rem",
+    fontWeight: "bold",
+    gap: theme.spacing(0.5),
+  },
+  paidStatusIcon: {
+    fontSize: "1rem",
+  },
+  viewInvoiceButton: {
+    padding: theme.spacing(0.5),
+    color: "#1976d2",
+    "&:hover": {
+      backgroundColor: "rgba(25, 118, 210, 0.1)",
+    },
+  },
 }));
 
 const Invoices = () => {
@@ -252,10 +279,24 @@ const Invoices = () => {
     return features;
   };
 
-  const handleOpenContactModal = (invoices) => {
-    setStoragePlans(invoices);
+  const handleOpenContactModal = (invoice) => {
+    // Se a fatura tem invoiceUrl, redireciona diretamente para o Asaas
+    if (invoice.invoiceUrl) {
+      window.open(invoice.invoiceUrl, '_blank');
+      return;
+    }
+    
+    // Fallback para o modal antigo se não tiver invoiceUrl
+    setStoragePlans(invoice);
     setSelectedContactId(null);
     setContactModalOpen(true);
+  };
+
+  const handleViewInvoice = (invoice) => {
+    // Abrir fatura paga para visualização
+    if (invoice.invoiceUrl) {
+      window.open(invoice.invoiceUrl, '_blank');
+    }
   };
 
   const handleCloseContactModal = () => {
@@ -288,6 +329,35 @@ const Invoices = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchParam, pageNumber]);
 
+  // Socket.IO listener para atualizações de pagamento em tempo real
+  useEffect(() => {
+    if (user?.companyId) {
+      const socket = socketConnection({ companyId: user.companyId });
+
+      socket.on(`company-${user.companyId}-invoice-paid`, (data) => {
+        if (data.action === "payment_confirmed") {
+          // Atualizar a fatura na lista
+          dispatch({
+            type: "UPDATE_USERS", // Reutilizando o reducer existente
+            payload: { 
+              id: data.invoice.id, 
+              status: data.invoice.status,
+              paymentDate: data.invoice.paymentDate,
+              paymentMethod: data.invoice.paymentMethod
+            }
+          });
+
+          // Mostrar notificação de sucesso
+          toast.success(`🎉 Pagamento confirmado! Fatura #${data.invoice.id} foi paga com sucesso.`);
+        }
+      });
+
+      return () => {
+        socket.disconnect();
+      };
+    }
+  }, [user?.companyId]);
+
   const loadMore = () => {
     setPageNumber((prevState) => prevState + 1);
   };
@@ -310,20 +380,39 @@ const Invoices = () => {
     }
   };
 
-  const rowStatus = (record) => {
+  const getStatusText = (record) => {
     const hoje = moment(moment()).format("DD/MM/yyyy");
     const vencimento = moment(record.dueDate).format("DD/MM/yyyy");
     var diff = moment(vencimento, "DD/MM/yyyy").diff(moment(hoje, "DD/MM/yyyy"));
     var dias = moment.duration(diff).asDays();    
     const status = record.status;
-    if (status === "paid") {
+    
+    // Verificar diferentes status do Asaas
+    if (status === "paid" || status === "CONFIRMED" || status === "RECEIVED" || status === "RECEIVED_IN_CASH") {
       return "Pago";
     }
-    if (dias < 0) {
+    if (dias < 0 && !isPaid(record)) {
       return "Vencido";
     } else {
       return "Em Aberto"
     }
+  }
+
+  const renderStatus = (record) => {
+    if (isPaid(record)) {
+      return (
+        <div className={classes.paidStatusBadge}>
+          <CheckIcon className={classes.paidStatusIcon} />
+          PAGO
+        </div>
+      );
+    }
+    return getStatusText(record);
+  }
+
+  const isPaid = (record) => {
+    const status = record.status;
+    return status === "paid" || status === "CONFIRMED" || status === "RECEIVED" || status === "RECEIVED_IN_CASH";
   }
 
   return (
@@ -416,7 +505,7 @@ const Invoices = () => {
                     <TableCell align="center">Id</TableCell>
                     <TableCell align="center">Detalhes</TableCell>
                     <TableCell align="center">Valor</TableCell>
-                    <TableCell align="center">Data Venc.</TableCell>
+                    <TableCell align="center">Vencimento</TableCell>
                     <TableCell align="center">Status</TableCell>
                     <TableCell align="center">Ação</TableCell>
                   </TableRow>
@@ -439,24 +528,31 @@ const Invoices = () => {
                           {invoice.value.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' })}
                         </TableCell>
                         <TableCell align="center">{moment(invoice.dueDate).format("DD/MM/YYYY")}</TableCell>
-                        <TableCell style={{ fontWeight: 'bold' }} align="center">{rowStatus(invoice)}</TableCell>
+                        <TableCell style={{ fontWeight: 'bold' }} align="center">{renderStatus(invoice)}</TableCell>
                         <TableCell align="center">
-                          {rowStatus(invoice) !== "Pago" ? (
+                          {!isPaid(invoice) ? (
                             <Button
                               size="small"
-                              variant="outlined"
-                              color="secondary"
+                              variant="contained"
+                              color="primary"
                               onClick={() => handleOpenContactModal(invoice)}
+                              startIcon={invoice.invoiceUrl ? <OpenInNewIcon /> : null}
+                              title={invoice.invoiceUrl ? "Abrir página de pagamento do Asaas" : "Processar pagamento"}
                             >
                               PAGAR
                             </Button>
                           ) : (
-                            <Button
-                              size="small"
-                              variant="outlined"
-                            >
-                              PAGO 
-                            </Button>
+                            invoice.invoiceUrl && (
+                              <Tooltip title="Ver fatura" arrow>
+                                <IconButton
+                                  className={classes.viewInvoiceButton}
+                                  onClick={() => handleViewInvoice(invoice)}
+                                  size="small"
+                                >
+                                  <VisibilityIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )
                           )}
                         </TableCell>
                       </TableRow>

@@ -28,16 +28,16 @@ import useStyles from "./styles";
 
 
 export default function CheckoutPage(props) {
-  const steps = ["Dados", "Personalizar", "Revisar"];
+  const steps = ["Pagamento"];
   const { formId, formField } = checkoutFormModel;
   
   
   
   const classes = useStyles();
-  const [activeStep, setActiveStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(0);
   const [datePayment, setDatePayment] = useState(null);
   const [invoiceId, ] = useState(props.Invoice.id);
-  const currentValidationSchema = validationSchema[activeStep];
+  const currentValidationSchema = validationSchema[activeStep] || {};
   const isLastStep = activeStep === steps.length - 1;
   const { user } = useContext(AuthContext);
 
@@ -45,8 +45,6 @@ function _renderStepContent(step, setFieldValue, setActiveStep, values ) {
 
   switch (step) {
     case 0:
-      return <AddressForm formField={formField} values={values} setFieldValue={setFieldValue}  />;
-    case 1:
       return <PaymentForm 
       formField={formField} 
       setFieldValue={setFieldValue} 
@@ -55,8 +53,6 @@ function _renderStepContent(step, setFieldValue, setActiveStep, values ) {
       invoiceId={invoiceId}
       values={values}
       />;
-    case 2:
-      return <ReviewOrder />;
     default:
       return <div>Not Found</div>;
   }

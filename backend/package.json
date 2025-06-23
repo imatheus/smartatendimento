@@ -8,12 +8,17 @@
     "watch": "tsc -w",
     "start": "nodemon dist/server.js",
     "dev:server": "ts-node-dev --respawn --transpile-only --ignore node_modules src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only --ignore node_modules src/server.ts",
     "db:migrate": "npx sequelize db:migrate",
     "db:seed": "sequelize db:seed:all",
     "pretest": "NODE_ENV=test sequelize db:migrate && NODE_ENV=test sequelize db:seed:all",
     "test": "NODE_ENV=test jest",
     "posttest": "NODE_ENV=test sequelize db:migrate:undo:all",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "test:webhook": "node test-webhook.js",
+    "test:webhook:created": "node test-webhook.js PAYMENT_CREATED",
+    "test:webhook:confirmed": "node test-webhook.js PAYMENT_CONFIRMED",
+    "test:webhook:overdue": "node test-webhook.js PAYMENT_OVERDUE"
   },
   "dependencies": {
     "@adiwajshing/baileys": "^4.4.0",

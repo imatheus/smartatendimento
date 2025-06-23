@@ -28,6 +28,7 @@ import subscriptionRoutes from "./subScriptionRoutes";
 import companyPlanRoutes from "./companyPlanRoutes";
 import webHookMetaRoutes from "./WebHookMetaRoutes";
 import webChatRoutes from "./webChatRoutes";
+import asaasRoutes from "./asaasRoutes";
 
 const routes = Router();
 
@@ -60,5 +61,6 @@ routes.use(companyPlanRoutes);
 routes.use(invoiceRoutes);
 routes.use("/webhook/meta", webHookMetaRoutes);
 routes.use(webChatRoutes);
+routes.use(asaasRoutes);
 
 export default routes;

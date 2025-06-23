@@ -4,6 +4,7 @@ import Company from "../../models/Company";
 import User from "../../models/User";
 import Setting from "../../models/Setting";
 import CreateCompanyPlanService from "../CompanyPlanService/CreateCompanyPlanService";
+import CreateAsaasCustomerForCompanyService from "../AsaasService/CreateAsaasCustomerForCompanyService";
 
 interface CompanyData {
   name: string;
@@ -286,6 +287,20 @@ const CreateCompanyService = async (
       await setting.update({ value: `${campaignsEnabled}` });
     }
   }
+
+  // Tentar criar automaticamente no Asaas (de forma assíncrona para não bloquear o cadastro)
+  setTimeout(async () => {
+    try {
+      const asaasResult = await CreateAsaasCustomerForCompanyService({ companyId: company.id });
+      if (asaasResult.success) {
+        console.log(`Empresa ${company.name} criada no Asaas automaticamente`);
+      } else {
+        console.log(`Falha ao criar empresa ${company.name} no Asaas: ${asaasResult.message}`);
+      }
+    } catch (error) {
+      console.error(`Erro ao criar empresa ${company.name} no Asaas:`, error);
+    }
+  }, 2000); // Aguarda 2 segundos para garantir que a empresa foi totalmente criada
 
   return company;
 };

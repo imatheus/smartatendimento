@@ -4,7 +4,6 @@ import Paper from "@material-ui/core/Paper";
 import { Tabs, Tab, Box, Typography } from "@material-ui/core";
 
 import MessagesAPITab from "./MessagesAPITab";
-import AsaasTab from "./AsaasTab";
 
 const useStyles = makeStyles((theme) => ({
   mainPaper: {
@@ -75,16 +74,11 @@ const Integrations = () => {
           textColor="primary"
         >
           <Tab label="API" {...a11yProps(0)} />
-          <Tab label="ASAAS" {...a11yProps(1)} />
         </Tabs>
       </div>
 
       <TabPanel value={tabValue} index={0}>
         <MessagesAPITab />
-      </TabPanel>
-      
-      <TabPanel value={tabValue} index={1}>
-        <AsaasTab />
       </TabPanel>
     </Paper>
   );
