@@ -156,6 +156,13 @@ const useCompanyStatus = () => {
       }
       return;
     }
+    
+    // Verificar se o usuário tem uma empresa válida antes de conectar
+    if (!user?.company?.id) {
+      console.warn('Usuário não possui empresa válida para conectar socket');
+      return;
+    }
+    
     const socket = socketConnection({ companyId: companyIdNum });
 
     // Listener para mudanças de status da empresa
@@ -174,7 +181,7 @@ const useCompanyStatus = () => {
           window.location.reload();
         }, 2000);
       } else if (data.action === "company_blocked") {
-        toast.error(`🚫 Empresa bloqueada por falta de pagamento.`);
+        toast.error(`Sistema bloqueado por falta de pagamento.`);
         
         // Atualizar dados do usuário e sincronizar status
         await refreshUserData();

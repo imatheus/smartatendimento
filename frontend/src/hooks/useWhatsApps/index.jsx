@@ -3,6 +3,7 @@ import toastError from "../../errors/toastError";
 
 import api from "../../services/api";
 import { socketConnection } from "../../services/socket";
+import { createSafeSocketConnection, getSafeCompanyId } from "../../utils/socketUtils";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_WHATSAPPS") {
@@ -73,8 +74,9 @@ const useWhatsApps = () => {
   }, []);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    const companyId = getSafeCompanyId();
+    const socket = createSafeSocketConnection(companyId, 'useWhatsApps');
+    if (!socket) return;
 
     socket.on(`company-${companyId}-whatsapp`, (data) => {
       if (data.action === "update") {

@@ -19,6 +19,7 @@ import TicketListItem from "../TicketListItem";
 import useTickets from "../../hooks/useTickets";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { socketConnection } from "../../services/socket";
+import { createSafeSocketConnection, getSafeCompanyId } from "../../utils/socketUtils";
 
 const useStyles = makeStyles((theme) => ({
   tabContainer: {
@@ -131,9 +132,11 @@ const NotificationsPopOver = () => {
 	}, [ticketIdUrl]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    const companyId = getSafeCompanyId();
     const userId = user.id;
+
+    const socket = createSafeSocketConnection(companyId, 'NotificationsPopOver');
+    if (!socket) return;
 
     socket.on("connect", () => socket.emit("joinNotification"));
 

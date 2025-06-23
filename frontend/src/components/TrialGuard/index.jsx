@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { useHistory, useLocation } from "react-router-dom";
-import { AuthContext } from "../../context/Auth/AuthContext";
-import useCompanyStatus from "../../hooks/useCompanyStatus";
+import { AuthContext } from "../../context/Auth/AuthContext.jsx";
+import useCompanyStatus from "../../hooks/useCompanyStatus.jsx";
 
 const TrialGuard = ({ children }) => {
   const { user } = useContext(AuthContext);

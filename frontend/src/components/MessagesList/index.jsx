@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useRef } from "react";
+﻿import React, { useState, useEffect, useReducer, useRef } from "react";
 
 import { isSameDay, parseISO, format } from "date-fns";
 import clsx from "clsx";
@@ -34,6 +34,7 @@ import whatsBackground from "../../assets/wa-background.png";
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
+import { createSafeSocketConnection, getSafeCompanyId } from "../../utils/socketUtils";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -334,7 +335,7 @@ const reducer = (state, action) => {
       state.push(newMessage);
     }
 
-    // Ordenar mensagens por data de criação para garantir ordem correta
+    // Ordenar mensagens por data de criaÃ§Ã£o para garantir ordem correta
     const sortedState = state.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     
     return [...sortedState];
@@ -417,16 +418,17 @@ useEffect(() => {
     return;
   }
   
-  const companyId = localStorage.getItem("companyId");
-  const socket = socketConnection({ companyId });
+  const companyId = getSafeCompanyId();
+  const socket = createSafeSocketConnection(companyId, 'MessagesList');
+  if (!socket) return;
 
-  // Conectar ao room específico do ticket
+  // Conectar ao room especÃ­fico do ticket
   socket.on("connect", () => {
     socket.emit("joinChatBox", `${ticketId}`);
   });
 
   const messageListener = (data) => {
-    // Garantir que a comparação funcione com string e number
+    // Garantir que a comparaÃ§Ã£o funcione com string e number
     const currentTicketId = parseInt(ticketId);
     const messageTicketId = parseInt(data.ticket?.id || data.message?.ticketId);
     
@@ -553,7 +555,7 @@ useEffect(() => {
           <div className={classes.documentPreview}>
             <div className={classes.documentHeader}>
               <div className={classes.documentIcon}>
-                <span role="img" aria-label="PDF document">📄</span>
+                <span role="img" aria-label="PDF document">ðŸ“„</span>
               </div>
               <div className={classes.documentInfo}>
                 <Typography variant="body2" className={classes.documentName}>
@@ -592,18 +594,18 @@ useEffect(() => {
       
       // Other document types
       const documentIcons = {
-        doc: '📝', docx: '📝',
-        xls: '📊', xlsx: '📊',
-        ppt: '📊', pptx: '📊',
-        txt: '📄',
-        zip: '🗜️', rar: '🗜️',
+        doc: 'ðŸ“', docx: 'ðŸ“',
+        xls: 'ðŸ“Š', xlsx: 'ðŸ“Š',
+        ppt: 'ðŸ“Š', pptx: 'ðŸ“Š',
+        txt: 'ðŸ“„',
+        zip: 'ðŸ—œï¸', rar: 'ðŸ—œï¸',
       };
       
       return (
         <div className={classes.documentPreview}>
           <div className={classes.documentHeader}>
             <div className={classes.documentIcon}>
-              {documentIcons[fileExtension] || '📎'}
+              {documentIcons[fileExtension] || 'ðŸ“Ž'}
             </div>
             <div className={classes.documentInfo}>
               <Typography variant="body2" className={classes.documentName}>
@@ -806,12 +808,12 @@ useEffect(() => {
   const messageLocation = (message, createdAt) => {
     return (
       <div className={[classes.textContentItem, { display: 'flex', padding: 5 }]}>
-        <img src={message.split('|')[0]} className={classes.imageLocation} alt="Localização" />
+        <img src={message.split('|')[0]} className={classes.imageLocation} alt="LocalizaÃ§Ã£o" />
         <a
           style={{ fontWeight: '700', color: 'gray' }}
           target="_blank"
           rel="noopener noreferrer"
-          href={message.split('|')[1]}> Clique para ver localização</a>
+          href={message.split('|')[1]}> Clique para ver localizaÃ§Ã£o</a>
         <span className={classes.timestamp}>
           {format(parseISO(createdAt), "HH:mm")}
         </span>

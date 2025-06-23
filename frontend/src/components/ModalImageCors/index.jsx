@@ -40,7 +40,6 @@ const useStyles = makeStyles(theme => ({
 		borderBottomRightRadius: 8,
 		backgroundColor: "transparent",
 		display: "flex",
-		border: `1px solid ${theme.palette.divider}`,
 		flexDirection: "column",
 		alignItems: "center",
 		justifyContent: "center",
@@ -142,7 +141,7 @@ const ModalImageCors = ({ imageUrl }) => {
 		console.log('Nome do arquivo extraído:', filename);
 		
 		// Gerar URLs possíveis
-		const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
+		const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 		const urls = [
 			`${baseUrl}/public/${filename}`,
 			`http://localhost:8080/public/${filename}`,

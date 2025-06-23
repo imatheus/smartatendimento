@@ -2,13 +2,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import CssBaseline from "@material-ui/core/CssBaseline";
-import App from "./App";
-import { AuthProvider } from "./context/Auth/AuthContext"; 
-import process from 'process';
+import App from "./App.jsx";
+import { AuthProvider } from "./context/Auth/AuthContext.jsx"; 
 import './index.css';
 
-// PASSO 2: O código do polyfill (window.process) vem DEPOIS das importações.
-window.process = process;
+// Polyfill para process no Vite (evita erro de undefined)
+if (typeof window !== 'undefined' && typeof window.process === 'undefined') {
+  window.process = { env: {} };
+}
 
 // PASSO 3: O resto do código permanece o mesmo, usando o nome correto <AuthProvider>.
 ReactDOM.render(

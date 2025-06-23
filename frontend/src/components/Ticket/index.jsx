@@ -18,6 +18,7 @@ import toastError from "../../errors/toastError";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { TagsContainer } from "../TagsContainer";
 import { socketConnection } from "../../services/socket";
+import { createSafeSocketConnection, getSafeCompanyId } from "../../utils/socketUtils";
 
 const drawerWidth = 320;
 
@@ -98,8 +99,9 @@ const Ticket = () => {
   }, [ticketId, user, history]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    const companyId = getSafeCompanyId();
+    const socket = createSafeSocketConnection(companyId, "Ticket");
+    if (!socket) return;
 
     socket.on("connect", () => socket.emit("joinChatBox", `${ticket.id}`));
 

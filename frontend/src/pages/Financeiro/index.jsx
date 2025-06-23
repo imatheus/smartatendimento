@@ -357,11 +357,17 @@ const Invoices = () => {
 
   // Socket.IO listener para atualizações de pagamento em tempo real
   useEffect(() => {
-    if (user?.companyId) {
-      const socket = socketConnection({ companyId: user.companyId });
+    // Só conecta se companyId for válido e usuário tiver empresa
+    const companyIdNum = Number(user?.companyId);
+    if (!user?.companyId || isNaN(companyIdNum) || companyIdNum <= 0 || !user?.company?.id) {
+      console.warn('Não é possível conectar socket - companyId inválido ou empresa não encontrada:', user?.companyId);
+      return;
+    }
+    
+    const socket = socketConnection({ companyId: companyIdNum });
 
       // Listener para pagamento confirmado
-      socket.on(`company-${user.companyId}-invoice-paid`, (data) => {
+      socket.on(`company-${companyIdNum}-invoice-paid`, (data) => {
         if (data.action === "payment_confirmed") {
           // Atualizar a fatura na lista
           dispatch({
@@ -380,7 +386,7 @@ const Invoices = () => {
       });
 
       // Listener para mudanças de status da empresa
-      socket.on(`company-${user.companyId}-status-updated`, (data) => {
+      socket.on(`company-${companyIdNum}-status-updated`, (data) => {
         if (data.action === "company_reactivated") {
           // Mostrar notificação de reativação
           toast.success(`✅ Empresa reativada! Todas as funcionalidades foram liberadas.`);
@@ -401,7 +407,7 @@ const Invoices = () => {
       });
 
       // Listener para atualizações de status (vencimento, etc.)
-      socket.on(`company-${user.companyId}-invoice-updated`, (data) => {
+      socket.on(`company-${companyIdNum}-invoice-updated`, (data) => {
         if (data.action === "payment_overdue") {
           // Atualizar a fatura na lista
           dispatch({
@@ -420,8 +426,7 @@ const Invoices = () => {
       return () => {
         socket.disconnect();
       };
-    }
-  }, [user?.companyId]);
+  }, [user?.companyId, user?.company?.id]);
 
   const loadMore = () => {
     setPageNumber((prevState) => prevState + 1);

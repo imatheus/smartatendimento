@@ -4,6 +4,7 @@ import { Avatar, CardHeader, Badge, makeStyles } from "@material-ui/core";
 
 import { i18n } from "../../translate/i18n";
 import { socketConnection } from "../../services/socket";
+import { createSafeSocketConnection, getSafeCompanyId } from "../../utils/socketUtils";
 
 const useStyles = makeStyles((theme) => ({
   onlineIndicator: {
@@ -70,8 +71,9 @@ const TicketInfo = ({ contact, ticket, onClick }) => {
 
 	// Real online status from socket events
 	useEffect(() => {
-		const companyId = localStorage.getItem("companyId");
-		const socket = socketConnection({ companyId });
+		const companyId = getSafeCompanyId();
+		const socket = createSafeSocketConnection(companyId, "TicketInfo");
+		if (!socket) return;
 
 		// Listen for typing events to update typing status
 		const typingListener = (data) => {

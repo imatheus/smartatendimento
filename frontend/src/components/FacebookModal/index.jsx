@@ -137,9 +137,9 @@ const FacebookModal = ({ open, onClose, connectionType = "facebook" }) => {
             </Typography>
 
             <Box className={classes.facebookButton}>
-              {process.env.REACT_APP_FACEBOOK_APP_ID ? (
+              {import.meta.env.VITE_FACEBOOK_APP_ID ? (
                 <FacebookLogin
-                  appId={process.env.REACT_APP_FACEBOOK_APP_ID}
+                  appId={import.meta.env.VITE_FACEBOOK_APP_ID}
                   autoLoad={false}
                   fields="name,email,picture"
                   scope={getScope()}

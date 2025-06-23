@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useContext } from "react";
+﻿import React, { useState, useEffect, useReducer, useContext } from "react";
 
 import { makeStyles } from "@material-ui/core/styles";
 import List from "@material-ui/core/List";
@@ -12,6 +12,7 @@ import { i18n } from "../../translate/i18n";
 import { ListSubheader } from "@material-ui/core";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { socketConnection } from "../../services/socket";
+import { createSafeSocketConnection, getSafeCompanyId } from "../../utils/socketUtils";
 
 const useStyles = makeStyles((theme) => ({
   ticketsListWrapper: {
@@ -191,8 +192,9 @@ const TicketsList = ({
   }, [tickets, status, searchParam]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    const companyId = getSafeCompanyId();
+    const socket = createSafeSocketConnection(companyId, "TicketsList");
+    if (!socket) return;
 
     const shouldUpdateTicket = (ticket) =>
       (!ticket.userId || ticket.userId === user?.id || showAll) &&
@@ -340,3 +342,5 @@ const TicketsList = ({
 };
 
 export default TicketsList;
+
+

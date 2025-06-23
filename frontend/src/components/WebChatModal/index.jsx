@@ -120,7 +120,7 @@ const WebChatModal = ({ open, onClose }) => {
 
   const generateChatCode = () => {
     const chatId = `webchat_${Date.now()}`;
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:8080";
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
     
     return `<!-- PepChat - Chat Web -->
 <div id="${chatId}"></div>

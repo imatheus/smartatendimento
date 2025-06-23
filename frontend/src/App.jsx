@@ -1,10 +1,10 @@
 import React from "react";
-import Routes from "./routes";
+import Routes from "./routes/index.jsx";
 import "react-toastify/dist/ReactToastify.css";
 
 import { ThemeProvider as MuiThemeProvider } from "@material-ui/core/styles";
 import { CssBaseline } from "@material-ui/core";
-import { ThemeProvider, useCustomTheme } from "./context/Theme/ThemeContext";
+import { ThemeProvider, useCustomTheme } from "./context/Theme/ThemeContext.jsx";
 
 // Import custom CSS after Material-UI components to ensure proper override
 import "./assets/css/custom-paper-styles.css";

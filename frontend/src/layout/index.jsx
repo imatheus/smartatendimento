@@ -32,6 +32,7 @@ import { i18n } from "../translate/i18n";
 import toastError from "../errors/toastError";
 import logo from "../assets/logo.png"; 
 import { socketConnection } from "../services/socket";
+import { createSafeSocketConnection, getSafeCompanyId, getSafeUserId } from "../utils/socketUtils";
 import moment from "moment";
 import useCompanyStatus from "../hooks/useCompanyStatus";
 
@@ -439,13 +440,14 @@ const LoggedInLayout = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const userId = localStorage.getItem("userId");
+    const companyId = getSafeCompanyId();
+    const userId = getSafeUserId();
 
-    const socket = socketConnection({ companyId });
+    const socket = createSafeSocketConnection(companyId, 'Layout');
+    if (!socket) return;
 
     socket.on(`company-${companyId}-auth`, (data) => {
-      if (data.user.id === +userId) {
+      if (data.user.id === userId) {
         toastError("Sua conta foi acessada em outro computador.");
         setTimeout(() => {
           localStorage.clear();

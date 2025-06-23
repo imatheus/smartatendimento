@@ -6,7 +6,7 @@ export function socketConnection(params) {
   if (localStorage.getItem("userId")) {
     userId = localStorage.getItem("userId");
   }
-  return openSocket(process.env.REACT_APP_BACKEND_URL, {
+  return openSocket(import.meta.env.VITE_BACKEND_URL, {
     transports: ["websocket", "polling", "flashsocket"],
     pingTimeout: 18000,
     pingInterval: 18000,

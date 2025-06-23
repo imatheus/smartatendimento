@@ -6,6 +6,7 @@ import { Dialog, DialogContent, Paper, Typography } from "@material-ui/core";
 import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import { socketConnection } from "../../services/socket";
+import { createSafeSocketConnection, getSafeCompanyId } from "../../utils/socketUtils";
 
 const QrcodeModal = ({ open, onClose, whatsAppId }) => {
   const [qrCode, setQrCode] = useState("");
@@ -26,8 +27,10 @@ const QrcodeModal = ({ open, onClose, whatsAppId }) => {
 
   useEffect(() => {
     if (!whatsAppId) return;
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    
+    const companyId = getSafeCompanyId();
+    const socket = createSafeSocketConnection(companyId, "QrcodeModal");
+    if (!socket) return;
 
     socket.on(`company-${companyId}-whatsappSession`, (data) => {
       if (data.action === "update" && data.session.id === whatsAppId) {

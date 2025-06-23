@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { socketConnection } from "../../services/socket";
+import { createSafeSocketConnection, getSafeCompanyId } from "../../utils/socketUtils";
 
 const useUserStatus = () => {
   const [usersStatus, setUsersStatus] = useState(new Map());
@@ -28,10 +29,9 @@ const useUserStatus = () => {
   }, [usersStatus]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    if (!companyId) return;
-
-    const socket = socketConnection({ companyId });
+    const companyId = getSafeCompanyId();
+    const socket = createSafeSocketConnection(companyId, 'useUserStatus');
+    if (!socket) return;
 
     const userStatusListener = (data) => {
       const { userId, online } = data;
