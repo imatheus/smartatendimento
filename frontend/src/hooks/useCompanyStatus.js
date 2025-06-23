@@ -5,8 +5,9 @@ import { socketConnection } from "../services/socket";
 import { toast } from "react-toastify";
 import api from "../services/api";
 
-// Flag global para evitar múltiplos toasts de pagamento confirmado
+// Flags globais para evitar múltiplos toasts
 let globalPaymentToastShown = false;
+let globalSubscriptionToastShown = false;
 
 const useCompanyStatus = () => {
   const { user, refreshUserData } = useContext(AuthContext);
@@ -192,19 +193,33 @@ const useCompanyStatus = () => {
         await syncStatusWithBackend();
         
         // Mostrar notificação sobre a mudança
-        toast.info(`📅 Data de vencimento atualizada para ${moment(data.company.dueDate).format('DD/MM/YYYY')}`);
+        if (data.company.dueDate && moment(data.company.dueDate).isValid()) {
+          toast.info(`Data de vencimento atualizada para ${moment(data.company.dueDate).format('DD/MM/YYYY')}`);
+        } else {
+          toast.info(`Data de vencimento atualizada`);
+        }
       } else if (data.action === "subscription_updated") {
         console.log('Assinatura da empresa atualizada:', data);
         
-        // Atualizar dados do usuário e sincronizar status
-        await refreshUserData();
-        await syncStatusWithBackend();
-        
-        // Mostrar notificação sobre a mudança na assinatura
-        if (data.company.dueDate) {
-          toast.info(`📅 Assinatura atualizada - Nova data de vencimento: ${moment(data.company.dueDate).format('DD/MM/YYYY')}`);
-        } else {
-          toast.info(`📋 Assinatura atualizada`);
+        // Evitar múltiplos toasts
+        if (!globalSubscriptionToastShown) {
+          globalSubscriptionToastShown = true;
+          
+          // Atualizar dados do usuário e sincronizar status
+          await refreshUserData();
+          await syncStatusWithBackend();
+          
+          // Mostrar notificação sobre a mudança na assinatura
+          if (data.company && data.company.dueDate && moment(data.company.dueDate).isValid()) {
+            toast.info(`Assinatura atualizada - Nova data de vencimento: ${moment(data.company.dueDate).format('DD/MM/YYYY')}`);
+          } else {
+            toast.info(`Assinatura atualizada`);
+          }
+          
+          // Liberar flag após 3 segundos
+          setTimeout(() => {
+            globalSubscriptionToastShown = false;
+          }, 3000);
         }
       }
     });

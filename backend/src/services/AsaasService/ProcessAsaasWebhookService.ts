@@ -295,37 +295,41 @@ const handleSubscriptionUpdated = async (payload: WebhookPayload, asaasConfig: A
 
       // Emitir evento via Socket.IO para atualizar a interface em tempo real
       const io = getIO();
-      io.emit(`company-${company.id}-status-updated`, {
-        action: "subscription_updated",
-        company: {
-          id: company.id,
-          dueDate: payload.subscription.nextDueDate,
-          value: payload.subscription.value,
-          description: payload.subscription.description
-        },
-        subscription: {
-          id: payload.subscription.id,
-          nextDueDate: payload.subscription.nextDueDate,
-          value: payload.subscription.value,
-          description: payload.subscription.description,
-          status: payload.subscription.status
-        }
-      });
-
-      // Se a data de vencimento foi alterada, emitir evento específico
-      if (updateData.dueDate) {
-        io.emit(`company-${company.id}-due-date-updated`, {
-          action: "subscription_due_date_changed",
+      
+      // Só emitir eventos se realmente houve mudanças
+      if (hasChanges) {
+        io.emit(`company-${company.id}-status-updated`, {
+          action: "subscription_updated",
           company: {
             id: company.id,
-            oldDueDate: company.dueDate,
-            newDueDate: payload.subscription.nextDueDate
+            dueDate: payload.subscription.nextDueDate,
+            value: payload.subscription.value,
+            description: payload.subscription.description
           },
           subscription: {
             id: payload.subscription.id,
-            nextDueDate: payload.subscription.nextDueDate
+            nextDueDate: payload.subscription.nextDueDate,
+            value: payload.subscription.value,
+            description: payload.subscription.description,
+            status: payload.subscription.status
           }
         });
+
+        // Se a data de vencimento foi alterada, emitir evento específico
+        if (updateData.dueDate) {
+          io.emit(`company-${company.id}-due-date-updated`, {
+            action: "subscription_due_date_changed",
+            company: {
+              id: company.id,
+              oldDueDate: company.dueDate,
+              newDueDate: payload.subscription.nextDueDate
+            },
+            subscription: {
+              id: payload.subscription.id,
+              nextDueDate: payload.subscription.nextDueDate
+            }
+          });
+        }
       }
     }
 

@@ -101,7 +101,7 @@ export function CompanyForm(props) {
 
   useEffect(() => {
     setRecord((prev) => {
-      if (moment(initialValue).isValid()) {
+      if (initialValue.dueDate && moment(initialValue.dueDate).isValid()) {
         initialValue.dueDate = moment(initialValue.dueDate).format(
           "YYYY-MM-DD"
         );
