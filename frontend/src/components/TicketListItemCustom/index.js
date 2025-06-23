@@ -23,7 +23,7 @@ import { TicketsContext } from "../../context/Tickets/TicketsContext";
 import toastError from "../../errors/toastError";
 import { v4 as uuidv4 } from "uuid";
 import WhatsAppIcon from "@material-ui/icons/WhatsApp";
-import AndroidIcon from "@material-ui/icons/Android";
+import AdbIcon from "@material-ui/icons/Adb";
 import VisibilityIcon from "@material-ui/icons/Visibility";
 import TicketMessagesDialog from "../TicketMessagesDialog";
 import DoneIcon from '@material-ui/icons/Done';
@@ -406,7 +406,7 @@ const TicketListItemCustom = ({ ticket, setUpdate }) => {
           )}
           {ticket.chatbot && (
             <Tooltip title="Chatbot">
-              <AndroidIcon
+              <AdbIcon
                 fontSize="small"
                 style={{ color: grey[700], marginRight: 5 }}
               />
@@ -480,7 +480,7 @@ const TicketListItemCustom = ({ ticket, setUpdate }) => {
           )}
           {ticket.chatbot && (
             <Tooltip title="Chatbot">
-              <AndroidIcon
+              <AdbIcon
                 fontSize="small"
                 style={{ color: grey[700], marginRight: 5 }}
               />

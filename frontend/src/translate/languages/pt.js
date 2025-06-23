@@ -297,7 +297,7 @@ const messages = {
           tickets: "Atendimentos",
           quickMessages: "Respostas Rápidas",
           contacts: "Contatos",
-          queues: "Setores & Chatbot",
+          queues: "Chatbot",
           tags: "Etiquetas",
           administration: "Administração",
           users: "Usuários",
@@ -469,7 +469,7 @@ const messages = {
         title: "Configurações de Campanhas",
       },
       queues: {
-        title: "Setores & Chatbot",
+        title: "Chatbot",
         table: {
           name: "Nome",
           color: "Cor",

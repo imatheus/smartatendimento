@@ -150,3 +150,10 @@ h1, h2, h3, h4, h5, h6,
   font-weight: 500 !important;
   font-family: 'Lato', 'Helvetica', 'Arial', sans-serif !important;
 }
+
+/* Estilo personalizado para itens do menu lateral */
+.makeStyles-drawerPaper-40 .MuiListItem-root {
+  color: #fff !important;
+  margin: 4px 0px !important;
+  border-radius: 25px !important;
+}

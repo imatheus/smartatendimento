@@ -8,21 +8,22 @@ import ListSubheader from "@material-ui/core/ListSubheader";
 import Divider from "@material-ui/core/Divider";
 import { Badge, Collapse, List, Popover, MenuList, MenuItem } from "@material-ui/core";
 import DashboardOutlinedIcon from "@material-ui/icons/DashboardOutlined";
-import WhatsAppIcon from "@material-ui/icons/WhatsApp";
+import ChatOutlinedIcon from "@material-ui/icons/ChatOutlined";
 import SyncAltIcon from "@material-ui/icons/SyncAlt";
 import SettingsOutlinedIcon from "@material-ui/icons/SettingsOutlined";
 import PeopleAltOutlinedIcon from "@material-ui/icons/PeopleAltOutlined";
 import ContactPhoneOutlinedIcon from "@material-ui/icons/ContactPhoneOutlined";
 import AccountTreeOutlinedIcon from "@material-ui/icons/AccountTreeOutlined";
-import FlashOnIcon from "@material-ui/icons/FlashOn";
-import CodeRoundedIcon from "@material-ui/icons/CodeRounded";
-import LocalOfferIcon from "@material-ui/icons/LocalOffer";
-import EventAvailableIcon from "@material-ui/icons/EventAvailable";
+import OfflineBoltOutlinedIcon from "@material-ui/icons/OfflineBoltOutlined";
+import AndroidOutlinedIcon from "@material-ui/icons/AndroidOutlined";
+import AccountBalanceOutlinedIcon from "@material-ui/icons/AccountBalanceOutlined";
+import PowerOutlinedIcon from "@material-ui/icons/PowerOutlined";
+import LocalOfferOutlinedIcon from "@material-ui/icons/LocalOfferOutlined";
+import VolumeUpOutlinedIcon from "@material-ui/icons/VolumeUpOutlined";
 import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import PeopleIcon from "@material-ui/icons/People";
 import ListIcon from "@material-ui/icons/ListAlt";
-import LocalAtmIcon from '@material-ui/icons/LocalAtm';
 
 import { i18n } from "../translate/i18n";
 import { WhatsAppsContext } from "../context/WhatsApp/WhatsAppsContext";
@@ -125,14 +126,14 @@ const MainListItems = (props) => {
       <ListItemLink
         to="/tickets"
         primary={i18n.t("mainDrawer.listItems.tickets")}
-        icon={<WhatsAppIcon />}
+        icon={<ChatOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
       />
 
       <ListItemLink
         to="/quick-messages"
         primary={i18n.t("mainDrawer.listItems.quickMessages")}
-        icon={<FlashOnIcon />}
+        icon={<OfflineBoltOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
       />
 
@@ -146,7 +147,7 @@ const MainListItems = (props) => {
       <ListItemLink
         to="/tags"
         primary={i18n.t("mainDrawer.listItems.tags")}
-        icon={<LocalOfferIcon />}
+        icon={<LocalOfferOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
       />
 
@@ -169,7 +170,7 @@ const MainListItems = (props) => {
                   onClick={() => setOpenCampaignSubmenu((prev) => !prev)}
                 >
                   <ListItemIcon>
-                    <EventAvailableIcon />
+                    <VolumeUpOutlinedIcon />
                   </ListItemIcon>
                   <ListItemText
                     primary={i18n.t("mainDrawer.listItems.campaigns")}
@@ -228,7 +229,7 @@ const MainListItems = (props) => {
                   }}
                 >
                   <ListItemIcon style={{ minWidth: 'auto' }}>
-                    <EventAvailableIcon />
+                    <VolumeUpOutlinedIcon />
                   </ListItemIcon>
                 </ListItem>
                 <Popover
@@ -294,7 +295,7 @@ const MainListItems = (props) => {
             <ListItemLink
               to="/queues"
               primary={i18n.t("mainDrawer.listItems.queues")}
-              icon={<AccountTreeOutlinedIcon />}
+              icon={<AndroidOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
             />
             <ListItemLink
@@ -306,13 +307,13 @@ const MainListItems = (props) => {
             <ListItemLink
               to="/integrations"
               primary={i18n.t("mainDrawer.listItems.integrations")}
-              icon={<CodeRoundedIcon />}
+              icon={<PowerOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
             />
              <ListItemLink
                 to="/financeiro"
                 primary={i18n.t("mainDrawer.listItems.financeiro")}
-                icon={<LocalAtmIcon />}
+                icon={<AccountBalanceOutlinedIcon />}
                 drawerCollapsed={drawerCollapsed}
               />
 
