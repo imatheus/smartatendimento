@@ -5,6 +5,7 @@ import { logger } from "../utils/logger";
 import AppError from "../errors/AppError";
 import authConfig from "../config/auth";
 import Company from "../models/Company";
+import SyncCompanyStatusService from "../services/CompanyService/SyncCompanyStatusService";
 
 interface TokenPayload {
   id: string;
@@ -43,38 +44,12 @@ const isAuthWithExpiredAccess = async (req: Request, res: Response, next: NextFu
       companyId
     };
 
-    // Buscar informações da empresa
-    const company = await Company.findByPk(companyId);
-    
-    if (!company) {
-      throw new AppError("Empresa não encontrada", 404);
-    }
-
-    // Verificar se a empresa está ativa ou em período de avaliação
-    const now = moment();
-    let isCompanyActive = company.status;
-    let isInTrial = false;
-    let isExpired = false;
-
-    // Verificar período de avaliação
-    if (company.trialExpiration) {
-      const trialExpiration = moment(company.trialExpiration);
-      isInTrial = trialExpiration.isAfter(now);
-      
-      if (isInTrial) {
-        isCompanyActive = true;
-      }
-    }
-
-    // Verificar data de vencimento
-    if (company.dueDate && !isInTrial) {
-      const dueDate = moment(company.dueDate);
-      isExpired = dueDate.isBefore(now);
-      
-      if (isExpired) {
-        isCompanyActive = false;
-      }
-    }
+    // Sincronizar status da empresa antes de verificar acesso
+    const syncResult = await SyncCompanyStatusService({ companyId });
+    const company = syncResult.company;
+    const isCompanyActive = company.status;
+    const isInTrial = syncResult.isInTrial;
+    const isExpired = syncResult.isExpired;
 
     // Verificar se é super admin - super admins nunca são bloqueados
     const isSuperAdmin = profile === 'super' || profile === 'admin';

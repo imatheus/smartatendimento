@@ -29,6 +29,7 @@ import { AuthContext } from "../../context/Auth/AuthContext";
 import toastError from "../../errors/toastError";
 import { toast } from "react-toastify";
 import { socketConnection } from "../../services/socket";
+import useCompanyStatus from "../../hooks/useCompanyStatus";
 
 import moment from "moment";
 
@@ -254,6 +255,7 @@ const useStyles = makeStyles((theme) => ({
 const Invoices = () => {
   const classes = useStyles();
   const { user } = useContext(AuthContext);
+  const { companyStatus } = useCompanyStatus();
 
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
@@ -485,45 +487,19 @@ const Invoices = () => {
   }
 
   const isInTrialPeriod = () => {
-    // Se a empresa tem uma data de vencimento definida, não está mais em período de trial
-    if (user?.company?.dueDate) return false;
-    
-    // Se não tem trialExpiration, não está em trial
-    if (!user?.company?.trialExpiration) return false;
-    
-    // Verificar se o período de teste ainda não expirou
-    const trialExpiration = moment(user.company.trialExpiration);
-    const now = moment();
-    const isTrialActive = now.isBefore(trialExpiration);
-    
-    return isTrialActive;
+    return companyStatus.isInTrial;
   };
 
   const isTrialExpired = () => {
-    // Se a empresa tem uma data de vencimento definida, não está mais em período de trial
-    if (user?.company?.dueDate) return false;
-    
-    // Se não tem trialExpiration, não está em trial
-    if (!user?.company?.trialExpiration) return false;
-    
-    const trialExpiration = moment(user.company.trialExpiration);
-    const now = moment();
-    
-    return now.isAfter(trialExpiration);
+    return companyStatus.isExpired && !companyStatus.isInTrial;
   };
 
   const getDaysRemaining = () => {
-    if (!user?.company?.trialExpiration) return 0;
-    const trialExpiration = moment(user.company.trialExpiration);
-    const now = moment();
-    return Math.ceil(trialExpiration.diff(now, 'days', true));
+    return companyStatus.daysRemaining;
   };
 
   const getDaysExpired = () => {
-    if (!user?.company?.trialExpiration) return 0;
-    const trialExpiration = moment(user.company.trialExpiration);
-    const now = moment();
-    return Math.ceil(now.diff(trialExpiration, 'days', true));
+    return companyStatus.isExpired ? Math.abs(companyStatus.daysRemaining) : 0;
   };
 
   return (
@@ -542,18 +518,10 @@ const Invoices = () => {
       
       {/* Mensagem de Trial Expirado */}
       {isTrialExpired() && (
-        <Paper className={classes.expiredBanner} elevation={0}>
-          <Typography className={classes.expiredTitle}>
-            🚫 Período de Teste Expirado
-          </Typography>
-          <Typography className={classes.expiredMessage}>
-            Seu período de teste de 7 dias expirou há {getDaysExpired()} {getDaysExpired() === 1 ? 'dia' : 'dias'}.
-            Para continuar usando o sistema, é necessário efetuar o pagamento de uma das faturas abaixo.
-          </Typography>
-          <Typography className={classes.expiredContact}>
-            Todas as funcionalidades do sistema estão bloqueadas até a regularização do pagamento.
-          </Typography>
-        </Paper>
+        toast.warning(
+          'Seu período de teste expirou! Para continuar utilizando o sistema, regularize o pagamento.',
+          { autoClose: 8000, toastId: 'trial-expired-warning' }
+        )
       )}
       
       {/* Two Column Layout */}
@@ -602,19 +570,6 @@ const Invoices = () => {
               ))}
             </div>
 
-            {user?.company?.dueDate && (
-              <div className={classes.dueDate}>
-                <Typography variant="body2" style={{ fontWeight: "bold", color: "#856404" }}>
-                  Próximo vencimento: {moment(user.company.dueDate).format("DD/MM/YYYY")}
-                </Typography>
-              </div>
-            )}
-
-            <div className={classes.cancelNotice}>
-              <Typography variant="body2" style={{ fontStyle: "italic", color: "#6c757d" }}>
-                Suporte: contato@pepchat.com.br
-              </Typography>
-            </div>
           </Paper>
         </div>
 

@@ -388,7 +388,8 @@ const [planUsers, setPlanUsers] = useState({});
         // Features that all plans have
         allFeatures.add("Agendamento de Mensagens");
         allFeatures.add("Suporte técnico");
-        allFeatures.add("Atualizações automáticas");
+        allFeatures.add("Integração com e-commerce");
+        allFeatures.add("Chatbot");
         
         return Array.from(allFeatures);
     };
@@ -409,7 +410,8 @@ const [planUsers, setPlanUsers] = useState({});
         const alwaysIncludedFeatures = [
             { text: "Agendamento de Mensagens", included: true },
             { text: "Suporte técnico", included: true },
-            { text: "Atualizações automáticas", included: true },
+            { text: "Integração com e-commerce", included: true },
+            { text: "Chatbot", included: true },
         ];
 
         // Only show conditional features if at least one plan has them

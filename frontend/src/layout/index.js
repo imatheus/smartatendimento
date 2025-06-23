@@ -33,6 +33,7 @@ import toastError from "../errors/toastError";
 import logo from "../assets/logo.png"; 
 import { socketConnection } from "../services/socket";
 import moment from "moment";
+import useCompanyStatus from "../hooks/useCompanyStatus";
 
 const drawerWidth = 300;
 const drawerCollapsedWidth = 100;
@@ -348,22 +349,38 @@ const useStyles = makeStyles((theme) => ({
     color: "#fff !important",
     margin: "8px",
   },
-  trialBanner: {
-    backgroundColor: "#ff9800",
-    color: "#fff",
-    padding: "8px 16px",
-    textAlign: "center",
-    fontSize: "14px",
-    fontWeight: 600,
+  statusTag: {
     position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: theme.zIndex.appBar + 1,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+    top: "16px",
+    right: "16px",
+    zIndex: theme.zIndex.appBar + 2,
+    padding: "6px 12px",
+    borderRadius: "20px",
+    fontSize: "12px",
+    fontWeight: 600,
+    color: "#fff",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+    animation: "$pulse 2s infinite",
   },
-  contentWithBanner: {
-    marginTop: "40px", // Altura da tarja
+  trialExpiredTag: {
+    backgroundColor: "#f44336", // Vermelho para expirado
+  },
+  invoiceOverdueTag: {
+    backgroundColor: "#ff9800", // Laranja para vencido
+  },
+  trialActiveTag: {
+    backgroundColor: "#2196f3", // Azul para trial ativo
+  },
+  "@keyframes pulse": {
+    "0%": {
+      transform: "scale(1)",
+    },
+    "50%": {
+      transform: "scale(1.05)",
+    },
+    "100%": {
+      transform: "scale(1)",
+    },
   },
 }));
 
@@ -377,6 +394,7 @@ const LoggedInLayout = ({ children }) => {
   const [drawerVariant, setDrawerVariant] = useState("permanent");
   const { user } = useContext(AuthContext);
   const { drawerCollapsed, toggleDrawerCollapse } = useCustomTheme();
+  const { companyStatus } = useCompanyStatus();
 
   const theme = useTheme();
   const greaterThenSm = useMediaQuery(theme.breakpoints.up("sm"));
@@ -500,27 +518,13 @@ const LoggedInLayout = ({ children }) => {
       .substring(0, 2);
   };
 
-  // Verificar se está em período de teste
+  // Usar o status da empresa do hook
   const isInTrialPeriod = () => {
-    // Se a empresa tem uma data de vencimento definida, não está mais em período de trial
-    if (user?.company?.dueDate) return false;
-    
-    // Se não tem trialExpiration, não está em trial
-    if (!user?.company?.trialExpiration) return false;
-    
-    // Verificar se o período de teste ainda não expirou
-    const trialExpiration = moment(user.company.trialExpiration);
-    const now = moment();
-    const isTrialActive = now.isBefore(trialExpiration);
-    
-    return isTrialActive;
+    return companyStatus.isInTrial;
   };
 
   const getDaysRemaining = () => {
-    if (!user?.company?.trialExpiration) return 0;
-    const trialExpiration = moment(user.company.trialExpiration);
-    const now = moment();
-    return Math.ceil(trialExpiration.diff(now, 'days', true));
+    return companyStatus.daysRemaining;
   };
 
   if (loading) {

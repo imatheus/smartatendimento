@@ -360,7 +360,7 @@ const checkAILimits = async (companyId: number) => {
 };
 ```
 
-## 🔒 Segurança e Qualidade
+##  Segurança e Qualidade
 
 ### Controle de Alucinação
 - **Prompt Restritivo**: Usar apenas informações fornecidas
@@ -431,7 +431,7 @@ const checkAILimits = async (companyId: number) => {
     - Controles avançados (Enterprise: Sim)
 20. Implementar validação de limites no backend para cada plano.
 
-## 🔒 Segurança e Monitoramento
+##  Segurança e Monitoramento
 21. Configurar prompt restritivo para evitar alucinações.
 22. Implementar validação de respostas incertas com fallback para humano.
 23. Configurar monitoramento de métricas:

@@ -74,7 +74,13 @@ export const store = async (req: Request, res: Response): Promise<void> => {
 export const show = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
-  const company = await ShowCompanyService(id);
+  // Garante que o id é um número válido
+  const companyId = Number(id);
+  if (isNaN(companyId)) {
+    throw new AppError("ID da empresa inválido", 400);
+  }
+
+  const company = await ShowCompanyService(companyId);
 
   res.status(200).json(company);
 };
