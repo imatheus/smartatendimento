@@ -106,6 +106,14 @@ export const webhook = async (req: Request, res: Response): Promise<Response> =>
     const payload = req.body;
     const signature = req.headers['asaas-signature'] as string;
 
+    // Log do payload recebido para debug
+    logger.info('Asaas webhook received:', {
+      event: payload.event,
+      paymentId: payload.payment?.id,
+      subscriptionId: payload.subscription?.id,
+      externalReference: payload.payment?.externalReference
+    });
+
     await ProcessAsaasWebhookService({
       payload,
       signature
@@ -113,7 +121,27 @@ export const webhook = async (req: Request, res: Response): Promise<Response> =>
 
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    logger.error('Error processing Asaas webhook:', error);
+    logger.error('Error processing Asaas webhook:', {
+      error: error.message,
+      stack: error.stack,
+      payload: req.body
+    });
+
+    // Retornar 200 para erros de dados inconsistentes para evitar retry
+    if (error.message && (
+      error.message.includes('chave estrangeira') ||
+      error.message.includes('Company') && error.message.includes('not found') ||
+      error.message.includes('Could not identify')
+    )) {
+      logger.warn('Returning 200 for data inconsistency error to prevent retry');
+      return res.status(200).json({ 
+        success: false,
+        error: "Data inconsistency - webhook processed but not applied",
+        details: error.message
+      });
+    }
+
+    // Para outros erros, retornar 400 para que o Asaas tente novamente
     return res.status(400).json({ 
       error: error.message || "Erro ao processar webhook do Asaas" 
     });

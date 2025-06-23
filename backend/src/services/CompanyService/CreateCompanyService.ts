@@ -5,6 +5,7 @@ import User from "../../models/User";
 import Setting from "../../models/Setting";
 import CreateCompanyPlanService from "../CompanyPlanService/CreateCompanyPlanService";
 import CreateAsaasCustomerForCompanyService from "../AsaasService/CreateAsaasCustomerForCompanyService";
+import SyncCompanyDueDateService from "./SyncCompanyDueDateService";
 
 interface CompanyData {
   name: string;
@@ -86,6 +87,7 @@ const CreateCompanyService = async (
     throw new AppError(err.message);
   }
 
+  // Criar empresa inicialmente sem dueDate se ela for fornecida (será tratada depois)
   const company = await Company.create({
     name,
     phone,
@@ -94,10 +96,21 @@ const CreateCompanyService = async (
     document,
     status,
     planId,
-    dueDate,
+    dueDate: dueDate ? null : undefined, // Será definida pelo serviço de sincronização
     recurrence,
     trialExpiration: trialExpiration ? new Date(trialExpiration) : undefined
   });
+
+  // Se uma dueDate foi fornecida, usar o serviço de sincronização
+  if (dueDate) {
+    await SyncCompanyDueDateService({
+      companyId: company.id,
+      dueDate,
+      updateAsaas: false, // Não atualizar Asaas ainda pois a empresa ainda não tem assinatura
+      updateTrialExpiration: !trialExpiration // Só atualizar trial se não foi fornecido explicitamente
+    });
+    await company.reload(); // Recarregar dados atualizados
+  }
 
   // Criar o plano personalizado da empresa
   if (planId) {

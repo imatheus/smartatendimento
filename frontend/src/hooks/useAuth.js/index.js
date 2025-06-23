@@ -51,6 +51,15 @@ const useAuth = () => {
         api.defaults.headers.Authorization = undefined;
         setIsAuth(false);
       }
+      if (error?.response?.status === 402) {
+        // Empresa vencida tentando acessar rota restrita
+        // Verificar se não é super admin antes de redirecionar
+        if (user.profile !== 'super' && !user.super) {
+          toast.warn("Acesso restrito. Redirecionando para o financeiro...");
+          history.push("/financeiro");
+        }
+        return Promise.reject(error);
+      }
       return Promise.reject(error);
     }
   );
@@ -104,38 +113,53 @@ const useAuth = () => {
         localStorage.removeItem("cshow"); // Remove se não tiver campanhas habilitadas
       }
 
+      // Sempre permitir login, mas verificar status da empresa
+      localStorage.setItem("token", JSON.stringify(data.token));
+      localStorage.setItem("companyId", companyId);
+      localStorage.setItem("userId", id);
+      api.defaults.headers.Authorization = `Bearer ${data.token}`;
+      setUser(data.user);
+      setIsAuth(true);
+
       moment.locale('pt-br');
-      const dueDate = data.user.company.dueDate;
-      const hoje = moment(moment()).format("DD/MM/yyyy");
+      const companyData = data.user.company;
+      const dueDate = companyData.dueDate;
       const vencimento = moment(dueDate).format("DD/MM/yyyy");
       
-      var diff = moment(dueDate).diff(moment(moment()).format());
+      localStorage.setItem("companyDueDate", vencimento);
 
-      var before = moment(moment().format()).isBefore(dueDate);
-      var dias = moment.duration(diff).asDays();
-      var diasVenc = vencimento.valueOf() - hoje.valueOf()
-      console.log("🚀 Console Log : diasVenc", diasVenc);
-
-      if (before === true) {
-        localStorage.setItem("token", JSON.stringify(data.token));
-        localStorage.setItem("companyId", companyId);
-        localStorage.setItem("userId", id);
-        localStorage.setItem("companyDueDate", vencimento);
-        api.defaults.headers.Authorization = `Bearer ${data.token}`;
-        setUser(data.user);
-        setIsAuth(true);
+      // Verificar se é super admin
+      const isSuperAdmin = data.user.profile === 'super' || data.user.super === true;
+      
+      // Verificar status da empresa
+      if (companyData.isInTrial) {
+        // Empresa em período de avaliação
+        const trialExpiration = moment(companyData.trialExpiration).format("DD/MM/yyyy");
         toast.success(i18n.t("auth.toasts.success"));
-        if (Math.round(dias) < 5) {
-          toast.warn(`Sua assinatura vence em ${Math.round(dias)} ${Math.round(dias) === 1 ? 'dia' : 'dias'} `);
-        }
+        toast.info(`Período de avaliação até ${trialExpiration}`);
         history.push("/tickets");
-        setLoading(false);
+      } else if ((companyData.isExpired || !companyData.status) && !isSuperAdmin) {
+        // Empresa vencida - redirecionar para financeiro (exceto super admins)
+        toast.success("Login realizado com sucesso");
+        toast.warn(`Empresa vencida em ${vencimento}. Acesso restrito ao financeiro para regularização.`);
+        history.push("/financeiro");
       } else {
-        console.log("BLOQUEADO")
-        toastError(`Opss! Sua assinatura venceu ${vencimento}.
-Entre em contato com o Suporte para mais informações! `);
-        setLoading(false);
+        // Empresa ativa OU super admin
+        const diff = moment(dueDate).diff(moment());
+        const dias = moment.duration(diff).asDays();
+        
+        toast.success(i18n.t("auth.toasts.success"));
+        
+        // Avisar se está próximo do vencimento (apenas para não-super-admins)
+        if (!isSuperAdmin && Math.round(dias) < 5 && Math.round(dias) > 0) {
+          toast.warn(`Sua assinatura vence em ${Math.round(dias)} ${Math.round(dias) === 1 ? 'dia' : 'dias'}`);
+        }
+        
+        // Super admins sempre vão para dashboard, outros para tickets
+        history.push(isSuperAdmin ? "/" : "/tickets");
       }
+      
+      setLoading(false);
 
       //quebra linha 
     } catch (err) {

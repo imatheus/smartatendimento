@@ -8,18 +8,20 @@ const TrialGuard = ({ children }) => {
   const history = useHistory();
   const location = useLocation();
 
-  const isTrialExpired = () => {
-    // Se a empresa tem uma data de vencimento definida, não está mais em período de trial
-    if (user?.company?.dueDate) return false;
+  const isCompanyExpiredOrInactive = () => {
+    // Super admins nunca são bloqueados
+    if (user?.profile === 'super' || user?.super === true) return false;
     
-    // Se não tem trialExpiration, não está em trial
-    if (!user?.company?.trialExpiration) return false;
+    // Verificar se a empresa está vencida ou inativa
+    if (!user?.company) return false;
     
-    const trialExpiration = moment(user.company.trialExpiration);
-    const now = moment();
+    const company = user.company;
     
-    // Verificar se o período de teste expirou
-    return now.isAfter(trialExpiration);
+    // Se está em período de trial ativo, permitir acesso
+    if (company.isInTrial) return false;
+    
+    // Se está vencida ou inativa, restringir acesso
+    return company.isExpired || !company.status;
   };
 
   const isFinanceiroPage = () => {
@@ -37,15 +39,15 @@ const TrialGuard = ({ children }) => {
   useEffect(() => {
     // Só verificar se o usuário está logado e não está nas páginas permitidas
     if (user && user.company && !isLoginPage() && !isSignupPage()) {
-      if (isTrialExpired() && !isFinanceiroPage()) {
-        // Redirecionar para a página financeira se o trial expirou
+      if (isCompanyExpiredOrInactive() && !isFinanceiroPage()) {
+        // Redirecionar para a página financeira se a empresa está vencida/inativa
         history.push("/financeiro");
       }
     }
   }, [user, location.pathname, history]);
 
-  // Se o trial expirou e não está na página financeira, não renderizar o conteúdo
-  if (user && user.company && isTrialExpired() && !isFinanceiroPage() && !isLoginPage() && !isSignupPage()) {
+  // Se a empresa está vencida/inativa e não está na página financeira, não renderizar o conteúdo
+  if (user && user.company && isCompanyExpiredOrInactive() && !isFinanceiroPage() && !isLoginPage() && !isSignupPage()) {
     return null; // Não renderizar nada enquanto redireciona
   }
 

@@ -24,6 +24,7 @@ import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import PeopleIcon from "@material-ui/icons/People";
 import ListIcon from "@material-ui/icons/ListAlt";
+import LockIcon from "@material-ui/icons/Lock";
 
 import { i18n } from "../translate/i18n";
 import { WhatsAppsContext } from "../context/WhatsApp/WhatsAppsContext";
@@ -64,12 +65,31 @@ function ListItemLink(props) {
           cursor: disabled ? 'not-allowed' : 'pointer'
         }}
       >
-        {icon ? <ListItemIcon style={{ 
-          minWidth: drawerCollapsed ? 'auto' : '40px',
-          opacity: disabled ? 0.5 : 1 
-        }}>{icon}</ListItemIcon> : null}
+        {icon ? (
+          <ListItemIcon style={{ 
+            minWidth: drawerCollapsed ? 'auto' : '40px',
+            opacity: disabled ? 0.5 : 1,
+            position: 'relative'
+          }}>
+            {icon}
+            {disabled && (
+              <LockIcon 
+                style={{ 
+                  position: 'absolute', 
+                  top: -2, 
+                  right: -8, 
+                  fontSize: 12, 
+                  color: '#f44336',
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  padding: 1
+                }} 
+              />
+            )}
+          </ListItemIcon>
+        ) : null}
         {!drawerCollapsed && <ListItemText 
-          primary={disabled ? `${primary} (Bloqueado)` : primary} 
+          primary={disabled ? `🔒 ${primary}` : primary} 
           style={{ opacity: disabled ? 0.5 : 1 }}
         />}
       </ListItem>
@@ -88,17 +108,20 @@ const MainListItems = (props) => {
   const [campaignPopoverAnchor, setCampaignPopoverAnchor] = useState(null);
   const history = useHistory();
 
-  const isTrialExpired = () => {
-    // Se a empresa tem uma data de vencimento definida, não está mais em período de trial
-    if (user?.company?.dueDate) return false;
+  const isCompanyExpiredOrInactive = () => {
+    // Super admins nunca são bloqueados
+    if (user?.profile === 'super' || user?.super === true) return false;
     
-    // Se não tem trialExpiration, não está em trial
-    if (!user?.company?.trialExpiration) return false;
+    // Verificar se a empresa está vencida ou inativa
+    if (!user?.company) return false;
     
-    const trialExpiration = moment(user.company.trialExpiration);
-    const now = moment();
+    const company = user.company;
     
-    return now.isAfter(trialExpiration);
+    // Se está em período de trial ativo, permitir acesso
+    if (company.isInTrial) return false;
+    
+    // Se está vencida ou inativa, restringir acesso
+    return company.isExpired || !company.status;
   };
 
   
@@ -148,7 +171,7 @@ const MainListItems = (props) => {
             primary="Dashboard"
             icon={<DashboardOutlinedIcon />}
             drawerCollapsed={drawerCollapsed}
-            disabled={isTrialExpired()}
+            disabled={isCompanyExpiredOrInactive()}
           />
         )}
       />
@@ -158,7 +181,7 @@ const MainListItems = (props) => {
         primary={i18n.t("mainDrawer.listItems.tickets")}
         icon={<ChatOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
-        disabled={isTrialExpired()}
+        disabled={isCompanyExpiredOrInactive()}
       />
 
       <ListItemLink
@@ -166,7 +189,7 @@ const MainListItems = (props) => {
         primary={i18n.t("mainDrawer.listItems.quickMessages")}
         icon={<OfflineBoltOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
-        disabled={isTrialExpired()}
+        disabled={isCompanyExpiredOrInactive()}
       />
 
       <ListItemLink
@@ -174,7 +197,7 @@ const MainListItems = (props) => {
         primary={i18n.t("mainDrawer.listItems.contacts")}
         icon={<ContactPhoneOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
-        disabled={isTrialExpired()}
+        disabled={isCompanyExpiredOrInactive()}
       />
 
       <ListItemLink
@@ -182,7 +205,7 @@ const MainListItems = (props) => {
         primary={i18n.t("mainDrawer.listItems.tags")}
         icon={<LocalOfferOutlinedIcon />}
         drawerCollapsed={drawerCollapsed}
-        disabled={isTrialExpired()}
+        disabled={isCompanyExpiredOrInactive()}
       />
 
       
@@ -201,20 +224,37 @@ const MainListItems = (props) => {
               <>
                 <ListItem
                   button
-                  onClick={() => !isTrialExpired() && setOpenCampaignSubmenu((prev) => !prev)}
+                  onClick={() => !isCompanyExpiredOrInactive() && setOpenCampaignSubmenu((prev) => !prev)}
                   style={{
-                    opacity: isTrialExpired() ? 0.5 : 1,
-                    cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
+                    opacity: isCompanyExpiredOrInactive() ? 0.5 : 1,
+                    cursor: isCompanyExpiredOrInactive() ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  <ListItemIcon style={{ opacity: isTrialExpired() ? 0.5 : 1 }}>
+                  <ListItemIcon style={{ 
+                    opacity: isCompanyExpiredOrInactive() ? 0.5 : 1,
+                    position: 'relative'
+                  }}>
                     <VolumeUpOutlinedIcon />
+                    {isCompanyExpiredOrInactive() && (
+                      <LockIcon 
+                        style={{ 
+                          position: 'absolute', 
+                          top: -2, 
+                          right: -8, 
+                          fontSize: 12, 
+                          color: '#f44336',
+                          backgroundColor: 'white',
+                          borderRadius: '50%',
+                          padding: 1
+                        }} 
+                      />
+                    )}
                   </ListItemIcon>
                   <ListItemText
-                    primary={isTrialExpired() ? `${i18n.t("mainDrawer.listItems.campaigns")} (Bloqueado)` : i18n.t("mainDrawer.listItems.campaigns")}
-                    style={{ opacity: isTrialExpired() ? 0.5 : 1 }}
+                    primary={isCompanyExpiredOrInactive() ? `🔒 ${i18n.t("mainDrawer.listItems.campaigns")}` : i18n.t("mainDrawer.listItems.campaigns")}
+                    style={{ opacity: isCompanyExpiredOrInactive() ? 0.5 : 1 }}
                   />
-                  {!isTrialExpired() && (openCampaignSubmenu ? (
+                  {!isCompanyExpiredOrInactive() && (openCampaignSubmenu ? (
                     <ExpandLessIcon />
                   ) : (
                     <ExpandMoreIcon />
@@ -222,57 +262,57 @@ const MainListItems = (props) => {
                 </ListItem>
                 <Collapse
                   style={{ paddingLeft: 15 }}
-                  in={openCampaignSubmenu && !isTrialExpired()}
+                  in={openCampaignSubmenu && !isCompanyExpiredOrInactive()}
                   timeout="auto"
                   unmountOnExit
                 >
                   <List component="div" disablePadding>
                     <ListItem 
-                      onClick={() => !isTrialExpired() && history.push("/campaigns")} 
+                      onClick={() => !isCompanyExpiredOrInactive() && history.push("/campaigns")} 
                       button
                       style={{
-                        opacity: isTrialExpired() ? 0.5 : 1,
-                        cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
+                        opacity: isCompanyExpiredOrInactive() ? 0.5 : 1,
+                        cursor: isCompanyExpiredOrInactive() ? 'not-allowed' : 'pointer'
                       }}
                     >
-                      <ListItemIcon style={{ opacity: isTrialExpired() ? 0.5 : 1 }}>
+                      <ListItemIcon style={{ opacity: isCompanyExpiredOrInactive() ? 0.5 : 1 }}>
                         <ListIcon />
                       </ListItemIcon>
                       <ListItemText 
-                        primary={isTrialExpired() ? "Listagem (Bloqueado)" : "Listagem"}
-                        style={{ opacity: isTrialExpired() ? 0.5 : 1 }}
+                        primary={isCompanyExpiredOrInactive() ? "🔒 Listagem" : "Listagem"}
+                        style={{ opacity: isCompanyExpiredOrInactive() ? 0.5 : 1 }}
                       />
                     </ListItem>
                     <ListItem
-                      onClick={() => !isTrialExpired() && history.push("/contact-lists")}
+                      onClick={() => !isCompanyExpiredOrInactive() && history.push("/contact-lists")}
                       button
                       style={{
-                        opacity: isTrialExpired() ? 0.5 : 1,
-                        cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
+                        opacity: isCompanyExpiredOrInactive() ? 0.5 : 1,
+                        cursor: isCompanyExpiredOrInactive() ? 'not-allowed' : 'pointer'
                       }}
                     >
-                      <ListItemIcon style={{ opacity: isTrialExpired() ? 0.5 : 1 }}>
+                      <ListItemIcon style={{ opacity: isCompanyExpiredOrInactive() ? 0.5 : 1 }}>
                         <PeopleIcon />
                       </ListItemIcon>
                       <ListItemText 
-                        primary={isTrialExpired() ? "Listas de Contatos (Bloqueado)" : "Listas de Contatos"}
-                        style={{ opacity: isTrialExpired() ? 0.5 : 1 }}
+                        primary={isCompanyExpiredOrInactive() ? "🔒 Listas de Contatos" : "Listas de Contatos"}
+                        style={{ opacity: isCompanyExpiredOrInactive() ? 0.5 : 1 }}
                       />
                     </ListItem>
                     <ListItem
-                      onClick={() => !isTrialExpired() && history.push("/campaigns-config")}
+                      onClick={() => !isCompanyExpiredOrInactive() && history.push("/campaigns-config")}
                       button
                       style={{
-                        opacity: isTrialExpired() ? 0.5 : 1,
-                        cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
+                        opacity: isCompanyExpiredOrInactive() ? 0.5 : 1,
+                        cursor: isCompanyExpiredOrInactive() ? 'not-allowed' : 'pointer'
                       }}
                     >
-                      <ListItemIcon style={{ opacity: isTrialExpired() ? 0.5 : 1 }}>
+                      <ListItemIcon style={{ opacity: isCompanyExpiredOrInactive() ? 0.5 : 1 }}>
                         <SettingsOutlinedIcon />
                       </ListItemIcon>
                       <ListItemText 
-                        primary={isTrialExpired() ? "Configurações (Bloqueado)" : "Configurações"}
-                        style={{ opacity: isTrialExpired() ? 0.5 : 1 }}
+                        primary={isCompanyExpiredOrInactive() ? "🔒 Configurações" : "Configurações"}
+                        style={{ opacity: isCompanyExpiredOrInactive() ? 0.5 : 1 }}
                       />
                     </ListItem>
                   </List>
@@ -283,25 +323,40 @@ const MainListItems = (props) => {
               <>
                 <ListItem
                   button
-                  onClick={(event) => !isTrialExpired() && setCampaignPopoverAnchor(event.currentTarget)}
-                  title={isTrialExpired() ? `${i18n.t("mainDrawer.listItems.campaigns")} (Bloqueado)` : i18n.t("mainDrawer.listItems.campaigns")}
+                  onClick={(event) => !isCompanyExpiredOrInactive() && setCampaignPopoverAnchor(event.currentTarget)}
+                  title={isCompanyExpiredOrInactive() ? `${i18n.t("mainDrawer.listItems.campaigns")} (Bloqueado)` : i18n.t("mainDrawer.listItems.campaigns")}
                   style={{ 
                     justifyContent: 'center',
                     paddingLeft: 16,
                     paddingRight: 16,
-                    opacity: isTrialExpired() ? 0.5 : 1,
-                    cursor: isTrialExpired() ? 'not-allowed' : 'pointer'
+                    opacity: isCompanyExpiredOrInactive() ? 0.5 : 1,
+                    cursor: isCompanyExpiredOrInactive() ? 'not-allowed' : 'pointer'
                   }}
                 >
                   <ListItemIcon style={{ 
                     minWidth: 'auto',
-                    opacity: isTrialExpired() ? 0.5 : 1 
+                    opacity: isCompanyExpiredOrInactive() ? 0.5 : 1,
+                    position: 'relative'
                   }}>
                     <VolumeUpOutlinedIcon />
+                    {isCompanyExpiredOrInactive() && (
+                      <LockIcon 
+                        style={{ 
+                          position: 'absolute', 
+                          top: -2, 
+                          right: -8, 
+                          fontSize: 12, 
+                          color: '#f44336',
+                          backgroundColor: 'white',
+                          borderRadius: '50%',
+                          padding: 1
+                        }} 
+                      />
+                    )}
                   </ListItemIcon>
                 </ListItem>
                 <Popover
-                  open={Boolean(campaignPopoverAnchor) && !isTrialExpired()}
+                  open={Boolean(campaignPopoverAnchor) && !isCompanyExpiredOrInactive()}
                   anchorEl={campaignPopoverAnchor}
                   onClose={handleCampaignPopoverClose}
                   anchorOrigin={{
@@ -320,7 +375,7 @@ const MainListItems = (props) => {
                 >
                   <MenuList>
                     <MenuItem onClick={() => {
-                      if (!isTrialExpired()) {
+                      if (!isCompanyExpiredOrInactive()) {
                         history.push("/campaigns");
                         handleCampaignPopoverClose();
                       }
@@ -331,7 +386,7 @@ const MainListItems = (props) => {
                       <ListItemText primary="Listagem" />
                     </MenuItem>
                     <MenuItem onClick={() => {
-                      if (!isTrialExpired()) {
+                      if (!isCompanyExpiredOrInactive()) {
                         history.push("/contact-lists");
                         handleCampaignPopoverClose();
                       }
@@ -342,7 +397,7 @@ const MainListItems = (props) => {
                       <ListItemText primary="Listas de Contatos" />
                     </MenuItem>
                     <MenuItem onClick={() => {
-                      if (!isTrialExpired()) {
+                      if (!isCompanyExpiredOrInactive()) {
                         history.push("/campaigns-config");
                         handleCampaignPopoverClose();
                       }
@@ -365,34 +420,35 @@ const MainListItems = (props) => {
                 </Badge>
               }
               drawerCollapsed={drawerCollapsed}
-              disabled={isTrialExpired()}
+              disabled={isCompanyExpiredOrInactive()}
             />
             <ListItemLink
               to="/queues"
               primary={i18n.t("mainDrawer.listItems.queues")}
               icon={<AndroidOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
-              disabled={isTrialExpired()}
+              disabled={isCompanyExpiredOrInactive()}
             />
             <ListItemLink
               to="/users"
               primary={i18n.t("mainDrawer.listItems.users")}
               icon={<PeopleAltOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
-              disabled={isTrialExpired()}
+              disabled={isCompanyExpiredOrInactive()}
             />
             <ListItemLink
               to="/integrations"
               primary={i18n.t("mainDrawer.listItems.integrations")}
               icon={<PowerOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
-              disabled={isTrialExpired()}
+              disabled={isCompanyExpiredOrInactive()}
             />
              <ListItemLink
                 to="/financeiro"
                 primary={i18n.t("mainDrawer.listItems.financeiro")}
                 icon={<AccountBalanceOutlinedIcon />}
                 drawerCollapsed={drawerCollapsed}
+                disabled={false}
               />
 
             <ListItemLink
@@ -400,7 +456,7 @@ const MainListItems = (props) => {
               primary={i18n.t("mainDrawer.listItems.settings")}
               icon={<SettingsOutlinedIcon />}
               drawerCollapsed={drawerCollapsed}
-              disabled={isTrialExpired()}
+              disabled={isCompanyExpiredOrInactive()}
             />
           </>
         )}

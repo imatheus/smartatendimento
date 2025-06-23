@@ -1,6 +1,7 @@
 import AppError from "../../errors/AppError";
 import Company from "../../models/Company";
 import Setting from "../../models/Setting";
+import SyncCompanyDueDateService from "./SyncCompanyDueDateService";
 
 interface CompanyData {
   name: string;
@@ -35,22 +36,28 @@ const UpdateCompanyService = async (
     throw new AppError("ERR_NO_COMPANY_FOUND", 404);
   }
 
-  // Se uma dueDate está sendo definida, remover o trialExpiration
+  // Se uma dueDate está sendo definida, usar o serviço de sincronização
+  if (dueDate) {
+    await SyncCompanyDueDateService({
+      companyId: company.id,
+      dueDate,
+      updateAsaas: true,
+      updateTrialExpiration: true
+    });
+  }
+
+  // Atualizar outros campos (exceto dueDate que já foi tratado acima)
   const updateData: any = {
     name,
     phone,
     email,
     status,
     planId,
-    dueDate,
     recurrence
   };
 
-  // Se está definindo uma dueDate, remover o período de trial
-  if (dueDate) {
-    updateData.trialExpiration = null;
-  } else if (trialExpiration !== undefined) {
-    // Só atualizar trialExpiration se não estiver definindo dueDate
+  // Só atualizar trialExpiration se não estiver definindo dueDate
+  if (!dueDate && trialExpiration !== undefined) {
     updateData.trialExpiration = trialExpiration ? new Date(trialExpiration) : null;
   }
 

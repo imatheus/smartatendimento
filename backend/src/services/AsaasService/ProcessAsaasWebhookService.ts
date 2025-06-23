@@ -4,6 +4,8 @@ import Invoices from "../../models/Invoices";
 import Company from "../../models/Company";
 import AsaasConfig from "../../models/AsaasConfig";
 import AsaasService from "./AsaasService";
+import SyncCompanyDueDateService from "../CompanyService/SyncCompanyDueDateService";
+import EnsureDefaultCompanyService from "../CompanyService/EnsureDefaultCompanyService";
 import AppError from "../../errors/AppError";
 import { logger } from "../../utils/logger";
 import { getIO } from "../../libs/socket";
@@ -87,6 +89,11 @@ const ProcessAsaasWebhookService = async ({
     const eventId = payload.payment?.id || payload.subscription?.id || 'unknown';
     logger.info(`Processing Asaas webhook: ${payload.event} for ${eventId}`);
 
+    // Validar payload básico
+    if (!payload.event) {
+      throw new AppError("Invalid webhook payload: missing event");
+    }
+
     // Buscar configuração global do Asaas
     const asaasConfig = await AsaasConfig.findOne();
 
@@ -109,27 +116,37 @@ const ProcessAsaasWebhookService = async ({
       case 'PAYMENT_CREATED':
         if (payload.payment) {
           await handlePaymentCreated(payload, asaasConfig);
+        } else {
+          logger.warn(`PAYMENT_CREATED event without payment data: ${eventId}`);
         }
         break;
       case 'PAYMENT_CONFIRMED':
       case 'PAYMENT_RECEIVED':
         if (payload.payment) {
           await handlePaymentConfirmed(payload, asaasConfig);
+        } else {
+          logger.warn(`${payload.event} event without payment data: ${eventId}`);
         }
         break;
       case 'PAYMENT_OVERDUE':
         if (payload.payment) {
           await handlePaymentOverdue(payload, asaasConfig);
+        } else {
+          logger.warn(`PAYMENT_OVERDUE event without payment data: ${eventId}`);
         }
         break;
       case 'PAYMENT_DELETED':
         if (payload.payment) {
           await handlePaymentDeleted(payload, asaasConfig);
+        } else {
+          logger.warn(`PAYMENT_DELETED event without payment data: ${eventId}`);
         }
         break;
       case 'SUBSCRIPTION_CREATED':
         if (payload.subscription) {
           await handleSubscriptionCreated(payload, asaasConfig);
+        } else {
+          logger.warn(`SUBSCRIPTION_CREATED event without subscription data: ${eventId}`);
         }
         break;
       default:
@@ -138,6 +155,13 @@ const ProcessAsaasWebhookService = async ({
 
   } catch (error: any) {
     logger.error('Error processing Asaas webhook:', error);
+    
+    // Se for erro de chave estrangeira, não relançar como erro crítico
+    if (error.message && error.message.includes('chave estrangeira')) {
+      logger.warn('Foreign key constraint error in webhook - data inconsistency detected');
+      return; // Não relançar o erro para evitar retry infinito
+    }
+    
     throw new AppError(error.message || "Erro ao processar webhook do Asaas");
   }
 };
@@ -208,16 +232,29 @@ const handlePaymentCreated = async (payload: WebhookPayload, asaasConfig: AsaasC
       }
     }
 
-    // Se não conseguiu identificar, usar a primeira empresa ativa como fallback
+    // Verificar se a empresa existe
+    if (targetCompanyId) {
+      const companyExists = await Company.findByPk(targetCompanyId);
+      if (!companyExists) {
+        logger.warn(`Company ${targetCompanyId} not found for payment ${payload.payment.id}`);
+        targetCompanyId = null;
+      }
+    }
+
+    // Se não conseguiu identificar ou empresa não existe, garantir que existe uma empresa padrão
     if (!targetCompanyId) {
-      const company = await Company.findOne({ where: { status: true } });
-      if (company) {
+      try {
+        const { company } = await EnsureDefaultCompanyService();
         targetCompanyId = company.id;
+        logger.info(`Using default company ${company.id} for payment ${payload.payment.id}`);
+      } catch (error: any) {
+        logger.error(`Failed to ensure default company for payment ${payload.payment.id}:`, error);
+        return;
       }
     }
 
     if (!targetCompanyId) {
-      logger.warn(`Could not identify company for payment ${payload.payment.id}`);
+      logger.warn(`Could not identify any valid company for payment ${payload.payment.id}`);
       return;
     }
 
@@ -252,11 +289,18 @@ const handlePaymentConfirmed = async (payload: WebhookPayload, asaasConfig: Asaa
 
     // Buscar fatura existente
     const invoice = await Invoices.findOne({
-      where: { asaasInvoiceId: payload.payment.id }
+      where: { asaasInvoiceId: payload.payment.id },
+      include: [{ model: Company, as: 'company' }]
     });
 
     if (!invoice) {
       logger.warn(`Invoice not found for payment ${payload.payment.id}`);
+      return;
+    }
+
+    // Verificar se a empresa da fatura ainda existe
+    if (!invoice.company) {
+      logger.warn(`Company not found for invoice ${invoice.id}, payment ${payload.payment.id}`);
       return;
     }
 
@@ -270,12 +314,34 @@ const handlePaymentConfirmed = async (payload: WebhookPayload, asaasConfig: Asaa
       paymentMethod: paymentMethod
     });
 
-    // Atualizar status da empresa para ativo
+    // Atualizar status da empresa e data de vencimento
     if (invoice.companyId) {
-      await Company.update(
-        { status: true },
-        { where: { id: invoice.companyId } }
-      );
+      const company = await Company.findByPk(invoice.companyId);
+      
+      if (company) {
+        // Calcular nova data de vencimento (próximo mês)
+        const currentDueDate = company.dueDate ? moment(company.dueDate) : moment();
+        const newDueDate = currentDueDate.add(1, 'month').format('YYYY-MM-DD');
+        
+        try {
+          // Usar o serviço de sincronização para atualizar a data de vencimento
+          await SyncCompanyDueDateService({
+            companyId: invoice.companyId,
+            dueDate: newDueDate,
+            updateAsaas: true,
+            updateTrialExpiration: false // Não alterar trial quando pagamento é confirmado
+          });
+          
+          logger.info(`Company ${company.name} due date updated to ${newDueDate} after payment confirmation`);
+        } catch (error: any) {
+          logger.error(`Error updating company due date after payment: ${error.message}`);
+          // Fallback: apenas ativar a empresa
+          await Company.update(
+            { status: true },
+            { where: { id: invoice.companyId } }
+          );
+        }
+      }
 
       // Emitir evento via Socket.IO para atualizar a interface em tempo real
       const io = getIO();
@@ -287,6 +353,11 @@ const handlePaymentConfirmed = async (payload: WebhookPayload, asaasConfig: Asaa
           paymentDate: payload.payment.paymentDate,
           paymentMethod: payload.payment.paymentMethod,
           asaasInvoiceId: payload.payment.id
+        },
+        company: {
+          id: invoice.companyId,
+          status: true,
+          newDueDate: moment().add(1, 'month').format('YYYY-MM-DD')
         }
       });
     }

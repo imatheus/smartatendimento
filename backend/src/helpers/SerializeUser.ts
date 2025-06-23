@@ -9,7 +9,16 @@ interface SerializedUser {
   email: string;
   profile: string;
   companyId: number;
-  company: Company | null;
+  company: Company | null | {
+    id: number;
+    name: string;
+    status: boolean;
+    isInTrial: boolean;
+    isExpired: boolean;
+    dueDate?: string;
+    trialExpiration?: Date;
+    plan?: any;
+  };
   super: boolean;
   queues: Queue[];
   profileImage?: string;

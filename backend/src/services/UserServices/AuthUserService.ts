@@ -1,5 +1,6 @@
 import User from "../../models/User";
 import AppError from "../../errors/AppError";
+import moment from "moment";
 import {
   createAccessToken,
   createRefreshToken
@@ -17,6 +18,16 @@ interface SerializedUser {
   profile: string;
   queues: Queue[];
   companyId: number;
+  company?: {
+    id: number;
+    name: string;
+    status: boolean;
+    isInTrial: boolean;
+    isExpired: boolean;
+    dueDate?: string;
+    trialExpiration?: Date;
+    plan?: any; // Informações do plano
+  };
 }
 
 interface Request {
@@ -56,10 +67,42 @@ const AuthUserService = async ({
     throw new AppError("ERR_INVALID_CREDENTIALS", 401);
   }
 
+  // Verificar status da empresa para informar no login
+  const company = user.company;
+  let companyStatus = {
+    id: company.id,
+    name: company.name,
+    status: company.status,
+    isInTrial: false,
+    isExpired: false,
+    dueDate: company.dueDate,
+    trialExpiration: company.trialExpiration,
+    plan: company.plan // Manter informações do plano
+  };
+
+  if (company) {
+    const now = moment();
+    
+    // Verificar período de avaliação
+    if (company.trialExpiration) {
+      const trialExpiration = moment(company.trialExpiration);
+      companyStatus.isInTrial = trialExpiration.isAfter(now);
+    }
+
+    // Verificar data de vencimento
+    if (company.dueDate && !companyStatus.isInTrial) {
+      const dueDate = moment(company.dueDate);
+      companyStatus.isExpired = dueDate.isBefore(now);
+    }
+  }
+
   const token = createAccessToken(user);
   const refreshToken = createRefreshToken(user);
 
   const serializedUser = await SerializeUser(user);
+  
+  // Sobrescrever informações da empresa com status atualizado
+  serializedUser.company = companyStatus;
 
   return {
     serializedUser,
