@@ -12,11 +12,9 @@ window.process = process;
 
 // PASSO 3: O resto do código permanece o mesmo, usando o nome correto <AuthProvider>.
 ReactDOM.render(
-  <React.StrictMode>
-    <AuthProvider>
-      <CssBaseline />
-      <App />
-    </AuthProvider>
-  </React.StrictMode>,
+  <AuthProvider>
+    <CssBaseline />
+    <App />
+  </AuthProvider>,
   document.getElementById("root")
 );

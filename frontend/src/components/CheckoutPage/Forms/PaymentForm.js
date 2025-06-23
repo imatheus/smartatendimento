@@ -11,7 +11,6 @@ import {
   Paper
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-import { Field } from "formik";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
 import toastError from "../../../errors/toastError";
@@ -236,7 +235,7 @@ const PaymentForm = ({ formField, setFieldValue, setActiveStep, activeStep, invo
         <Card className={classes.pixCard}>
           <CardContent>
             <Typography variant="h6" gutterBottom color="primary">
-              🎉 PIX Gerado com Sucesso!
+              <span role="img" aria-label="celebration">🎉</span> PIX Gerado com Sucesso!
             </Typography>
             
             <div className={classes.qrCodeContainer}>
