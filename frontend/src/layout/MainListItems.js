@@ -122,7 +122,7 @@ const MainListItems = (props) => {
           setConnectionWarning(false);
         }
       }
-    }, 2000);
+    }, 4000);
     return () => clearTimeout(delayDebounceFn);
   }, [whatsApps]);
 

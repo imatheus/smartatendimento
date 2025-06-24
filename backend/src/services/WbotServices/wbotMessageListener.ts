@@ -685,7 +685,7 @@ const handleRating = async (
           ticket,
           ticketId: ticket.id,
         });
-    }, 2000);
+    }, 4000);
   }
 };
 

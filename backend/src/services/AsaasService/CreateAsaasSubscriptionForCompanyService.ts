@@ -88,7 +88,7 @@ const CreateAsaasSubscriptionForCompanyService = async ({
       value: subscriptionValue,
       nextDueDate: company.dueDate,
       cycle,
-      description: `Assinatura Plano ${company.plan?.name || 'Personalizado'}`,
+      description: `Assinatura ${company.plan?.name || 'Personalizado'}`,
       externalReference: `company_${company.id}_subscription`
     };
 

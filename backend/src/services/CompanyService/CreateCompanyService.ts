@@ -318,7 +318,7 @@ const CreateCompanyService = async (
     } catch (error) {
       console.error(`Erro ao criar empresa ${company.name} no Asaas:`, error);
     }
-  }, 2000); // Aguarda 2 segundos para garantir que a empresa foi totalmente criada
+  }, 4000); // Aguarda 2 segundos para garantir que a empresa foi totalmente criada
 
   return company;
 };

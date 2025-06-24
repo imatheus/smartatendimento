@@ -25,6 +25,7 @@ import { AuthContext } from "../../context/Auth/AuthContext";
 
 import toastError from "../../errors/toastError";
 import { toast } from "react-toastify";
+import { showUniqueError, showUniqueSuccess, showUniqueWarning, showUniqueInfo } from "../../utils/toastManager";
 import { socketConnection } from "../../services/socket";
 import useCompanyStatus from "../../hooks/useCompanyStatus";
 
@@ -209,7 +210,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     backgroundColor: "#4caf50",
     color: "white",
-    padding: theme.spacing(0.5, 1.5),
+    padding: "4px 8px",
     borderRadius: "20px",
     fontSize: "0.75rem",
     fontWeight: "bold",
@@ -217,6 +218,36 @@ const useStyles = makeStyles((theme) => ({
   },
   paidStatusIcon: {
     fontSize: "1rem",
+  },
+  overdueStatusBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    backgroundColor: "#f44336",
+    color: "white",
+    padding: "4px 8px",
+    borderRadius: "20px",
+    fontSize: "0.75rem",
+    fontWeight: "bold",
+  },
+  nearDueStatusBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    backgroundColor: "#ff9800",
+    color: "white",
+    padding: "4px 8px",
+    borderRadius: "20px",
+    fontSize: "0.75rem",
+    fontWeight: "bold",
+  },
+  openStatusBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    backgroundColor: "#2196f3",
+    color: "white",
+    padding: "4px 8px",
+    borderRadius: "20px",
+    fontSize: "0.75rem",
+    fontWeight: "bold",
   },
   viewInvoiceButton: {
     padding: theme.spacing(0.5),
@@ -352,6 +383,16 @@ const Invoices = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchParam, pageNumber]);
 
+  // Mostrar toast de trial expirado apenas uma vez
+  useEffect(() => {
+    if (isTrialExpired()) {
+      showUniqueWarning(
+        'Seu período de teste expirou! Para continuar utilizando o sistema, regularize o pagamento.',
+        { autoClose: 8000 }
+      );
+    }
+  }, [companyStatus.isExpired, companyStatus.isInTrial]);
+
   // Socket.IO listener para atualizações de pagamento em tempo real
   useEffect(() => {
     if (user?.companyId) {
@@ -371,29 +412,26 @@ const Invoices = () => {
             }
           });
 
-          // Mostrar notificação de sucesso
-          toast.success(`🎉 Pagamento confirmado! Fatura #${data.invoice.id} foi paga com sucesso. Sistema reativado!`);
+          // Não mostrar toast aqui pois já é mostrado no useCompanyStatus
         }
       });
 
       // Listener para mudanças de status da empresa
       socket.on(`company-${user.companyId}-status-updated`, (data) => {
         if (data.action === "company_reactivated") {
-          // Mostrar notificação de reativação
-          toast.success(`✅ Empresa reativada! Todas as funcionalidades foram liberadas.`);
+          // Não mostrar toast aqui pois já é mostrado no useAuth
           
           // Recarregar a página após 2 segundos para aplicar as mudanças
           setTimeout(() => {
             window.location.reload();
-          }, 2000);
+          }, 4000);
         } else if (data.action === "company_blocked") {
-          // Empresa foi bloqueada por vencimento
-          toast.error(`🚫 Empresa bloqueada por falta de pagamento. Fatura vencida!`);
+          // Não mostrar toast aqui pois já é mostrado no useAuth
           
           // Recarregar a página para mostrar o status atualizado
           setTimeout(() => {
             window.location.reload();
-          }, 2000);
+          }, 4000);
         }
       });
 
@@ -410,7 +448,7 @@ const Invoices = () => {
           });
 
           // Mostrar notificação de vencimento
-          toast.warning(`⚠️ Fatura #${data.invoice.id} está vencida.`);
+          showUniqueWarning(`Fatura #${data.invoice.id} está vencida.`);
         }
       });
 
@@ -432,50 +470,66 @@ const Invoices = () => {
     }
   };
 
-  const rowStyle = (record) => {
-    const hoje = moment(moment()).format("DD/MM/yyyy");
-    const vencimento = moment(record.dueDate).format("DD/MM/yyyy");
-    var diff = moment(vencimento, "DD/MM/yyyy").diff(moment(hoje, "DD/MM/yyyy"));
-    var dias = moment.duration(diff).asDays();    
+  const getStatusInfo = (record) => {
     const status = record.status;
     
-    // Destacar faturas vencidas (por status do Asaas ou por data)
-    if (status === "OVERDUE" || (dias < 0 && status !== "paid" && status !== "CONFIRMED" && status !== "RECEIVED" && status !== "RECEIVED_IN_CASH")) {
-      return { backgroundColor: "#ffbcbc9c" };
+    // Se a fatura já foi paga
+    if (status === "paid" || status === "CONFIRMED" || status === "RECEIVED" || status === "RECEIVED_IN_CASH") {
+      return { text: "Pago", type: "paid" };
     }
+    
+    // Calcular diferença de dias usando moment
+    if (moment(record.dueDate).isValid()) {
+      const now = moment();
+      const dueDate = moment(record.dueDate);
+      const diff = dueDate.diff(now, "days");
+      
+      // Verificar se está vencido pelo status do Asaas ou pela data
+      if (status === "OVERDUE" || diff < 0) {
+        return { text: "Vencido", type: "overdue" };
+      }
+      
+      // Faltam menos de 3 dias para vencer
+      if (diff >= 0 && diff < 3) {
+        return { text: "Em Aberto", type: "nearDue" };
+      }
+    }
+    
+    return { text: "Em Aberto", type: "open" };
   };
 
-  const getStatusText = (record) => {
-    const hoje = moment(moment()).format("DD/MM/yyyy");
-    const vencimento = moment(record.dueDate).format("DD/MM/yyyy");
-    var diff = moment(vencimento, "DD/MM/yyyy").diff(moment(hoje, "DD/MM/yyyy"));
-    var dias = moment.duration(diff).asDays();    
-    const status = record.status;
-    
-    console.log('Status da fatura:', status, 'ID:', record.id, 'Dias:', dias);
-    
-    // Verificar diferentes status do Asaas
-    if (status === "paid" || status === "CONFIRMED" || status === "RECEIVED" || status === "RECEIVED_IN_CASH") {
-      return "Pago";
-    }
-    // Verificar se está vencido pelo status do Asaas ou pela data
-    if (status === "OVERDUE" || (dias < 0 && status !== "paid" && status !== "CONFIRMED" && status !== "RECEIVED" && status !== "RECEIVED_IN_CASH")) {
-      return "Vencido";
-    } else {
-      return "Em Aberto"
-    }
-  }
-
+  
   const renderStatus = (record) => {
-    if (isPaid(record)) {
-      return (
-        <div className={classes.paidStatusBadge}>
-          <CheckIcon className={classes.paidStatusIcon} />
-          PAGO
-        </div>
-      );
+    const statusInfo = getStatusInfo(record);
+    
+    switch (statusInfo.type) {
+      case "paid":
+        return (
+          <div className={classes.paidStatusBadge}>
+            <CheckIcon className={classes.paidStatusIcon} />
+            PAGO
+          </div>
+        );
+      case "overdue":
+        return (
+          <div className={classes.overdueStatusBadge}>
+            VENCIDO
+          </div>
+        );
+      case "nearDue":
+        return (
+          <div className={classes.nearDueStatusBadge}>
+            EM ABERTO
+          </div>
+        );
+      case "open":
+      default:
+        return (
+          <div className={classes.openStatusBadge}>
+            EM ABERTO
+          </div>
+        );
     }
-    return getStatusText(record);
   }
 
   const isPaid = (record) => {
@@ -513,14 +567,7 @@ const Invoices = () => {
         <Title>Financeiro</Title>
       </MainHeader>
       
-      {/* Mensagem de Trial Expirado */}
-      {isTrialExpired() && (
-        toast.warning(
-          'Seu período de teste expirou! Para continuar utilizando o sistema, regularize o pagamento.',
-          { autoClose: 8000, toastId: 'trial-expired-warning' }
-        )
-      )}
-      
+            
       {/* Two Column Layout */}
       <div className={classes.mainContainer}>
         {/* Left Column - Plan Information */}
@@ -600,7 +647,7 @@ const Invoices = () => {
                     </TableRow>
                   ) : (
                     invoices.map((invoice) => (
-                      <TableRow style={rowStyle(invoice)} key={invoice.id}>
+                      <TableRow key={invoice.id}>
                         <TableCell align="center">{invoice.id}</TableCell>
                         <TableCell align="center">{invoice.detail}</TableCell>
                         <TableCell style={{ fontWeight: 'bold' }} align="center">

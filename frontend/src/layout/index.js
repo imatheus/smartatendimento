@@ -349,27 +349,28 @@ const useStyles = makeStyles((theme) => ({
     color: "#fff !important",
     margin: "8px",
   },
-  statusTag: {
+  trialBanner: {
     position: "fixed",
-    top: "16px",
-    right: "16px",
-    zIndex: theme.zIndex.appBar + 2,
-    padding: "6px 12px",
-    borderRadius: "20px",
-    fontSize: "12px",
+    top: "0",
+    left: "0",
+    right: "0",
+    zIndex: theme.zIndex.appBar + 1,
+    padding: "8px 16px",
+    fontSize: "14px",
     fontWeight: 600,
     color: "#fff",
+    backgroundColor: "#ff9800",
+    textAlign: "center",
     boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
     animation: "$pulse 2s infinite",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    minHeight: "40px",
   },
-  trialExpiredTag: {
-    backgroundColor: "#f44336", // Vermelho para expirado
-  },
-  invoiceOverdueTag: {
-    backgroundColor: "#ff9800", // Laranja para vencido
-  },
-  trialActiveTag: {
-    backgroundColor: "#2196f3", // Azul para trial ativo
+  contentWithBanner: {
+    top: "40px !important",
   },
   "@keyframes pulse": {
     "0%": {
@@ -520,12 +521,22 @@ const LoggedInLayout = ({ children }) => {
 
   // Usar o status da empresa do hook
   const isInTrialPeriod = () => {
-    return companyStatus.isInTrial;
+    console.log('isInTrialPeriod check:', companyStatus);
+    // TESTE TEMPORÁRIO: Forçar trial para testar a UI
+    return companyStatus.isInTrial || true;
   };
 
   const getDaysRemaining = () => {
-    return companyStatus.daysRemaining;
+    console.log('getDaysRemaining:', companyStatus.daysRemaining);
+    // TESTE TEMPORÁRIO: Retornar 5 dias se não houver dados
+    return companyStatus.daysRemaining || 5;
   };
+
+  // Debug: Log do status da empresa
+  useEffect(() => {
+    console.log('Company Status Updated:', companyStatus);
+    console.log('User Company:', user?.company);
+  }, [companyStatus, user?.company]);
 
   if (loading) {
     return <BackdropLoading />;
@@ -536,7 +547,7 @@ const LoggedInLayout = ({ children }) => {
       {/* Tarja de Período de Testes */}
       {isInTrialPeriod() && (
         <Box className={classes.trialBanner}>
-          Avaliação - {getDaysRemaining()} {getDaysRemaining() === 1 ? 'dia restante' : 'dias restantes'}
+          <span role="img" aria-label="fogo">🔥</span> Avaliação: {getDaysRemaining()} {getDaysRemaining() === 1 ? 'dia restante' : 'dias restantes'}
         </Box>
       )}
       
@@ -545,7 +556,7 @@ const LoggedInLayout = ({ children }) => {
         className={clsx(classes.appBar, {
           [classes.contentWithBanner]: isInTrialPeriod()
         })}
-        style={{ top: isInTrialPeriod() ? '-5px' : '0' }}
+        style={{ top: isInTrialPeriod() ? '40px' : '0' }}
       >
         <Toolbar variant="dense" className={classes.toolbar}>
           <IconButton
@@ -649,7 +660,7 @@ const LoggedInLayout = ({ children }) => {
         PaperProps={{
           style: {
             height: isInTrialPeriod() ? "calc(100vh - 136px)" : "calc(100vh - 96px)",
-            marginTop: isInTrialPeriod() ? "110px" : "70px",
+            marginTop: isInTrialPeriod() ? "128px" : "70px",
           }
         }}
         open={drawerOpen}
@@ -679,7 +690,7 @@ const LoggedInLayout = ({ children }) => {
       />
       
       <main className={classes.content} style={{ 
-        paddingTop: isInTrialPeriod() ? '88px' : '48px' 
+        paddingTop: isInTrialPeriod() ? '128px' : '48px' 
       }}>
         {children ? children : null}
       </main>

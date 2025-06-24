@@ -259,79 +259,31 @@ const handleSubscriptionUpdated = async (payload: WebhookPayload, asaasConfig: A
       return;
     }
 
-    // Preparar dados para atualização da empresa
-    const updateData: any = {};
-    let hasChanges = false;
+    // Atualizar apenas timestamp de sincronização
+    // A data de vencimento da empresa agora vem das faturas, não da assinatura
+    const updateData: any = {
+      asaasSyncedAt: new Date()
+    };
 
-    // Verificar se a data de vencimento foi alterada
-    if (payload.subscription.nextDueDate && payload.subscription.nextDueDate !== company.dueDate) {
-      updateData.dueDate = payload.subscription.nextDueDate;
-      hasChanges = true;
-      logger.info(`Updating company ${company.id} due date from ${company.dueDate} to ${payload.subscription.nextDueDate} via subscription update`);
-    }
+    await company.update(updateData);
 
-    // Atualizar timestamp de sincronização
-    updateData.asaasSyncedAt = new Date();
-
-    // Atualizar a empresa se houver mudanças
-    if (hasChanges || updateData.asaasSyncedAt) {
-      await company.update(updateData);
-      
-      // Se a data de vencimento foi alterada, usar o serviço de sincronização
-      if (hasChanges && updateData.dueDate) {
-        try {
-          await SyncCompanyDueDateService({
-            companyId: company.id,
-            dueDate: payload.subscription.nextDueDate,
-            updateAsaas: false, // Não atualizar Asaas pois a mudança veio de lá
-            updateTrialExpiration: false // Não alterar trial em atualizações de assinatura
-          });
-          
-          logger.info(`Company ${company.id} synchronized after subscription update`);
-        } catch (syncError: any) {
-          logger.error(`Error syncing company after subscription update: ${syncError.message}`);
-        }
+    // Emitir evento via Socket.IO para informar sobre atualização da assinatura
+    const io = getIO();
+    io.emit(`company-${company.id}-status-updated`, {
+      action: "subscription_updated",
+      company: {
+        id: company.id,
+        value: payload.subscription.value,
+        description: payload.subscription.description
+      },
+      subscription: {
+        id: payload.subscription.id,
+        nextDueDate: payload.subscription.nextDueDate,
+        value: payload.subscription.value,
+        description: payload.subscription.description,
+        status: payload.subscription.status
       }
-
-      // Emitir evento via Socket.IO para atualizar a interface em tempo real
-      const io = getIO();
-      
-      // Só emitir eventos se realmente houve mudanças
-      if (hasChanges) {
-        io.emit(`company-${company.id}-status-updated`, {
-          action: "subscription_updated",
-          company: {
-            id: company.id,
-            dueDate: payload.subscription.nextDueDate,
-            value: payload.subscription.value,
-            description: payload.subscription.description
-          },
-          subscription: {
-            id: payload.subscription.id,
-            nextDueDate: payload.subscription.nextDueDate,
-            value: payload.subscription.value,
-            description: payload.subscription.description,
-            status: payload.subscription.status
-          }
-        });
-
-        // Se a data de vencimento foi alterada, emitir evento específico
-        if (updateData.dueDate) {
-          io.emit(`company-${company.id}-due-date-updated`, {
-            action: "subscription_due_date_changed",
-            company: {
-              id: company.id,
-              oldDueDate: company.dueDate,
-              newDueDate: payload.subscription.nextDueDate
-            },
-            subscription: {
-              id: payload.subscription.id,
-              nextDueDate: payload.subscription.nextDueDate
-            }
-          });
-        }
-      }
-    }
+    });
 
     logger.info(`Subscription updated for company ${company.id}, subscription ${payload.subscription.id}`);
 
@@ -408,6 +360,59 @@ const handlePaymentCreated = async (payload: WebhookPayload, asaasConfig: AsaasC
     });
 
     logger.info(`Invoice created: ${invoice.id} for payment ${payload.payment.id}`);
+
+    // Atualizar a data de vencimento da empresa com a data da nova fatura
+    if (targetCompanyId && payload.payment.originalDueDate) {
+      try {
+        await SyncCompanyDueDateService({
+          companyId: targetCompanyId,
+          dueDate: payload.payment.originalDueDate,
+          updateAsaas: false, // Não atualizar Asaas pois a fatura veio de lá
+          updateTrialExpiration: false // Não alterar trial quando nova fatura é criada
+        });
+        
+        logger.info(`Company ${targetCompanyId} due date updated to ${payload.payment.originalDueDate} after new invoice creation`);
+      } catch (syncError: any) {
+        logger.error(`Error syncing company due date after invoice creation: ${syncError.message}`);
+        
+        // Fallback: atualizar diretamente a data de vencimento da empresa
+        const company = await Company.findByPk(targetCompanyId);
+        if (company) {
+          await company.update({
+            dueDate: payload.payment.originalDueDate
+          });
+          logger.info(`Company ${targetCompanyId} due date updated via fallback to ${payload.payment.originalDueDate}`);
+        }
+      }
+
+      // Emitir evento via Socket.IO para atualizar a interface em tempo real
+      const io = getIO();
+      io.emit(`company-${targetCompanyId}-status-updated`, {
+        action: "company_due_date_updated",
+        company: {
+          id: targetCompanyId,
+          dueDate: payload.payment.originalDueDate
+        },
+        invoice: {
+          id: invoice.id,
+          dueDate: payload.payment.originalDueDate,
+          asaasInvoiceId: payload.payment.id
+        }
+      });
+
+      io.emit(`company-${targetCompanyId}-due-date-updated`, {
+        action: "new_invoice_created",
+        company: {
+          id: targetCompanyId,
+          newDueDate: payload.payment.originalDueDate
+        },
+        invoice: {
+          id: invoice.id,
+          dueDate: payload.payment.originalDueDate,
+          asaasInvoiceId: payload.payment.id
+        }
+      });
+    }
 
   } catch (error: any) {
     logger.error('Error handling payment created:', error);

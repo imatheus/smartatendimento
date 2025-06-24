@@ -3,6 +3,7 @@ import { useHistory } from "react-router-dom";
 import { has, isArray } from "lodash";
 
 import { toast } from "react-toastify";
+import { showUniqueError, showUniqueSuccess, showUniqueWarning, showUniqueInfo } from "../../utils/toastManager";
 
 import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
@@ -95,7 +96,7 @@ const useAuth = () => {
     socket.on(`company-${companyId}-status-updated`, (data) => {
       if (data.action === "company_reactivated") {
         // Mostrar notificação de reativação
-        toast.success(`✅ Empresa reativada! Todas as funcionalidades foram liberadas.`);
+        showUniqueSuccess(`✅ Empresa reativada! Todas as funcionalidades foram liberadas.`);
         
         // Recarregar dados do usuário
         refreshUserData().then(() => {
@@ -104,19 +105,19 @@ const useAuth = () => {
             setTimeout(() => {
               history.push('/');
               window.location.reload();
-            }, 2000);
+            }, 4000);
           } else {
             // Se não estiver no financeiro, apenas recarregar a página
             setTimeout(() => {
               window.location.reload();
-            }, 2000);
+            }, 4000);
           }
         });
       } else if (data.action === "company_blocked") {
         // Empresa foi bloqueada por vencimento
         // Verificar se não é super admin antes de bloquear
         if (user.profile !== 'super' && !user.super) {
-          toast.error(`🚫 Empresa bloqueada por falta de pagamento. Redirecionando para o financeiro...`);
+          showUniqueError(`🚫 Empresa bloqueada por falta de pagamento. Redirecionando para o financeiro...`);
           
           // Recarregar dados do usuário
           refreshUserData().then(() => {
@@ -124,7 +125,7 @@ const useAuth = () => {
             setTimeout(() => {
               history.push('/financeiro');
               window.location.reload();
-            }, 2000);
+            }, 4000);
           });
         }
       }

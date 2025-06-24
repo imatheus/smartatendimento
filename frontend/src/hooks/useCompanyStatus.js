@@ -3,11 +3,9 @@ import { AuthContext } from "../context/Auth/AuthContext";
 import moment from "moment";
 import { socketConnection } from "../services/socket";
 import { toast } from "react-toastify";
+import { showUniqueError, showUniqueSuccess, showUniqueWarning, showUniqueInfo } from "../utils/toastManager";
 import api from "../services/api";
 
-// Flags globais para evitar múltiplos toasts
-let globalPaymentToastShown = false;
-let globalSubscriptionToastShown = false;
 
 const useCompanyStatus = () => {
   const { user, refreshUserData } = useContext(AuthContext);
@@ -164,7 +162,7 @@ const useCompanyStatus = () => {
       console.log('Status da empresa atualizado via socket:', data);
       
       if (data.action === "company_reactivated") {
-        toast.success(`Todas as funcionalidades foram liberadas`);
+        // Não mostrar toast aqui pois já é mostrado no useAuth
         
         // Atualizar dados do usuário e sincronizar status
         await refreshUserData();
@@ -173,9 +171,9 @@ const useCompanyStatus = () => {
         // Recarregar a página após 2 segundos para garantir que tudo seja atualizado
         setTimeout(() => {
           window.location.reload();
-        }, 2000);
+        }, 4000);
       } else if (data.action === "company_blocked") {
-        toast.error(`🚫 Empresa bloqueada por falta de pagamento.`);
+        // Não mostrar toast aqui pois já é mostrado no useAuth
         
         // Atualizar dados do usuário e sincronizar status
         await refreshUserData();
@@ -184,7 +182,7 @@ const useCompanyStatus = () => {
         // Recarregar a página após 2 segundos
         setTimeout(() => {
           window.location.reload();
-        }, 2000);
+        }, 4000);
       } else if (data.action === "company_due_date_updated") {
         console.log('Data de vencimento da empresa atualizada:', data.company.dueDate);
         
@@ -194,47 +192,47 @@ const useCompanyStatus = () => {
         
         // Mostrar notificação sobre a mudança
         if (data.company.dueDate && moment(data.company.dueDate).isValid()) {
-          toast.info(`Data de vencimento atualizada para ${moment(data.company.dueDate).format('DD/MM/YYYY')}`);
+          showUniqueInfo(`📅 Data de vencimento atualizada para ${moment(data.company.dueDate).format('DD/MM/YYYY')}`);
         } else {
-          toast.info(`Data de vencimento atualizada`);
+          showUniqueInfo(`📅 Data de vencimento atualizada`);
         }
       } else if (data.action === "subscription_updated") {
         console.log('Assinatura da empresa atualizada:', data);
         
-        // Evitar múltiplos toasts
-        if (!globalSubscriptionToastShown) {
-          globalSubscriptionToastShown = true;
-          
-          // Atualizar dados do usuário e sincronizar status
-          await refreshUserData();
-          await syncStatusWithBackend();
-          
-          // Mostrar notificação sobre a mudança na assinatura
-          if (data.company && data.company.dueDate && moment(data.company.dueDate).isValid()) {
-            toast.info(`Assinatura atualizada - Nova data de vencimento: ${moment(data.company.dueDate).format('DD/MM/YYYY')}`);
-          } else {
-            toast.info(`Assinatura atualizada`);
-          }
-          
-          // Liberar flag após 3 segundos
-          setTimeout(() => {
-            globalSubscriptionToastShown = false;
-          }, 3000);
-        }
+        // Atualizar dados do usuário e sincronizar status
+        await refreshUserData();
+        await syncStatusWithBackend();
+        
+        // Mostrar notificação sobre a mudança na assinatura (sem data de vencimento)
+        showUniqueInfo(`📋 Assinatura atualizada`);
       }
     });
 
     // Listener para pagamentos confirmados
     socket.on(`company-${companyIdNum}-invoice-paid`, async (data) => {
-      if (data.action === "payment_confirmed" && !globalPaymentToastShown) {
-        globalPaymentToastShown = true;
-        toast.success(`Pagamento confirmado!`);
+      if (data.action === "payment_confirmed") {
+        showUniqueSuccess(`Pagamento confirmado!`);
         await refreshUserData();
         await syncStatusWithBackend();
         setTimeout(() => {
           window.location.reload();
-          globalPaymentToastShown = false; // libera para o próximo evento após reload
-        }, 2000);
+        }, 4000);
+      }
+    });
+
+    // Listener para atualizações de data de vencimento específicas
+    socket.on(`company-${companyIdNum}-due-date-updated`, async (data) => {
+      if (data.action === "new_invoice_created") {
+        console.log('Nova fatura criada, data de vencimento atualizada:', data.company.newDueDate);
+        
+        // Atualizar dados do usuário e sincronizar status
+        await refreshUserData();
+        await syncStatusWithBackend();
+        
+        // Mostrar notificação sobre nova fatura
+        if (data.company.newDueDate && moment(data.company.newDueDate).isValid()) {
+          showUniqueInfo(`📄 Nova fatura gerada - Vencimento: ${moment(data.company.newDueDate).format('DD/MM/YYYY')}`);
+        }
       }
     });
 

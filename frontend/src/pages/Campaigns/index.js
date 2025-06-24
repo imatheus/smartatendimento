@@ -248,7 +248,7 @@ const Campaigns = () => {
             newSet.delete(data.record.id);
             return newSet;
           });
-        }, 2000);
+        }, 4000);
         
         // Mostrar toast de atualização
         if (data.action === "update") {
