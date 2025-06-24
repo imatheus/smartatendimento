@@ -516,13 +516,13 @@ export default function CompaniesManager() {
         // Atualizar a lista de empresas
         loadPlans();
       } else if (data.action === "subscription_updated") {
-        console.log('Assinatura da empresa atualizada:', data);
+        console.log('Assinatura atualizada:', data);
         
         // Atualizar a lista de empresas
         loadPlans();
         
         // Mostrar notificação
-        toast.info(`📋 Assinatura da empresa atualizada`);
+        toast.info(`Assinatura atualizada`);
       }
     });
 

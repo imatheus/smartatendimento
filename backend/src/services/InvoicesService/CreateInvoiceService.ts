@@ -1,6 +1,7 @@
 import Invoice from "../../models/Invoices";
 import Company from "../../models/Company";
 import Plan from "../../models/Plan";
+import CompanyPlan from "../../models/CompanyPlan";
 import AppError from "../../errors/AppError";
 
 interface InvoiceData {
@@ -14,21 +15,28 @@ const CreateInvoiceService = async (data: InvoiceData): Promise<Invoice> => {
   const { companyId, detail, value, dueDate } = data;
 
   // Buscar dados da empresa
-  const company = await Company.findByPk(companyId, {
-    include: [{ model: Plan, as: "plan" }]
-  });
+  const company = await Company.findByPk(companyId);
 
   if (!company) {
     throw new AppError("ERR_NO_COMPANY_FOUND", 404);
   }
 
-  if (!company.plan) {
-    throw new AppError("ERR_NO_PLAN_FOUND", 404);
+  // Buscar o plano personalizado da empresa
+  const companyPlan = await CompanyPlan.findOne({
+    where: {
+      companyId,
+      isActive: true
+    },
+    include: [{ model: Plan, as: 'basePlan' }]
+  });
+
+  if (!companyPlan) {
+    throw new AppError("ERR_NO_COMPANY_PLAN_FOUND", 404);
   }
 
   // Definir valores padrão se não fornecidos
-  const invoiceDetail = detail || `Mensalidade Plano ${company.plan.name}`;
-  const invoiceValue = value || company.plan.value;
+  const invoiceDetail = detail || `Mensalidade ${companyPlan.name}`;
+  const invoiceValue = value || companyPlan.totalValue; // Usar valor total do plano personalizado
   const invoiceDueDate = dueDate || company.dueDate;
 
   // Verificar se já existe fatura para esta data

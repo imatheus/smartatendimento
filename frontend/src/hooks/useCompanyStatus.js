@@ -204,7 +204,7 @@ const useCompanyStatus = () => {
         await syncStatusWithBackend();
         
         // Mostrar notificação sobre a mudança na assinatura (sem data de vencimento)
-        showUniqueInfo(`📋 Assinatura atualizada`);
+        showUniqueInfo(`Assinatura atualizada`);
       }
     });
 
@@ -223,7 +223,7 @@ const useCompanyStatus = () => {
     // Listener para atualizações de data de vencimento específicas
     socket.on(`company-${companyIdNum}-due-date-updated`, async (data) => {
       if (data.action === "new_invoice_created") {
-        console.log('Nova fatura criada, data de vencimento atualizada:', data.company.newDueDate);
+        console.log('Nova fatura criada, vencimento:', data.company.newDueDate);
         
         // Atualizar dados do usuário e sincronizar status
         await refreshUserData();
@@ -231,7 +231,7 @@ const useCompanyStatus = () => {
         
         // Mostrar notificação sobre nova fatura
         if (data.company.newDueDate && moment(data.company.newDueDate).isValid()) {
-          showUniqueInfo(`📄 Nova fatura gerada - Vencimento: ${moment(data.company.newDueDate).format('DD/MM/YYYY')}`);
+          showUniqueInfo(`Nova fatura gerada - Vencimento: ${moment(data.company.newDueDate).format('DD/MM/YYYY')}`);
         }
       }
     });

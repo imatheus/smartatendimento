@@ -2,6 +2,7 @@ import moment from "moment";
 import AppError from "../../errors/AppError";
 import Company from "../../models/Company";
 import Plan from "../../models/Plan";
+import CompanyPlan from "../../models/CompanyPlan";
 import AsaasConfig from "../../models/AsaasConfig";
 import AsaasService from "./AsaasService";
 import { logger } from "../../utils/logger";
@@ -29,9 +30,7 @@ const CreateAsaasSubscriptionForCompanyService = async ({
 }: Request): Promise<Response> => {
   try {
     // Buscar a empresa
-    const company = await Company.findByPk(companyId, {
-      include: [{ model: Plan, as: 'plan' }]
-    });
+    const company = await Company.findByPk(companyId);
 
     if (!company) {
       throw new AppError("Empresa não encontrada", 404);
@@ -40,6 +39,15 @@ const CreateAsaasSubscriptionForCompanyService = async ({
     if (!company.dueDate) {
       throw new AppError("Empresa deve ter uma data de vencimento definida", 400);
     }
+
+    // Buscar o plano personalizado da empresa
+    const companyPlan = await CompanyPlan.findOne({
+      where: {
+        companyId,
+        isActive: true
+      },
+      include: [{ model: Plan, as: 'basePlan' }]
+    });
 
     // Buscar configuração do Asaas
     const asaasConfig = await AsaasConfig.findOne();
@@ -74,8 +82,8 @@ const CreateAsaasSubscriptionForCompanyService = async ({
 
     // Determinar valor da assinatura
     let subscriptionValue = planValue;
-    if (!subscriptionValue && company.plan) {
-      subscriptionValue = company.plan.value;
+    if (!subscriptionValue && companyPlan) {
+      subscriptionValue = companyPlan.totalValue; // Usar valor total do plano personalizado
     }
     if (!subscriptionValue) {
       subscriptionValue = 50; // Valor padrão
@@ -88,7 +96,7 @@ const CreateAsaasSubscriptionForCompanyService = async ({
       value: subscriptionValue,
       nextDueDate: company.dueDate,
       cycle,
-      description: `Assinatura ${company.plan?.name || 'Personalizado'}`,
+      description: ` ${companyPlan?.name || 'Personalizado'}`,
       externalReference: `company_${company.id}_subscription`
     };
 

@@ -522,14 +522,12 @@ const LoggedInLayout = ({ children }) => {
   // Usar o status da empresa do hook
   const isInTrialPeriod = () => {
     console.log('isInTrialPeriod check:', companyStatus);
-    // TESTE TEMPORÁRIO: Forçar trial para testar a UI
-    return companyStatus.isInTrial || true;
+    return companyStatus.isInTrial;
   };
 
   const getDaysRemaining = () => {
     console.log('getDaysRemaining:', companyStatus.daysRemaining);
-    // TESTE TEMPORÁRIO: Retornar 5 dias se não houver dados
-    return companyStatus.daysRemaining || 5;
+    return companyStatus.daysRemaining;
   };
 
   // Debug: Log do status da empresa

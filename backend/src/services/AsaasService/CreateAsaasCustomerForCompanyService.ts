@@ -1,5 +1,6 @@
 import Company from "../../models/Company";
 import Plan from "../../models/Plan";
+import CompanyPlan from "../../models/CompanyPlan";
 import AsaasConfig from "../../models/AsaasConfig";
 import AsaasService from "./AsaasService";
 import AppError from "../../errors/AppError";
@@ -31,19 +32,26 @@ const CreateAsaasCustomerForCompanyService = async ({
       };
     }
 
-    // Buscar dados da empresa com plano
-    const company = await Company.findByPk(companyId, {
-      include: [{ model: Plan, as: 'plan' }]
-    });
+    // Buscar dados da empresa
+    const company = await Company.findByPk(companyId);
 
     if (!company) {
       throw new AppError("Empresa não encontrada", 404);
     }
 
-    if (!company.plan) {
+    // Buscar o plano personalizado da empresa (que considera o número de usuários)
+    const companyPlan = await CompanyPlan.findOne({
+      where: {
+        companyId,
+        isActive: true
+      },
+      include: [{ model: Plan, as: 'basePlan' }]
+    });
+
+    if (!companyPlan) {
       return {
         success: false,
-        message: "Empresa não possui plano configurado"
+        message: "Empresa não possui plano personalizado configurado"
       };
     }
 
@@ -76,15 +84,15 @@ const CreateAsaasCustomerForCompanyService = async ({
     // Calcular data de início da assinatura (7 dias de trial)
     const nextDueDate = moment().add(7, 'days').format('YYYY-MM-DD');
 
-    // Preparar dados da assinatura
+    // Preparar dados da assinatura usando o valor total do plano personalizado
     const subscriptionData = {
       customer: asaasCustomer.id!,
       billingType: 'BOLETO',
-      value: company.plan.value,
+      value: companyPlan.totalValue, // Usar o valor total que considera o número de usuários
       nextDueDate,
       cycle: 'MONTHLY',
-      description: `Assinatura ${company.plan.name}`,
-      externalReference: `company_${companyId}_plan_${company.plan.id}`
+      description: `${companyPlan.name}`,
+      externalReference: `company_${companyId}_plan_${companyPlan.id}`
     };
 
     // Criar assinatura no Asaas

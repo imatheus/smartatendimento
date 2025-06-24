@@ -122,7 +122,7 @@ const SyncCompanyDueDateService = async ({
             await company.update({ asaasSyncedAt: new Date() });
 
             result.asaasUpdated = true;
-            logger.info(`Assinatura ${company.asaasSubscriptionId} atualizada no Asaas com nova data: ${dueDate}`);
+            logger.info(`${company.asaasSubscriptionId} atualizada no Asaas com nova data: ${dueDate}`);
           }
         } else {
           logger.warn("Configuração do Asaas não encontrada ou inativa");
